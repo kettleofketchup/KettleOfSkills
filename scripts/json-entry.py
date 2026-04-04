@@ -6,6 +6,6 @@ import sys
 entry = {
     "name": sys.argv[1],
     "description": sys.argv[2],
-    "path": "plugins/" + sys.argv[1],
+    "source": "./plugins/" + sys.argv[1],
 }
 print(json.dumps(entry))
