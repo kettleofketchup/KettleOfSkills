@@ -1,0 +1,9 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "kettleofskills",
+  "description": "Curated skill packs for Claude Code — individual skills and grouped bundles",
+  "owner": {
+    "name": "kettleofketchup"
+  },
+  "plugins": []
+}
