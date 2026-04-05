@@ -5,5 +5,306 @@
   "owner": {
     "name": "kettleofketchup"
   },
-  "plugins": []
+  "plugins": [
+    {
+      "name": "argocd",
+      "description": "GitOps continuous delivery for Kubernetes with ArgoCD. Use when creating/managing ArgoCD Applications, ApplicationSet...",
+      "source": "./plugins/argocd"
+    },
+    {
+      "name": "authentik",
+      "description": "Authentik self-hosted identity provider for Kubernetes. This skill should be used when deploying Authentik via Helm, ...",
+      "source": "./plugins/authentik"
+    },
+    {
+      "name": "calico",
+      "description": "Calico CNI and network policy engine via Tigera Operator for Kubernetes. Use when deploying Calico with Tigera Operat...",
+      "source": "./plugins/calico"
+    },
+    {
+      "name": "cert-manager",
+      "description": "Kubernetes certificate management debugging and configuration. This skill should be used when troubleshooting cert-ma...",
+      "source": "./plugins/cert-manager"
+    },
+    {
+      "name": "claude-code",
+      "description": "Claude Code CLI tool expert. This skill should be used when working with Claude Code features, installation, setup, a...",
+      "source": "./plugins/claude-code"
+    },
+    {
+      "name": "cloudflare",
+      "description": "Cloudflare Tunnel (cloudflared) deployment on Kubernetes, Cloudflare Access Service Tokens for machine-to-machine aut...",
+      "source": "./plugins/cloudflare"
+    },
+    {
+      "name": "cloudnative-pg",
+      "description": "CloudNativePG (CNPG) Kubernetes operator for PostgreSQL. Use when deploying PostgreSQL clusters on Kubernetes, creati...",
+      "source": "./plugins/cloudnative-pg"
+    },
+    {
+      "name": "context-engineering",
+      "description": "Master context engineering for AI agent systems. Use when designing agent architectures, debugging context failures, ...",
+      "source": "./plugins/context-engineering"
+    },
+    {
+      "name": "copyparty",
+      "description": "Copyparty portable file server with resumable uploads, dedup, WebDAV, SFTP, FTP, TFTP, SMB, zeroconf, media indexer, ...",
+      "source": "./plugins/copyparty"
+    },
+    {
+      "name": "dicebear",
+      "description": "DiceBear avatar generation and Gravatar API integration. Use when generating procedural avatars from seeds/emails, se...",
+      "source": "./plugins/dicebear"
+    },
+    {
+      "name": "discord",
+      "description": "Discord API interactions, message components, slash commands, modals, webhooks, and embeds. Use when building Discord...",
+      "source": "./plugins/discord"
+    },
+    {
+      "name": "docker",
+      "description": "Docker layer optimization for fast builds. This skill should be used when writing Dockerfiles, optimizing build times...",
+      "source": "./plugins/docker"
+    },
+    {
+      "name": "documentation-reviewer",
+      "description": "Review and update MkDocs documentation when code changes. This skill should be used when completing feature implement...",
+      "source": "./plugins/documentation-reviewer"
+    },
+    {
+      "name": "foundry-vtt",
+      "description": "Foundry VTT virtual tabletop development, deployment, and module creation. This skill should be used when developing ...",
+      "source": "./plugins/foundry-vtt"
+    },
+    {
+      "name": "github",
+      "description": "GitHub CLI (gh) and GitHub Actions workflow development. This skill should be used when working with gh commands (PRs...",
+      "source": "./plugins/github"
+    },
+    {
+      "name": "gitlab-ci",
+      "description": "GitLab CI/CD multi-project pipeline orchestration and cross-pipeline dependencies. This skill should be used when con...",
+      "source": "./plugins/gitlab-ci"
+    },
+    {
+      "name": "gitlab-tickets",
+      "description": "Create GitLab issues through conversational brainstorming. Use when user wants to capture ideas, features, bugs, or w...",
+      "source": "./plugins/gitlab-tickets"
+    },
+    {
+      "name": "go-dota2-steam",
+      "description": "Go libraries for Steam and Dota 2 Game Coordinator development. This skill should be used when working with paralin/g...",
+      "source": "./plugins/go-dota2-steam"
+    },
+    {
+      "name": "golang-viper",
+      "description": "Go Viper configuration library (github.com/spf13/viper). Use when working with config file reading (SetConfigName, Ad...",
+      "source": "./plugins/golang-viper"
+    },
+    {
+      "name": "goss",
+      "description": "Goss YAML-based server validation and testing tool. This skill should be used when writing goss.yaml gossfiles, valid...",
+      "source": "./plugins/goss"
+    },
+    {
+      "name": "grafana",
+      "description": "Grafana observability stack for self-hosted Kubernetes using kube-prometheus-stack. This skill should be used when de...",
+      "source": "./plugins/grafana"
+    },
+    {
+      "name": "helm",
+      "description": "Kubernetes package management with Helm. This skill should be used when installing/upgrading Helm releases, developin...",
+      "source": "./plugins/helm"
+    },
+    {
+      "name": "just",
+      "description": "Bootstrap repos with just command runner. Use when setting up new projects, creating justfiles, adding task automatio...",
+      "source": "./plugins/just"
+    },
+    {
+      "name": "k3s",
+      "description": "Self-hosted K3s lightweight Kubernetes distribution. This skill should be used when installing or configuring K3s clu...",
+      "source": "./plugins/k3s"
+    },
+    {
+      "name": "kubectx",
+      "description": "kubectx and kubens CLI tools for switching Kubernetes contexts and namespaces. This skill should be used when switchi...",
+      "source": "./plugins/kubectx"
+    },
+    {
+      "name": "kustomize",
+      "description": "Kustomize Kubernetes manifest composition without templating. This skill should be used when writing kustomization.ya...",
+      "source": "./plugins/kustomize"
+    },
+    {
+      "name": "mcp-management",
+      "description": "Manage Model Context Protocol (MCP) servers - discover, analyze, and execute tools/prompts/resources from configured ...",
+      "source": "./plugins/mcp-management"
+    },
+    {
+      "name": "mermaidjs-v11",
+      "description": "Create diagrams and visualizations using Mermaid.js v11 syntax. Use when generating flowcharts, sequence diagrams, cl...",
+      "source": "./plugins/mermaidjs-v11"
+    },
+    {
+      "name": "mkdocs-documentation",
+      "description": "MkDocs Material documentation management. This skill should be used when writing, formatting, or validating documenta...",
+      "source": "./plugins/mkdocs-documentation"
+    },
+    {
+      "name": "nextcloud",
+      "description": "Use when deploying Nextcloud on Kubernetes with Helm, configuring Rook-Ceph storage, Traefik ingress, Authentik SAML ...",
+      "source": "./plugins/nextcloud"
+    },
+    {
+      "name": "nixos",
+      "description": "NixOS and Nix flake development for multi-repo architectures, airgapped deployments, and K3s infrastructure. Use when...",
+      "source": "./plugins/nixos"
+    },
+    {
+      "name": "opentelemetry",
+      "description": "OpenTelemetry (OTEL) distributed tracing, metrics, and log correlation. Use when instrumenting Go, Python (Django, Fa...",
+      "source": "./plugins/opentelemetry"
+    },
+    {
+      "name": "openwebui",
+      "description": "Open WebUI self-hosted AI chat interface deployment, configuration, and administration. Use when deploying Open WebUI...",
+      "source": "./plugins/openwebui"
+    },
+    {
+      "name": "pikvm",
+      "description": "PiKVM HTTP API Python library and Ansible module/collection development. Use when building Python clients for PiKVM K...",
+      "source": "./plugins/pikvm"
+    },
+    {
+      "name": "playwright",
+      "description": "Playwright browser automation for E2E testing and web scraping. This skill should be used when writing Playwright tes...",
+      "source": "./plugins/playwright"
+    },
+    {
+      "name": "react",
+      "description": "React 19 development with async components, Server Components, and modern patterns. Use when building React component...",
+      "source": "./plugins/react"
+    },
+    {
+      "name": "rook-ceph",
+      "description": "Multi-node Rook Ceph deployment for Kubernetes production clusters. This skill should be used when deploying Ceph sto...",
+      "source": "./plugins/rook-ceph"
+    },
+    {
+      "name": "skill-creator",
+      "description": "Guide for creating effective skills. This skill should be used when users want to create a new skill (or update an ex...",
+      "source": "./plugins/skill-creator"
+    },
+    {
+      "name": "svg-logo-designer",
+      "description": "Create professional SVG logos from descriptions and design specifications. Generates multiple logo variations with di...",
+      "source": "./plugins/svg-logo-designer"
+    },
+    {
+      "name": "talos",
+      "description": "Talos Linux v1.12 Kubernetes operating system management. This skill should be used when bootstrapping Talos clusters...",
+      "source": "./plugins/talos"
+    },
+    {
+      "name": "traefik",
+      "description": "Traefik v3 reverse proxy and load balancer for Kubernetes and Docker. Use when configuring Traefik entrypoints, HTTP/...",
+      "source": "./plugins/traefik"
+    },
+    {
+      "name": "ui-styling",
+      "description": "Create beautiful, accessible user interfaces with shadcn/ui components (built on Radix UI + Tailwind), Tailwind CSS u...",
+      "source": "./plugins/ui-styling"
+    },
+    {
+      "name": "vsphere",
+      "description": "VMware vSphere infrastructure management with govc CLI and Ansible. This skill should be used when running govc comma...",
+      "source": "./plugins/vsphere"
+    },
+    {
+      "name": "wails",
+      "description": "Wails v2 Go desktop application framework with web frontend. Use when creating Go desktop apps with web UI (Svelte/Re...",
+      "source": "./plugins/wails"
+    },
+    {
+      "name": "zensical",
+      "description": "Zensical modern static site generator for project documentation (successor to Material for MkDocs). This skill should...",
+      "source": "./plugins/zensical"
+    },
+    {
+      "name": "zinit-zsh",
+      "description": "Zinit zsh plugin manager configuration and binary installs. This skill should be used when adding zsh plugins, instal...",
+      "source": "./plugins/zinit-zsh"
+    },
+    {
+      "name": "zsh-completions",
+      "description": "Write zsh completion scripts with descriptions, colors, and dynamic completions. This skill should be used when creat...",
+      "source": "./plugins/zsh-completions"
+    },
+    {
+      "name": "zustand",
+      "description": "Zustand state management for React applications. This skill should be used when creating Zustand stores, implementing...",
+      "source": "./plugins/zustand"
+    },
+    {
+      "name": "all",
+      "description": "All skills — the complete collection",
+      "source": "./plugins/all"
+    },
+    {
+      "name": "claude-tooling",
+      "description": "Claude Code tooling — claude-code, context-engineering, mcp-management, skill-creator",
+      "source": "./plugins/claude-tooling"
+    },
+    {
+      "name": "devops",
+      "description": "DevOps tooling — docker, github, gitlab-ci, goss, and more",
+      "source": "./plugins/devops"
+    },
+    {
+      "name": "discord",
+      "description": "Discord bot development",
+      "source": "./plugins/discord"
+    },
+    {
+      "name": "docs",
+      "description": "Documentation — mkdocs, mermaidjs, zensical, documentation-reviewer",
+      "source": "./plugins/docs"
+    },
+    {
+      "name": "frontend",
+      "description": "Frontend development — react, zustand, ui-styling, playwright, svg-logo-designer",
+      "source": "./plugins/frontend"
+    },
+    {
+      "name": "golang",
+      "description": "Go development — golang-viper, go-dota2-steam, wails",
+      "source": "./plugins/golang"
+    },
+    {
+      "name": "homelab",
+      "description": "Homelab infrastructure — nixos, vsphere, k3s, talos, pikvm, and more",
+      "source": "./plugins/homelab"
+    },
+    {
+      "name": "k8s-apps",
+      "description": "Kubernetes applications — authentik, cloudflare, nextcloud, grafana, opentelemetry, openwebui, and more",
+      "source": "./plugins/k8s-apps"
+    },
+    {
+      "name": "k8s-core",
+      "description": "Kubernetes core infrastructure — helm, kustomize, argocd, k3s, talos, calico, cert-manager, traefik, kubectx",
+      "source": "./plugins/k8s-core"
+    },
+    {
+      "name": "k8s-storage",
+      "description": "Kubernetes storage — rook-ceph, cloudnative-pg",
+      "source": "./plugins/k8s-storage"
+    },
+    {
+      "name": "shell",
+      "description": "Shell tooling — zinit-zsh, zsh-completions",
+      "source": "./plugins/shell"
+    }
+  ]
 }

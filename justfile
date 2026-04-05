@@ -25,9 +25,14 @@ sync-groups:
 
     valid_groups=("${!group_descriptions[@]}")
 
-    # Clean existing group plugin dirs (anything with symlinks in skills/)
+    # Clean existing group symlinks (preserve individual plugin dirs that share a group name)
     for group in "${valid_groups[@]}"; do
-        rm -rf "plugins/${group}"
+        if [[ -d "plugins/${group}/skills" ]]; then
+            # Only remove symlinks, not real skill directories
+            for link in "plugins/${group}/skills"/*; do
+                [[ -L "$link" ]] && rm -f "$link"
+            done
+        fi
     done
 
     # Iterate over individual plugin config.yaml files
@@ -74,7 +79,8 @@ sync-groups:
                 fi
 
                 mkdir -p "plugins/${category}/skills"
-                if [[ ! -L "plugins/${category}/skills/${skill}" ]]; then
+                # Skip self-referential symlinks (skill already lives in this group dir)
+                if [[ "$category" != "$plugin" ]] && [[ ! -L "plugins/${category}/skills/${skill}" ]]; then
                     ln -s "../../${plugin}/skills/${skill}" "plugins/${category}/skills/${skill}"
                 fi
             fi
@@ -85,7 +91,11 @@ sync-groups:
     echo "sync-groups complete:"
     for group in $(printf '%s\n' "${valid_groups[@]}" | sort); do
         if [[ -d "plugins/${group}/skills" ]]; then
-            count="$(find "plugins/${group}/skills" -maxdepth 1 -type l | wc -l)"
+            # Count both symlinks and real skill directories
+            count=0
+            for entry in "plugins/${group}/skills"/*/; do
+                [[ -d "$entry" || -L "${entry%/}" ]] && count=$((count + 1))
+            done
             echo "  ${group}: ${count} skills"
         fi
     done
@@ -115,54 +125,47 @@ sync-marketplace:
     entries_file="$(mktemp)"
     trap 'rm -f "$entries_file"' EXIT
 
-    # Process each plugin directory
+    # Emit individual plugin entries (dirs that contain a real config.yaml, not via symlink)
     for plugin_dir in plugins/*/; do
         [[ -d "$plugin_dir" ]] || continue
         plugin="$(basename "$plugin_dir")"
 
-        # Determine if this is a group or individual plugin
-        if [[ -n "${group_descriptions[$plugin]+x}" ]]; then
-            # Group plugin — use hardcoded description
-            description="${group_descriptions[$plugin]}"
-        else
-            # Individual plugin — read description from SKILL.md frontmatter
-            description=""
-            for skill_md in "${plugin_dir}skills"/*/SKILL.md; do
-                [[ -f "$skill_md" ]] || continue
-                in_frontmatter=false
-                while IFS= read -r line; do
-                    if [[ "$line" == "---" ]]; then
-                        if $in_frontmatter; then
-                            break
-                        fi
-                        in_frontmatter=true
-                        continue
-                    fi
-                    if $in_frontmatter && [[ "$line" =~ ^description:[[:space:]]*(.*) ]]; then
-                        description="${BASH_REMATCH[1]}"
-                        # Strip surrounding quotes if present
-                        description="${description#\"}"
-                        description="${description%\"}"
-                        description="${description#\'}"
-                        description="${description%\'}"
-                        break
-                    fi
-                done < "$skill_md"
-                break
-            done
+        # Check if this dir has a real (non-symlinked) skill directory with config.yaml
+        has_config=false
+        for skill_dir in "${plugin_dir}skills"/*/; do
+            [[ -d "$skill_dir" ]] || continue
+            # Skip symlinked skill directories (those belong to groups)
+            [[ -L "${skill_dir%/}" ]] && continue
+            [[ -f "${skill_dir}config.yaml" ]] && has_config=true && break
+        done
+        $has_config || continue
 
-            if [[ -z "$description" ]]; then
-                description="${plugin} skill for Claude Code"
-            fi
+        # Individual plugin — read description from SKILL.md frontmatter
+        description=""
+        for skill_md in "${plugin_dir}skills"/*/SKILL.md; do
+            [[ -f "$skill_md" ]] || continue
+            description="$(python3 scripts/extract-description.py "$skill_md")"
+            break
+        done
 
-            # Truncate to 120 chars
-            if [[ ${#description} -gt 120 ]]; then
-                description="${description:0:117}..."
-            fi
+        if [[ -z "$description" ]]; then
+            description="${plugin} skill for Claude Code"
         fi
 
-        # Write entry as JSON line using python3 for safe encoding
-        python3 scripts/json-entry.py "$plugin" "$description" >> "$entries_file"
+        # Truncate to 120 chars
+        if [[ ${#description} -gt 120 ]]; then
+            description="${description:0:117}..."
+        fi
+
+        python3 scripts/json-entry.py "$plugin" "$description" "individual" >> "$entries_file"
+    done
+
+    # Emit group plugin entries
+    for group in "${!group_descriptions[@]}"; do
+        if [[ -d "plugins/${group}/skills" ]]; then
+            description="${group_descriptions[$group]}"
+            python3 scripts/json-entry.py "$group" "$description" "group" >> "$entries_file"
+        fi
     done
 
     # Assemble the final marketplace.json

@@ -13,15 +13,19 @@ with open(entries_file) as f:
         if line:
             entries.append(json.loads(line))
 
-# Sort: individual plugins first (alphabetically), then groups (alphabetically)
+# Use _type hint if present, otherwise fall back to name-based detection
 individuals = sorted(
-    [e for e in entries if e["name"] not in group_names],
+    [e for e in entries if e.get("_type", "group" if e["name"] in group_names else "individual") == "individual"],
     key=lambda x: x["name"],
 )
 group_entries = sorted(
-    [e for e in entries if e["name"] in group_names],
+    [e for e in entries if e.get("_type", "group" if e["name"] in group_names else "individual") == "group"],
     key=lambda x: x["name"],
 )
+
+# Strip internal _type field from output
+for e in individuals + group_entries:
+    e.pop("_type", None)
 
 marketplace = {
     "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
