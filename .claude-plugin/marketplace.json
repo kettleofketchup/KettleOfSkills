@@ -67,6 +67,11 @@
       "source": "./plugins/docker"
     },
     {
+      "name": "docs-seeker",
+      "description": "Searching internet for technical documentation using llms.txt standard, GitHub repositories via Repomix, and parallel...",
+      "source": "./plugins/docs-seeker"
+    },
+    {
       "name": "documentation-reviewer",
       "description": "Review and update MkDocs documentation when code changes. This skill should be used when completing feature implement...",
       "source": "./plugins/documentation-reviewer"
@@ -137,9 +142,19 @@
       "source": "./plugins/kustomize"
     },
     {
+      "name": "litellm",
+      "description": "LiteLLM AI gateway proxy for unified LLM API access. Use when deploying LiteLLM proxy with Docker/Helm/Kubernetes, wr...",
+      "source": "./plugins/litellm"
+    },
+    {
       "name": "mcp-management",
       "description": "Manage Model Context Protocol (MCP) servers - discover, analyze, and execute tools/prompts/resources from configured ...",
       "source": "./plugins/mcp-management"
+    },
+    {
+      "name": "media-processing",
+      "description": "Process multimedia files with FFmpeg (video/audio encoding, conversion, streaming, filtering, hardware acceleration) ...",
+      "source": "./plugins/media-processing"
     },
     {
       "name": "mermaidjs-v11",
@@ -192,9 +207,24 @@
       "source": "./plugins/rook-ceph"
     },
     {
+      "name": "security-awareness",
+      "description": "Detect and prevent security threats during agent activity. Covers phishing, credential protection, domain verificatio...",
+      "source": "./plugins/security-awareness"
+    },
+    {
+      "name": "shadcn",
+      "description": "Manages shadcn components and projects — adding, searching, fixing, debugging, styling, and composing UI. Provides pr...",
+      "source": "./plugins/shadcn"
+    },
+    {
       "name": "skill-creator",
-      "description": "Guide for creating effective skills. This skill should be used when users want to create a new skill (or update an ex...",
+      "description": "Create or update Claude skills. Use for new skills, skill references, skill scripts, optimizing existing skills, exte...",
       "source": "./plugins/skill-creator"
+    },
+    {
+      "name": "skill-creator-kettleofskills",
+      "description": "Create, categorize, and validate new skills for the kettleofskills marketplace. Use when adding skills, assigning cat...",
+      "source": "./plugins/skill-creator-kettleofskills"
     },
     {
       "name": "svg-logo-designer",
@@ -205,6 +235,11 @@
       "name": "talos",
       "description": "Talos Linux v1.12 Kubernetes operating system management. This skill should be used when bootstrapping Talos clusters...",
       "source": "./plugins/talos"
+    },
+    {
+      "name": "threejs",
+      "description": "Build 3D web apps with Three.js (WebGL/WebGPU). Use for 3D scenes, animations, custom shaders, PBR materials, VR/XR e...",
+      "source": "./plugins/threejs"
     },
     {
       "name": "traefik",
@@ -235,6 +270,11 @@
       "name": "zinit-zsh",
       "description": "Zinit zsh plugin manager configuration and binary installs. This skill should be used when adding zsh plugins, instal...",
       "source": "./plugins/zinit-zsh"
+    },
+    {
+      "name": "zod",
+      "description": "Zod schema validation and React Hook Form integration for TypeScript frontends. This skill should be used when creati...",
+      "source": "./plugins/zod"
     },
     {
       "name": "zsh-completions",
