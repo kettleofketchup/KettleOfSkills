@@ -1,5 +1,7 @@
 set shell := ["bash", "-euo", "pipefail", "-c"]
 
+mod git 'just/git.just'
+
 # Run sync-groups then sync-marketplace
 sync: sync-groups sync-marketplace
 
