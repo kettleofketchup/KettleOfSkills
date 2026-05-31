@@ -1,6 +1,6 @@
 ---
 name: talos
-description: Talos Linux v1.12 Kubernetes operating system management. This skill should be used when bootstrapping Talos clusters, generating or patching machine configurations (controlplane.yaml, worker.yaml), configuring networking (static IPs, VLANs, bonds, bridges, DNS, proxies, KubeSpan, firewall rules), upgrading Talos OS or Kubernetes versions, performing etcd maintenance (backup, restore, defrag, member management), troubleshooting cluster issues (talosctl commands, logs, health checks, dashboard), managing storage (disk encryption, user volumes, Rook-Ceph, local-path-provisioner), deploying Kubernetes addons (Cilium, Calico, MetalLB, Traefik, metrics-server), installing on platforms (bare metal ISO/PXE, Proxmox, KVM, VMware, Docker, air-gapped), managing security (certificates, CA rotation, SecureBoot, SELinux), or working with system extensions, containerd config, registry mirrors, and performance tuning.
+description: Talos Linux v1.12 immutable K8s OS. This skill should be used when bootstrapping clusters, patching machine config, networking, upgrades, etcd maintenance, talosctl debugging, or platform installs.
 ---
 
 # Talos Linux

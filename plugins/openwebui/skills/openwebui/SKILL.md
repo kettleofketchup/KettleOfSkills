@@ -1,6 +1,6 @@
 ---
 name: openwebui
-description: Open WebUI self-hosted AI chat interface deployment, configuration, and administration. Use when deploying Open WebUI with Docker/Kubernetes/pip, configuring environment variables (OLLAMA_BASE_URL, OPENAI_API_KEY, DATABASE_URL, RAG_*, AUDIO_*, IMAGE_*), setting up SSO/OAuth/LDAP/SCIM authentication, configuring RBAC (roles, groups, permissions), managing RAG/embeddings/vector databases (ChromaDB, Milvus, PGVector, Qdrant), setting up web search providers (SearXNG, Brave, Tavily, DDGS), writing plugins (Tools, Functions, Pipes, Filters, Actions, Valves, Events), configuring MCP servers, OpenAPI tool servers, setting up image generation (AUTOMATIC1111, ComfyUI, OpenAI DALL-E, Gemini), configuring TTS/STT (Whisper, OpenAI, Edge-TTS, Kokoro), scaling with Redis/PostgreSQL, reverse proxy setup (Nginx, Caddy, HAProxy, Cloudflare Tunnel), Open Terminal setup, troubleshooting connection errors, or managing Open WebUI pipelines and extensibility.
+description: Open WebUI self-hosted AI chat interface. This skill should be used when deploying (Docker/Helm/pip), configuring auth/SSO/RBAC, RAG/vector DBs, web search, plugins/MCP, scaling, or reverse proxy.
 ---
 
 # Open WebUI

@@ -13,7 +13,7 @@
     },
     {
       "name": "authentik",
-      "description": "Authentik self-hosted identity provider for Kubernetes. This skill should be used when deploying Authentik via Helm, ...",
+      "description": "Authentik self-hosted IdP on Kubernetes. This skill should be used when deploying via Helm, configuring SAML/OAuth2 p...",
       "source": "./plugins/authentik"
     },
     {
@@ -48,7 +48,7 @@
     },
     {
       "name": "copyparty",
-      "description": "Copyparty portable file server with resumable uploads, dedup, WebDAV, SFTP, FTP, TFTP, SMB, zeroconf, media indexer, ...",
+      "description": "Copyparty portable file server (HTTP/WebDAV/FTP/SFTP/SMB). This skill should be used when deploying via Docker/pip/Ni...",
       "source": "./plugins/copyparty"
     },
     {
@@ -78,7 +78,7 @@
     },
     {
       "name": "foundry-vtt",
-      "description": "Foundry VTT virtual tabletop development, deployment, and module creation. This skill should be used when developing ...",
+      "description": "Foundry VTT virtual tabletop. This skill should be used when developing modules/systems (ApplicationV2, hooks, DataMo...",
       "source": "./plugins/foundry-vtt"
     },
     {
@@ -108,18 +108,23 @@
     },
     {
       "name": "goss",
-      "description": "Goss YAML-based server validation and testing tool. This skill should be used when writing goss.yaml gossfiles, valid...",
+      "description": "Goss YAML server validation. This skill should be used when writing gossfiles, validating packages/services/files/por...",
       "source": "./plugins/goss"
     },
     {
       "name": "grafana",
-      "description": "Grafana observability stack for self-hosted Kubernetes using kube-prometheus-stack. This skill should be used when de...",
+      "description": "Grafana observability on Kubernetes (kube-prometheus-stack). This skill should be used when deploying Grafana/Prometh...",
       "source": "./plugins/grafana"
     },
     {
       "name": "helm",
       "description": "Kubernetes package management with Helm. This skill should be used when installing/upgrading Helm releases, developin...",
       "source": "./plugins/helm"
+    },
+    {
+      "name": "hyprland",
+      "description": "Hyprland Wayland compositor on NixOS. This skill should be used when configuring programs.hyprland, GPU rendering (In...",
+      "source": "./plugins/hyprland"
     },
     {
       "name": "just",
@@ -132,13 +137,18 @@
       "source": "./plugins/k3s"
     },
     {
+      "name": "kettle-skill-creator",
+      "description": "Create, promote, categorize, and validate skills for the kettleofskills marketplace. Use when syncing dotfiles skills...",
+      "source": "./plugins/kettle-skill-creator"
+    },
+    {
       "name": "kubectx",
       "description": "kubectx and kubens CLI tools for switching Kubernetes contexts and namespaces. This skill should be used when switchi...",
       "source": "./plugins/kubectx"
     },
     {
       "name": "kustomize",
-      "description": "Kustomize Kubernetes manifest composition without templating. This skill should be used when writing kustomization.ya...",
+      "description": "Kustomize Kubernetes manifest composition. This skill should be used when writing kustomization.yaml, base/overlays, ...",
       "source": "./plugins/kustomize"
     },
     {
@@ -153,7 +163,7 @@
     },
     {
       "name": "media-processing",
-      "description": "Process multimedia files with FFmpeg (video/audio encoding, conversion, streaming, filtering, hardware acceleration) ...",
+      "description": "FFmpeg + ImageMagick media processing. This skill should be used when transcoding video/audio, resizing/cropping imag...",
       "source": "./plugins/media-processing"
     },
     {
@@ -183,12 +193,12 @@
     },
     {
       "name": "openwebui",
-      "description": "Open WebUI self-hosted AI chat interface deployment, configuration, and administration. Use when deploying Open WebUI...",
+      "description": "Open WebUI self-hosted AI chat interface. This skill should be used when deploying (Docker/Helm/pip), configuring aut...",
       "source": "./plugins/openwebui"
     },
     {
       "name": "pikvm",
-      "description": "PiKVM HTTP API Python library and Ansible module/collection development. Use when building Python clients for PiKVM K...",
+      "description": "PiKVM HTTP API + Ansible collection development. This skill should be used when building Python clients, writing modu...",
       "source": "./plugins/pikvm"
     },
     {
@@ -222,18 +232,18 @@
       "source": "./plugins/skill-creator"
     },
     {
-      "name": "skill-creator-kettleofskills",
-      "description": "Create, categorize, and validate new skills for the kettleofskills marketplace. Use when adding skills, assigning cat...",
-      "source": "./plugins/skill-creator-kettleofskills"
-    },
-    {
       "name": "svg-logo-designer",
       "description": "Create professional SVG logos from descriptions and design specifications. Generates multiple logo variations with di...",
       "source": "./plugins/svg-logo-designer"
     },
     {
+      "name": "sway",
+      "description": "Sway tiling Wayland compositor on NixOS. This skill should be used when configuring programs.sway, GPU rendering (Int...",
+      "source": "./plugins/sway"
+    },
+    {
       "name": "talos",
-      "description": "Talos Linux v1.12 Kubernetes operating system management. This skill should be used when bootstrapping Talos clusters...",
+      "description": "Talos Linux v1.12 immutable K8s OS. This skill should be used when bootstrapping clusters, patching machine config, n...",
       "source": "./plugins/talos"
     },
     {
@@ -258,12 +268,12 @@
     },
     {
       "name": "wails",
-      "description": "Wails v2 Go desktop application framework with web frontend. Use when creating Go desktop apps with web UI (Svelte/Re...",
+      "description": "Wails v2 Go desktop apps with web frontend. This skill should be used when scaffolding, binding Go to JS, configuring...",
       "source": "./plugins/wails"
     },
     {
       "name": "zensical",
-      "description": "Zensical modern static site generator for project documentation (successor to Material for MkDocs). This skill should...",
+      "description": "Zensical static site generator (successor to mkdocs-material). This skill should be used when authoring docs, writing...",
       "source": "./plugins/zensical"
     },
     {
@@ -340,6 +350,11 @@
       "name": "k8s-storage",
       "description": "Kubernetes storage — rook-ceph, cloudnative-pg",
       "source": "./plugins/k8s-storage"
+    },
+    {
+      "name": "linux",
+      "description": "Linux desktop — hyprland, sway",
+      "source": "./plugins/linux"
     },
     {
       "name": "shell",

@@ -17,6 +17,7 @@ from pathlib import Path
 VALID_CATEGORIES = [
     "k8s-core", "k8s-storage", "k8s-apps", "homelab", "devops",
     "frontend", "golang", "docs", "claude-tooling", "shell", "discord",
+    "linux",
 ]
 
 SKILL_MD_TEMPLATE = """---
@@ -141,7 +142,7 @@ def main():
     print("  1. Edit SKILL.md: fill in description and body")
     print("  2. Edit config.yaml: assign categories" if not categories else "  2. config.yaml already set")
     print("  3. Add/edit reference files in references/")
-    print("  4. Validate: python3 plugins/skill-creator-kettleofskills/skills/skill-creator-kettleofskills/scripts/validate-plugin.py " + name)
+    print("  4. Validate: python3 plugins/kettle-skill-creator/skills/kettle-skill-creator/scripts/validate-plugin.py " + name)
     print("  5. Sync: just sync")
 
 

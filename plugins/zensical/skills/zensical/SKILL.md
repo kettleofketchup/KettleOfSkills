@@ -2,7 +2,7 @@
 name: zensical
 last_updated: 2026-03-25
 version: "0.0.x (alpha)"
-description: "Zensical modern static site generator for project documentation (successor to Material for MkDocs). This skill should be used when creating or editing Zensical documentation sites, writing zensical.toml configuration, authoring Markdown with Zensical extensions (admonitions, code blocks, content tabs, grids, diagrams, math), migrating from mkdocs-material to Zensical, setting up Docker or uv development workflows, configuring live preview with zensical serve, building production Docker images, publishing to GitHub Pages or GitLab Pages, configuring site search, navigation features, theming (colors/fonts/logo), customizing Zensical sites with CSS/JS overrides, using Snippets for content reuse (include-markdown substitute), or generating API docs with mkdocstrings."
+description: "Zensical static site generator (successor to mkdocs-material). This skill should be used when authoring docs, writing zensical.toml, running uv/Docker preview, theming, or publishing to Pages."
 ---
 
 # Zensical Documentation

@@ -1,6 +1,6 @@
 ---
 name: goss
-description: "Goss YAML-based server validation and testing tool. This skill should be used when writing goss.yaml gossfiles, validating server configuration (packages, services, files, ports, processes, users, groups, DNS, HTTP endpoints, mounts, kernel parameters, network interfaces), using goss CLI commands (validate, serve, add, autoadd, render), testing Docker containers with dgoss, testing Kubernetes pods with kgoss, testing docker-compose stacks with dcgoss, writing goss templates with Go text/template and Sprig functions, using goss matchers (regex, numeric, semver, gjson), configuring goss serve health endpoints, modularizing gossfiles with includes, or troubleshooting goss validation failures."
+description: "Goss YAML server validation. This skill should be used when writing gossfiles, validating packages/services/files/ports/HTTP, using dgoss/kgoss, templates, matchers, or serve health endpoints."
 last_updated: 2026-03-18
 ---
 

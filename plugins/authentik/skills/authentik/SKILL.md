@@ -1,21 +1,6 @@
 ---
 name: authentik
-description: >-
-  Authentik self-hosted identity provider for Kubernetes. This skill should be
-  used when deploying Authentik via Helm, configuring SAML/OAuth2 providers,
-  setting up blueprints for declarative configuration, integrating Traefik
-  forward auth middleware, configuring Google Workspace SAML federation as
-  login source, setting up SSO for ArgoCD/Grafana/Gitea/MinIO, writing
-  property mappings, managing flows/stages/policies, protecting apps behind
-  Authentik proxy outpost, customizing branding (logos, favicons, custom CSS,
-  color schemes, flow backgrounds, per-domain brands, Patternfly CSS variables,
-  dark/light theme overrides, login page styling, brand blueprints),
-  configuring Authentik environment variables (AUTHENTIK_SECRET_KEY,
-  AUTHENTIK_POSTGRESQL__, AUTHENTIK_EMAIL__, AUTHENTIK_STORAGE__,
-  AUTHENTIK_LOG_LEVEL), tuning web/worker settings, setting up S3 storage
-  backends, configuring PgBouncer compatibility, PostgreSQL read replicas,
-  or deploying Authentik in airgapped/offline environments (disabling update
-  checks, analytics, error reporting, Gravatar).
+description: Authentik self-hosted IdP on Kubernetes. This skill should be used when deploying via Helm, configuring SAML/OAuth2 providers, blueprints, Google Workspace SSO, forward-auth, branding, or app SSO.
 ---
 
 # Authentik
@@ -48,9 +33,12 @@ Configure SAML providers for SSO with applications (ArgoCD, Grafana, etc.).
 ### Blueprints (Declarative Config)
 YAML-based declarative configuration for flows, stages, providers, applications.
 - v1 schema: `version`, `metadata`, `context`, `entries`
-- Tags: `!KeyOf`, `!Find`, `!Env`, `!Context`, `!Format`, `!If`, `!Condition`, `!Enumerate`
-- Mount via ConfigMap at `/blueprints/custom/` in server + worker pods
-- See [blueprints.md](references/blueprints.md)
+- Tags: `!KeyOf` (intra-blueprint only), `!Find`, `!FindObject` (2025.8+), `!Env`, `!Context`, `!Format`, `!If`, `!Condition`, `!Enumerate`. **`!Slice` does not exist** — common mis-citation.
+- `state:` values: `present` (reconcile drift), `created` (create-once-ignore-after), `must_created` (fail if exists), `absent` (delete)
+- Mount via ConfigMap at `/blueprints/custom/` in server + worker pods, atomic per-file transactions, 60min reapply cadence
+- See [blueprints.md](references/blueprints.md) for the structural overview
+- **State semantics, !KeyOf scoping, first-boot chicken-and-egg**: [blueprints/sync_states.md](references/blueprints/sync_states.md)
+- **LDAP sources** (`user_matching_mode`, password sync, delete_not_found): [blueprints/ldap_sources.md](references/blueprints/ldap_sources.md)
 
 ### Traefik Forward Auth Middleware
 Protect apps behind Traefik using Authentik proxy provider outpost.
@@ -58,6 +46,10 @@ Protect apps behind Traefik using Authentik proxy provider outpost.
 - Traefik `forwardAuth` middleware pointing to outpost
 - Headers: `X-authentik-username`, `X-authentik-groups`, `X-authentik-email`
 - See [middleware.md](references/middleware.md)
+
+### Hiding Applications from the User Library
+Use `meta_launch_url: "blank://blank"` to hide a proxy-provider Application's tile from My Applications without changing its policies. The literal is `blank://blank` — `blank://` alone fails Authentik's URL validator with `Enter a valid URL`. Hide forward-auth proxies that **duplicate** an existing OIDC/SAML user-facing app; keep visible (with a real launch URL) for proxies that ARE the only user-facing entry.
+- See [hide-from-library.md](references/hide-from-library.md)
 
 ### Google Workspace SAML Login
 "Login with Google" via SAML federation source.

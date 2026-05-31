@@ -58,6 +58,13 @@ app := &options.App{
 BackgroundColour: &options.RGBA{R: 27, G: 38, B: 54, A: 255}
 ```
 
+**Alpha behavior per platform:**
+- **Linux**: Full 0-255 range (converted to 0.0-1.0 float for `GdkRGBA`). Semi-transparent values work. When `linux.Options.WindowIsTranslucent` is true, alpha is forced to 0.0.
+- **Windows**: Binary -- any non-zero alpha is treated as 255 (fully opaque). Use `windows.Options.WebviewIsTransparent` for transparency.
+- **macOS**: Full 0-255 range. Use `mac.Options.WebviewIsTransparent` for transparency.
+
+The color shows before the frontend loads and behind CSS `transparent` areas. Match it to your CSS theme background to avoid a visible flash.
+
 CSS drag region usage:
 ```css
 .titlebar { --wails-draggable: drag; }
@@ -158,8 +165,13 @@ Under `Linux: &linux.Options{...}`.
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `Icon` | `[]byte` | `nil` | Window icon (PNG/JPEG bytes) |
-| `WindowIsTranslucent` | `bool` | `false` | Translucent window (compositor-dependent) |
-| `WebviewGpuPolicy` | `linux.WebviewGpuPolicy` | `WebviewGpuPolicyAlways` | `WebviewGpuPolicyAlways`, `WebviewGpuPolicyOnDemand`, `WebviewGpuPolicyNever` |
+| `WindowIsTranslucent` | `bool` | `false` | Transparent window background. Requires compositing WM (Sway/Hyprland/KWin/Mutter/Picom). Forces `BackgroundColour` alpha to 0.0. CSS transparent areas show through to desktop. Silently ignored without compositor. |
+| `WebviewGpuPolicy` | `linux.WebviewGpuPolicy` | `WebviewGpuPolicyAlways` | GPU acceleration for webkit2gtk. `Always` (hardware), `OnDemand` (WebKit decides), `Never` (software/pixman). **Note:** default is `Always` only when `Linux:` is set; when `Linux:` is nil (omitted), Wails defaults to `Never` for safety. |
+| `ProgramName` | `string` | `""` | Sets `g_set_prgname()` before `gtk_init()`. Used as Wayland xdg-shell `app_id` on some webkit2gtk builds (not all). |
+
+**Important:** Linux does NOT have `WebviewIsTransparent` (that's Windows/Mac only). Use `WindowIsTranslucent` instead -- it serves both purposes on Linux by making the entire window + webview transparent.
+
+See [Background Transparency guide](../guides/background-transparency.md) for detailed rendering differences between browser and Wails.
 
 ## Other Options
 

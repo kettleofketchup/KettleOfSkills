@@ -1,6 +1,6 @@
 ---
 name: copyparty
-description: Copyparty portable file server with resumable uploads, dedup, WebDAV, SFTP, FTP, TFTP, SMB, zeroconf, media indexer, and thumbnails. Use when deploying copyparty file servers (Docker, pip, sfx, NixOS), configuring volumes and permissions, setting up accounts and access control, writing copyparty.conf config files, enabling protocols (HTTP/WebDAV/FTP/SFTP/TFTP/SMB), configuring reverse proxies (nginx/traefik/caddy), setting up file indexing and search, configuring upload rules and deduplication, enabling thumbnails and media playback, writing event hooks, using the HTTP API, or integrating with identity providers (Authelia/authentik/Tailscale) via header-based forward-auth with dynamic per-user/per-group volumes.
+description: Copyparty portable file server (HTTP/WebDAV/FTP/SFTP/SMB). This skill should be used when deploying via Docker/pip/NixOS, configuring accounts/volumes, indexer, hooks, or forward-auth IdP integration.
 ---
 
 # Copyparty File Server

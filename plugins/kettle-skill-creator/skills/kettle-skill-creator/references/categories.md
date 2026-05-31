@@ -13,9 +13,10 @@ Every skill is automatically added to `all` -- never list `all` in config.yaml.
 | `frontend` | Frontend development | react, zustand, ui-styling, playwright, svg-logo-designer |
 | `golang` | Go development | golang-viper, go-dota2-steam, wails |
 | `docs` | Documentation tools | mkdocs-documentation, mermaidjs-v11, zensical, documentation-reviewer |
-| `claude-tooling` | Claude Code tooling | claude-code, context-engineering, mcp-management, skill-creator |
+| `claude-tooling` | Claude Code tooling | claude-code, context-engineering, mcp-management, skill-creator, kettle-skill-creator |
 | `shell` | Shell tooling | zinit-zsh, zsh-completions |
 | `discord` | Discord bot development | discord |
+| `linux` | Linux desktop (Wayland compositors, NixOS desktop) | hyprland, sway |
 
 ## config.yaml Format
 
@@ -29,6 +30,7 @@ categories:
 
 To add a new category, update the `group_descriptions` associative array in **both** the
 `sync-groups` and `sync-marketplace` recipes in the root `justfile`. Also add the group name
-to the `GROUPS_CSV` variable in `sync-marketplace`.
+to the `GROUPS_CSV` variable in `sync-marketplace`, and to `VALID_CATEGORIES` in
+`init-plugin.py` and `validate-plugin.py`.
 
 After adding, run `just sync` to generate the new group plugin directory.

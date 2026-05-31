@@ -1,6 +1,6 @@
 ---
 name: pikvm
-description: PiKVM HTTP API Python library and Ansible module/collection development. Use when building Python clients for PiKVM KVM-over-IP devices, creating Ansible modules/collections for PiKVM automation (ansible-creator, ansible-dev-tools, ansible-test, ansible-lint), scaffolding Ansible collections with galaxy.yml, writing module argument_spec/DOCUMENTATION/EXAMPLES/RETURN strings, implementing check_mode/diff_mode, creating doc_fragments, using module_utils with open_url, uploading ISOs via MSD API, managing virtual storage devices, controlling ATX power, sending HID input, taking screenshots with OCR, or interacting with any PiKVM REST endpoint.
+description: PiKVM HTTP API + Ansible collection development. This skill should be used when building Python clients, writing modules (argument_spec, check_mode), MSD uploads, ATX/HID/OCR, or REST calls.
 ---
 
 # PiKVM HTTP API

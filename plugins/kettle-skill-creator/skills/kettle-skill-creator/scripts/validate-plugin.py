@@ -23,6 +23,7 @@ from pathlib import Path
 VALID_CATEGORIES = {
     "k8s-core", "k8s-storage", "k8s-apps", "homelab", "devops",
     "frontend", "golang", "docs", "claude-tooling", "shell", "discord",
+    "linux",
 }
 
 # Group plugin names (these are auto-generated, not individual skills)

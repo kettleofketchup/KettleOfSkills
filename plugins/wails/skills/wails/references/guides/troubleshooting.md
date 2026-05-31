@@ -178,6 +178,40 @@ winget install NSIS.NSIS
 makensis -VERSION
 ```
 
+## Transparency & Rendering Issues
+
+**Symptom:** Frontend looks different in Wails than in browser (`bun dev` / mock mode).
+
+**Root cause:** Wails uses webkit2gtk (WebKit engine), not Chromium. Different compositing, font rendering, blur implementations.
+
+**Fixes:**
+
+1. **Match `BackgroundColour` to CSS theme** -- the webview background shows behind CSS transparent areas. Mismatch causes color shifts:
+   ```go
+   BackgroundColour: &options.RGBA{R: 7, G: 0, B: 18, A: 255}, // must match CSS --background
+   ```
+
+2. **Cover the viewport with a solid CSS background** -- don't rely on the webview background. Use `fixed inset-0` with your theme color so the webview background is never visible.
+
+3. **Check GPU policy** -- software rendering (`WebviewGpuPolicyNever`) changes blur filter and animation quality. Ensure `Linux: &linux.Options{}` is set (even empty) to avoid the `Never` default.
+
+4. **Check webkit2gtk version** -- `backdrop-filter` requires >= 2.30.0:
+   ```bash
+   pkg-config --modversion webkit2gtk-4.0  # or webkit2gtk-4.1
+   ```
+
+5. **Check WebKit env vars** -- `WEBKIT_DISABLE_COMPOSITING_MODE=1` disables accelerated compositing, changing backdrop-filter behavior.
+
+See [Background Transparency guide](background-transparency.md) for detailed analysis.
+
+**Symptom:** `WindowIsTranslucent` doesn't work (window is still opaque).
+
+**Fix:** Requires a compositing window manager. On bare X11 without a compositor, the flag is silently ignored. On Wayland compositors (Sway, Hyprland), it should work. Verify with `gdk_screen_is_composited()`.
+
+**Symptom:** Resize causes black/white flashing behind webview.
+
+**Cause:** GTK window background doesn't match webview background. Fixed in Wails by PR #2853 which applies `BackgroundColour` to both the webview and the `#webview-box` GTK container. If still visible, ensure you're on Wails >= v2.6.
+
 ## Dev Mode Issues
 
 **Hot reload not working:**

@@ -1,6 +1,6 @@
 ---
 name: foundry-vtt
-description: "Foundry VTT virtual tabletop development, deployment, and module creation. This skill should be used when developing Foundry VTT modules or game systems, writing module.json or system.json manifests, creating ActorSheet/ItemSheet classes, using Foundry hooks (init, ready, setup, renderApplication, create/update/delete document hooks), working with TypeDataModel data schemas, building Handlebars templates for Foundry UI, using ApplicationV2 and HandlebarsApplicationMixin, registering game settings via game.settings API, creating compendium packs, deploying Foundry VTT on Kubernetes/K3s with felddy/foundryvtt Docker image or Helm charts, configuring Traefik/Nginx reverse proxy with WebSocket support for Foundry, writing Quench tests for Foundry modules, using libWrapper/socketlib libraries, integrating Svelte/Vite/TypeScript with Foundry development, packaging and distributing Foundry modules, developing WFRP4e (Warhammer Fantasy Roleplay 4e) modules with game.wfrp4e API and effects triggers, adding custom species/careers/items to wfrp4e, or troubleshooting Foundry VTT API issues across v11/v12/v13."
+description: "Foundry VTT virtual tabletop. This skill should be used when developing modules/systems (ApplicationV2, hooks, DataModels, Handlebars), deploying via Docker/Helm with Traefik, or working with WFRP4e."
 last_updated: 2026-03-20
 ---
 

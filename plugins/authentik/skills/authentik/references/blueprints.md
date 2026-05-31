@@ -2,6 +2,16 @@
 
 Declarative YAML config for flows, stages, providers, applications. Auto-discovered, reconciled every 60 min. Atomic transactions (all-or-nothing).
 
+**Schema**: `https://goauthentik.io/blueprints/schema.json` — the authoritative JSON Schema for blueprint v1 files. Use it as a yaml-language-server comment at the top of every blueprint:
+
+```yaml
+# yaml-language-server: $schema=https://goauthentik.io/blueprints/schema.json
+version: 1
+...
+```
+
+This gives you IDE autocomplete + validation for every supported model, state value, YAML tag, and field. It will flag unknown fields (like the `attributes` nested object we added to `authentik_core.user` preseeds) before you deploy a blueprint that silently no-ops.
+
 ## Structure
 
 ```yaml

@@ -1,6 +1,6 @@
 ---
 name: kustomize
-description: Kustomize Kubernetes manifest composition without templating. This skill should be used when writing kustomization.yaml files, creating base/overlay directory structures, using Components for shared config (single source of truth pattern), applying strategic merge or JSON patches, using replacements (modern vars alternative) to inject values across resources, configuring generators (ConfigMapGenerator, SecretGenerator), inflating Helm charts (helmCharts/helmGlobals), applying common transformers (namespace, namePrefix, labels, images), CRD field configurations, debugging kustomize build output, or structuring multi-app repositories with shared components.
+description: Kustomize Kubernetes manifest composition. This skill should be used when writing kustomization.yaml, base/overlays, Components, patches, replacements, generators, helmCharts, or transformers.
 last_updated: 2026-03-09
 ---
 

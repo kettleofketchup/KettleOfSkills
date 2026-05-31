@@ -23,6 +23,7 @@ sync-groups:
         [claude-tooling]="Claude Code tooling — claude-code, context-engineering, mcp-management, skill-creator"
         [shell]="Shell tooling — zinit-zsh, zsh-completions"
         [discord]="Discord bot development"
+        [linux]="Linux desktop — hyprland, sway"
     )
 
     valid_groups=("${!group_descriptions[@]}")
@@ -120,9 +121,10 @@ sync-marketplace:
         [claude-tooling]="Claude Code tooling — claude-code, context-engineering, mcp-management, skill-creator"
         [shell]="Shell tooling — zinit-zsh, zsh-completions"
         [discord]="Discord bot development"
+        [linux]="Linux desktop — hyprland, sway"
     )
 
-    GROUPS_CSV="all,k8s-core,k8s-storage,k8s-apps,homelab,devops,frontend,golang,docs,claude-tooling,shell,discord"
+    GROUPS_CSV="all,k8s-core,k8s-storage,k8s-apps,homelab,devops,frontend,golang,docs,claude-tooling,shell,discord,linux"
 
     entries_file="$(mktemp)"
     trap 'rm -f "$entries_file"' EXIT
