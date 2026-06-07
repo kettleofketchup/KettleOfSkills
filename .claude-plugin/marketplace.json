@@ -242,6 +242,11 @@
       "source": "./plugins/sway"
     },
     {
+      "name": "tailwind",
+      "description": "Tailwind CSS v4 (CSS-first) configuration and theming. Use when editing theme colors, light/dark or dark-only themes,...",
+      "source": "./plugins/tailwind"
+    },
+    {
       "name": "talos",
       "description": "Talos Linux v1.12 immutable K8s OS. This skill should be used when bootstrapping clusters, patching machine config, n...",
       "source": "./plugins/talos"
