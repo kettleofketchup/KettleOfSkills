@@ -10,6 +10,11 @@ Tailwind v4 is **CSS-first**: configuration and theme live in CSS, not a
 and customization happens in `@theme`, `@plugin`, `@source`, `@utility`, and
 `@custom-variant` directives. This skill covers v4 only.
 
+> **Related:** for building shadcn/ui + React components, forms (React Hook Form
+> + Zod), accessibility, and responsive layouts, use the `ui-styling` skill. This
+> skill focuses on the Tailwind layer itself — config, theme colors, and syncing
+> with a project brand skill.
+
 ## Configuration essentials
 
 The project's entry CSS is the file containing `@import "tailwindcss";` (often

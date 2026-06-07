@@ -263,7 +263,7 @@
     },
     {
       "name": "ui-styling",
-      "description": "Create beautiful, accessible user interfaces with shadcn/ui components (built on Radix UI + Tailwind), Tailwind CSS u...",
+      "description": "Build accessible UIs with shadcn/ui (Radix UI + Tailwind), React Hook Form + Zod validation, CVA variants, canvas des...",
       "source": "./plugins/ui-styling"
     },
     {
