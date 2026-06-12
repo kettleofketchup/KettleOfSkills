@@ -53,8 +53,6 @@ Working `flake.nix` for NixOS + Sway + integrated graphics + home-manager + Wail
           };
 
           services.xserver.videoDrivers = [ "modesetting" ];
-
-          # PipeWire (required for screen-sharing portals)
           security.rtkit.enable = true;
           services.pipewire = {
             enable = true;
@@ -63,7 +61,7 @@ Working `flake.nix` for NixOS + Sway + integrated graphics + home-manager + Wail
             wireplumber.enable = true;
           };
 
-          # Sway compositor — auto-wires xdg.portal, polkit, dbus, pam.swaylock
+          # Sway — auto-wires xdg.portal, polkit, dbus, pam.swaylock
           programs.sway = {
             enable = true;
             wrapperFeatures.gtk = true;     # CRITICAL for Wails
@@ -87,8 +85,6 @@ Working `flake.nix` for NixOS + Sway + integrated graphics + home-manager + Wail
           };
 
           # NOTE: xdg.portal.* is auto-set by programs.sway. Don't duplicate.
-
-          # Polkit GUI agent
           systemd.user.services.polkit-gnome-authentication-agent-1 = {
             description = "polkit-gnome-authentication-agent-1";
             wantedBy = [ "graphical-session.target" ];
@@ -100,7 +96,6 @@ Working `flake.nix` for NixOS + Sway + integrated graphics + home-manager + Wail
             };
           };
 
-          # Display manager: greetd + tuigreet
           services.greetd = {
             enable = true;
             settings.default_session = {
@@ -109,10 +104,7 @@ Working `flake.nix` for NixOS + Sway + integrated graphics + home-manager + Wail
             };
           };
 
-          fonts.packages = with pkgs; [
-            noto-fonts noto-fonts-emoji nerd-fonts.jetbrains-mono
-          ];
-
+          fonts.packages = with pkgs; [ noto-fonts noto-fonts-emoji nerd-fonts.jetbrains-mono ];
           users.users.dev = {
             isNormalUser = true;
             extraGroups  = [ "wheel" "networkmanager" "video" "render" "audio" "input" ];
@@ -135,19 +127,12 @@ Working `flake.nix` for NixOS + Sway + integrated graphics + home-manager + Wail
       ];
     };
 
-    # Wails dev shell
     devShells.${system}.default = pkgs.mkShell {
-      name = "wails-dev";
       nativeBuildInputs = with pkgs; [ go nodejs_20 pkg-config wails ];
-      buildInputs = with pkgs; [
-        gtk3 webkitgtk_4_1 glib cairo pango gdk-pixbuf libsoup_3
-      ];
+      buildInputs = with pkgs; [ gtk3 webkitgtk_4_1 glib cairo pango gdk-pixbuf libsoup_3 ];
       shellHook = ''
-        export CGO_ENABLED=1
-        export PKG_CONFIG_PATH="${pkgs.webkitgtk_4_1.dev}/lib/pkgconfig:${pkgs.gtk3.dev}/lib/pkgconfig:$PKG_CONFIG_PATH"
-        export WEBKIT_DISABLE_DMABUF_RENDERER=1
-        export GDK_BACKEND="wayland,x11"
-        echo "Build with: wails build -tags webkit2_41"
+        export CGO_ENABLED=1 WEBKIT_DISABLE_DMABUF_RENDERER=1 GDK_BACKEND="wayland,x11"
+        echo "Build: wails build -tags webkit2_41"
       '';
     };
   };
@@ -158,7 +143,6 @@ Working `flake.nix` for NixOS + Sway + integrated graphics + home-manager + Wail
 
 ```bash
 nixos-rebuild switch --flake .#laptop
-swaymsg -t get_version
-echo $XDG_SESSION_TYPE   # → wayland
+swaymsg -t get_version && echo $XDG_SESSION_TYPE  # -> wayland
 nix develop && wails doctor
 ```

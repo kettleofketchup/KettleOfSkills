@@ -47,6 +47,11 @@
       "source": "./plugins/context-engineering"
     },
     {
+      "name": "copier",
+      "description": "Copier templating — author copier.yml templates (questions, Jinja, _tasks, migrations), scaffold via `copier copy`, s...",
+      "source": "./plugins/copier"
+    },
+    {
       "name": "copyparty",
       "description": "Copyparty portable file server (HTTP/WebDAV/FTP/SFTP/SMB). This skill should be used when deploying via Docker/pip/Ni...",
       "source": "./plugins/copyparty"

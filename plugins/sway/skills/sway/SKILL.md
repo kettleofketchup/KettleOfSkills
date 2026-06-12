@@ -21,7 +21,7 @@ Configure Sway (i3-compatible tiling Wayland compositor) on NixOS. Optimized for
 | **Per-vendor Sway env var matrix** | `references/multi-gpu-env-vars.md` |
 | **Sway-specific NVIDIA quirks (`--unsupported-gpu`, WLR_*)** | `references/sway-nvidia.md` |
 | Wails blank-screen webkit2gtk fix | `references/wails-webkit-fixes.md` |
-| **Animated wallpapers (mpvpaper, awww, gtk-layer-shell)** | `references/animated-wallpapers.md` |
+| **Animated wallpapers (mpvpaper, awww, gtk-layer-shell)** | `references/animated-wallpapers.md`, `references/animated-wallpapers-advanced.md` |
 | home-manager sway module | `references/home-manager.md` |
 | Complete `flake.nix` example | `references/flake-example.md` |
 | Ecosystem packages (waybar, etc.) | `references/ecosystem-packages.md` |
