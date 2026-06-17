@@ -102,6 +102,11 @@
       "source": "./plugins/gitlab-tickets"
     },
     {
+      "name": "go-bun",
+      "description": "Bun SQL-first ORM for Go (uptrace/bun). Use for PostgreSQL/SQLite setup, bun.BaseModel struct tags, query builder CRU...",
+      "source": "./plugins/go-bun"
+    },
+    {
       "name": "go-dota2-steam",
       "description": "Go libraries for Steam and Dota 2 Game Coordinator development. This skill should be used when working with paralin/g...",
       "source": "./plugins/go-dota2-steam"
