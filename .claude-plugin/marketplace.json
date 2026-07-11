@@ -27,6 +27,11 @@
       "source": "./plugins/cert-manager"
     },
     {
+      "name": "charm-tui",
+      "description": "Build Go terminal UIs (TUIs) and CLIs with charmbracelet — Bubble Tea runtime, Lip Gloss styling, Bubbles components,...",
+      "source": "./plugins/charm-tui"
+    },
+    {
       "name": "claude-code",
       "description": "Claude Code CLI tool expert. This skill should be used when working with Claude Code features, installation, setup, a...",
       "source": "./plugins/claude-code"
@@ -322,6 +327,11 @@
       "source": "./plugins/claude-tooling"
     },
     {
+      "name": "cli",
+      "description": "Command-line tooling — charm-tui",
+      "source": "./plugins/cli"
+    },
+    {
       "name": "devops",
       "description": "DevOps tooling — docker, github, gitlab-ci, goss, and more",
       "source": "./plugins/devops"
@@ -343,7 +353,7 @@
     },
     {
       "name": "golang",
-      "description": "Go development — golang-viper, go-dota2-steam, wails",
+      "description": "Go development — golang-viper, go-dota2-steam, wails, charm-tui",
       "source": "./plugins/golang"
     },
     {
@@ -375,6 +385,11 @@
       "name": "shell",
       "description": "Shell tooling — zinit-zsh, zsh-completions",
       "source": "./plugins/shell"
+    },
+    {
+      "name": "tui",
+      "description": "Terminal UI development — charm-tui",
+      "source": "./plugins/tui"
     }
   ]
 }

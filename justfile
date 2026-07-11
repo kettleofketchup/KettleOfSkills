@@ -18,7 +18,9 @@ sync-groups:
         [homelab]="Homelab infrastructure — nixos, vsphere, k3s, talos, pikvm, and more"
         [devops]="DevOps tooling — docker, github, gitlab-ci, goss, and more"
         [frontend]="Frontend development — react, zustand, ui-styling, playwright, svg-logo-designer"
-        [golang]="Go development — golang-viper, go-dota2-steam, wails"
+        [golang]="Go development — golang-viper, go-dota2-steam, wails, charm-tui"
+        [cli]="Command-line tooling — charm-tui"
+        [tui]="Terminal UI development — charm-tui"
         [docs]="Documentation — mkdocs, mermaidjs, zensical, documentation-reviewer"
         [claude-tooling]="Claude Code tooling — claude-code, context-engineering, mcp-management, skill-creator"
         [shell]="Shell tooling — zinit-zsh, zsh-completions"
@@ -116,7 +118,9 @@ sync-marketplace:
         [homelab]="Homelab infrastructure — nixos, vsphere, k3s, talos, pikvm, and more"
         [devops]="DevOps tooling — docker, github, gitlab-ci, goss, and more"
         [frontend]="Frontend development — react, zustand, ui-styling, playwright, svg-logo-designer"
-        [golang]="Go development — golang-viper, go-dota2-steam, wails"
+        [golang]="Go development — golang-viper, go-dota2-steam, wails, charm-tui"
+        [cli]="Command-line tooling — charm-tui"
+        [tui]="Terminal UI development — charm-tui"
         [docs]="Documentation — mkdocs, mermaidjs, zensical, documentation-reviewer"
         [claude-tooling]="Claude Code tooling — claude-code, context-engineering, mcp-management, skill-creator"
         [shell]="Shell tooling — zinit-zsh, zsh-completions"
@@ -124,7 +128,7 @@ sync-marketplace:
         [linux]="Linux desktop — hyprland, sway"
     )
 
-    GROUPS_CSV="all,k8s-core,k8s-storage,k8s-apps,homelab,devops,frontend,golang,docs,claude-tooling,shell,discord,linux"
+    GROUPS_CSV="all,k8s-core,k8s-storage,k8s-apps,homelab,devops,frontend,golang,cli,tui,docs,claude-tooling,shell,discord,linux"
 
     entries_file="$(mktemp)"
     trap 'rm -f "$entries_file"' EXIT
