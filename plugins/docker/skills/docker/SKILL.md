@@ -1,7 +1,7 @@
 ---
 name: docker
-version: 2026-02-01
-description: Docker layer optimization for fast builds. This skill should be used when writing Dockerfiles, optimizing build times, setting up multi-stage builds, configuring BuildKit cache mounts, debugging slow builds, writing docker-compose.yml files, or integrating Docker with CI/CD pipelines (GitHub Actions, GitLab CI). Covers layer ordering, dependency caching, .dockerignore, multi-stage patterns, BuildKit features, and Docker Compose patterns.
+version: 2026-07-15
+description: Docker builds, Compose, and Docker-in-Docker for CI. Use when writing Dockerfiles, optimizing build times, multi-stage builds, BuildKit cache mounts, docker-compose.yml, or CI/CD pipelines (GitHub/GitLab/Forgejo Actions) — including docker-in-docker (dind) runners, rootless dind, bind-mount-vs-build-context confusion, and "mkdir <path>: permission denied" mount failures. Covers layer ordering, dependency caching, .dockerignore, multi-stage, BuildKit, Compose, and dind mount patterns.
 ---
 
 # Docker Layer Optimization
@@ -95,6 +95,10 @@ Slow build? Check in order:
 3. Not using BuildKit cache mounts? → Downloads deps every build
 4. Not using multi-stage? → Large final image, slow push/pull
 
+Bind mount / `mkdir <path>: permission denied` in a docker-in-docker CI runner, or files
+missing after switching a mount to `COPY`? → `references/docker-in-docker-mounts.md` (it's
+path visibility on the daemon, not permission).
+
 ## References
 
 For detailed patterns by language and CI/CD integration:
@@ -104,3 +108,4 @@ For detailed patterns by language and CI/CD integration:
 - `references/buildkit-advanced.md` - Advanced BuildKit features (bake, secrets, SSH)
 - `references/compose-services.md` - Compose file structure, services, build, networking, volumes, health checks, commands
 - `references/compose-patterns.md` - Dev patterns, override files, profiles, watch mode, environment variable priority
+- `references/docker-in-docker-mounts.md` - Docker-in-Docker: why bind mounts fail on rootless dind (path visibility, not permission), build-context vs bind-mount, `.dockerignore` gotchas, CI patterns (bake/named-volume/services/DooD), and dind version pinning
