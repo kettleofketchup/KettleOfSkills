@@ -274,6 +274,109 @@ def test_shell_heredoc_with_dash_and_quoted_delimiter(tmp_path):
     assert not any("inside heredoc too" in t for t in found)
 
 
+def test_shell_arithmetic_left_shift_is_not_a_heredoc_opener(tmp_path):
+    """C1: `$((1 << SHIFT))` contains a `<<` that reads exactly like a heredoc
+    opener to a scanner that only looks at the token in isolation. Mirrors
+    test_match.py's `# F8` arithmetic case: without the `_ARITH_SPAN` guard,
+    `SHIFT` is read as the heredoc delimiter and everything up to the next
+    line that happens to read exactly `SHIFT` -- including a real comment --
+    is swallowed as the heredoc body, while `extract()` still reports
+    `"skipped": None` as if the file were fully, cleanly scanned."""
+    doc = tmp_path / "arith.sh"
+    doc.write_text(
+        "mask=$((1 << SHIFT))\n"
+        "# a real comment that must not vanish\n"
+    )
+    record = ec.extract(doc)
+    assert record["skipped"] is None
+    found = [c["text"] for c in record["comments"]]
+    assert any("a real comment that must not vanish" in t for t in found)
+
+
+def test_shell_multiline_arithmetic_shift_across_lines_is_not_a_heredoc_opener(tmp_path):
+    """C1 re-review (Critical, round 2): the first fix's `_ARITH_SPAN` check
+    was scoped to a single line, but `_HEREDOC_START`'s own `\\s*` matches a
+    newline -- `$((` opened on one line, `<<` and its operand on the next,
+    is normal bash formatting and the single-line check never sees the
+    closing `))` at all, reproducing the original swallow-to-EOF bug."""
+    doc = tmp_path / "arith_multiline.sh"
+    doc.write_text(
+        "mask=$((1 <<\n"
+        "  SHIFT))\n"
+        "# real comment after\n"
+    )
+    record = ec.extract(doc)
+    assert record["skipped"] is None
+    found = [c["text"] for c in record["comments"]]
+    assert any("real comment after" in t for t in found)
+
+
+def test_shell_multiline_arithmetic_block_is_not_a_heredoc_opener(tmp_path):
+    """Second multi-line shape from the same finding: the whole `$((...))`
+    expression on its own lines, with `<<` in the middle."""
+    doc = tmp_path / "arith_block.sh"
+    doc.write_text(
+        "result=$((\n"
+        "    value << SHIFT_AMOUNT\n"
+        "))\n"
+        "# a note about the result\n"
+    )
+    record = ec.extract(doc)
+    assert record["skipped"] is None
+    found = [c["text"] for c in record["comments"]]
+    assert any("a note about the result" in t for t in found)
+
+
+def test_shell_heredoc_after_unrelated_arithmetic_is_still_suppressed(tmp_path):
+    """Regression guard for the fix to the fix: a naive DOTALL/lazy regex over
+    the whole file would pair the FIRST `$((` with the NEXT `))` anywhere
+    after it -- including one belonging to a second, unrelated arithmetic
+    expression -- and would then wrongly treat everything up to there,
+    including a real heredoc's `<<`, as inside an arithmetic span. A
+    legitimate heredoc appearing after an unrelated `$(( ))` must still have
+    its body suppressed as data, not scanned for comments."""
+    doc = tmp_path / "heredoc_after_arith.sh"
+    doc.write_text(
+        "# real comment before\n"
+        "mask=$((1 << SHIFT))\n"
+        "cat <<EOF\n"
+        "this has a # inside heredoc\n"
+        "EOF\n"
+        "# real comment after\n"
+    )
+    record = ec.extract(doc)
+    assert record["skipped"] is None
+    found = [c["text"] for c in record["comments"]]
+    assert any("real comment before" in t for t in found)
+    assert any("real comment after" in t for t in found)
+    assert not any("inside heredoc" in t for t in found)
+
+
+def test_js_extension_reports_javascript_not_typescript(tmp_path):
+    """I5: `.js`/`.jsx` used to map onto the `typescript` Lang entry, so
+    `extract()` reported `lang: "typescript"` for a plain JS file. That erases
+    the JSDoc `@param` carve-out in comment-classes.md, which is keyed off
+    the file being untyped: every downstream signal read "typed language,
+    condensable" for a codebase whose JSDoc tags are its only type info."""
+    doc = tmp_path / "a.js"
+    doc.write_text("// hi\n")
+    assert ec.extract(doc)["lang"] == "javascript"
+
+    jsx = tmp_path / "a.jsx"
+    jsx.write_text("// hi\n")
+    assert ec.extract(jsx)["lang"] == "javascript"
+
+
+def test_jsdoc_negative_fixture_reports_javascript_and_keeps_the_param_block(tmp_path):
+    """The spec's verification table names tests/samples/negative/jsdoc.js
+    explicitly: a JSDoc @param block in a .js file must be reported under the
+    honest `javascript` label, not `typescript`, so the agent's never-touch
+    carve-out for JSDoc in untyped files actually applies."""
+    record = ec.extract(paths.NEGATIVE_SAMPLES / "jsdoc.js")
+    assert record["lang"] == "javascript"
+    assert any("@param" in c["text"] for c in record["comments"])
+
+
 def test_python_triple_quoted_string_inside_function_body_is_not_a_docstring(tmp_path):
     """Regression guard: a triple-quoted literal that is not the first
     statement of a function -- here it follows an assignment -- is data, not

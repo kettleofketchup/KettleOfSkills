@@ -59,6 +59,56 @@ _DOCSTRING_OWNER = re.compile(r"^(async\s+def|def|class)\b")
 # Matches `<<EOF`, `<<-EOF`, `<<'EOF'`, `<<"EOF"`.
 _HEREDOC_START = re.compile(r"<<-?\s*(['\"]?)([A-Za-z_][A-Za-z0-9_]*)\1")
 
+# `$(( ... ))` arithmetic expansion contains `<<` (shift) that reads exactly
+# like a heredoc opener to a scanner that only looks at the token in
+# isolation -- `mask=$((1 << SHIFT))` would otherwise make `_HEREDOC_START`
+# match with delimiter `SHIFT` and swallow every line up to the next one that
+# happens to read `SHIFT`, silently eating real comments in between and
+# reporting "skipped": null as if the file were fully scanned. Same guard as
+# `prmatch._heredoc_start`, ported here since this module cannot import that
+# one (see the note on `_HEREDOC_START` above).
+#
+# Spans are found by depth-tracked forward scan, not a DOTALL regex, and
+# deliberately NOT line-scoped: `_HEREDOC_START`'s own `\s*` matches a
+# newline, so `mask=$((1 <<\n  SHIFT))` -- a `$((` opened on one line and
+# closed on the next, a normal bash formatting style -- has its `<<` on a
+# different line than the delimiter, and a check confined to "the current
+# line" never sees the closing `))` at all. A lazy DOTALL regex would fix
+# that but introduces the opposite bug: `\$\(\(.*?\)\)` pairs the FIRST
+# `$((` in the file with the NEXT `))` anywhere after it, which can belong to
+# a second, unrelated arithmetic expression -- wrongly swallowing everything
+# between them, including a real heredoc's `<<`. Depth tracking (mirroring
+# `prmatch._arith_end`) pairs each `$((` with its own matching close and
+# nothing else's.
+def _arith_spans(text):
+    """(start, end) index pairs for every `$(( ... ))` in `text`, in order,
+    non-overlapping. An unterminated `$((` runs to end of text rather than
+    being dropped -- the same "resolve toward skipping" rule as elsewhere in
+    this module: better to over-protect a stray unclosed expansion than to
+    treat its dangling `<<` as a real heredoc opener."""
+    spans = []
+    length = len(text)
+    cursor = 0
+    while True:
+        start = text.find("$((", cursor)
+        if start == -1:
+            break
+        depth = 2
+        j = start + 3
+        while j < length and depth > 0:
+            if text[j] == "(":
+                depth += 1
+            elif text[j] == ")":
+                depth -= 1
+            j += 1
+        spans.append((start, j))
+        cursor = j
+    return spans
+
+
+def _in_arith_spans(spans, index):
+    return any(start <= index < end for start, end in spans)
+
 
 def _skip_heredoc(text, index, match):
     """Index just past a heredoc body opened by `match` at `index`.
@@ -108,13 +158,21 @@ _TOML_STRINGS = (
 _KOTLIN_STRINGS = (('"""', '"""', False, True),) + _C_STRINGS
 _JAVA_STRINGS = (('"""', '"""', True, True),) + _C_STRINGS
 
+_JS_FAMILY_STRINGS = _C_STRINGS + (("`", "`", True, True),)
+
 LANGS = {
     "go": Lang(("//",), (("/*", "*/", False),), _C_STRINGS + (("`", "`", False, True),)),
     # Rust is the one language here that nests block comments by specification.
     "rust": Lang(("//",), (("/*", "*/", True),), _C_STRINGS),
-    "typescript": Lang(
-        ("//",), (("/*", "*/", False),), _C_STRINGS + (("`", "`", True, True),)
-    ),
+    "typescript": Lang(("//",), (("/*", "*/", False),), _JS_FAMILY_STRINGS),
+    # Same lexical rules as TypeScript -- kept as a distinct key (rather than
+    # aliasing .js/.jsx onto "typescript") so `extract()`'s reported `lang`
+    # is honest. The JSDoc `@param` carve-out in comment-classes.md depends on
+    # that label: it tells the agent JSDoc blocks are off-limits in .js/.jsx
+    # because there they are the only type information available, but
+    # condensable in a typed language. A `.js` file reported as "typescript"
+    # made every signal say "typed language, condensable" instead.
+    "javascript": Lang(("//",), (("/*", "*/", False),), _JS_FAMILY_STRINGS),
     "c": Lang(("//",), (("/*", "*/", False),), _C_STRINGS),
     # Kotlin block comments nest by specification, like Rust's.
     "kotlin": Lang(("//",), (("/*", "*/", True),), _KOTLIN_STRINGS),
@@ -136,7 +194,7 @@ LANGS = {
 
 EXTENSIONS = {
     ".go": "go", ".rs": "rust",
-    ".ts": "typescript", ".tsx": "typescript", ".js": "typescript", ".jsx": "typescript",
+    ".ts": "typescript", ".tsx": "typescript", ".js": "javascript", ".jsx": "javascript",
     ".c": "c", ".h": "c", ".cc": "c", ".cpp": "c", ".hpp": "c",
     ".java": "java", ".kt": "kotlin",
     ".py": "python", ".pyi": "python",
@@ -346,6 +404,9 @@ def scan(text, lang):
     line_tokens = sorted(lang.line, key=len, reverse=True)
     blocks = sorted(lang.block, key=lambda pair: len(pair[0]), reverse=True)
     strings = sorted(lang.strings, key=lambda triple: len(triple[0]), reverse=True)
+    # Computed once up front (not on demand per `<<`) so a `$((` opened on one
+    # line and closed several lines later is still recognised as a single span.
+    arith_spans = _arith_spans(text) if lang.heredocs else ()
 
     while index < length:
         char = text[index]
@@ -357,7 +418,7 @@ def scan(text, lang):
 
         if lang.heredocs and text.startswith("<<", index):
             heredoc_match = _HEREDOC_START.match(text, index)
-            if heredoc_match:
+            if heredoc_match and not _in_arith_spans(arith_spans, index):
                 new_index = _skip_heredoc(text, index, heredoc_match)
                 line += text.count("\n", index, new_index)
                 index = new_index

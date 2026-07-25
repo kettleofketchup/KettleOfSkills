@@ -72,14 +72,38 @@ def decide(event):
         if (root / SENTINEL_NAME).exists():
             return None
         tree = gitpaths.head_tree(cwd)
-        trunk = gitpaths.resolve_trunk(cwd)
-        base = gitpaths.merge_base(trunk, cwd)
     except gitpaths.GitError:
         return None  # fail open
     except OSError:
         return None  # fail open
 
     stored = receipt.read(root, tree)
+
+    # Prefer re-resolving the base from the receipt's OWN resolved_base_ref
+    # (an explicit ref /comment-review <ref> may have used) over the gate's
+    # own trunk pick. Without this, a receipt written against any base other
+    # than whatever this gate would independently resolve can never validate
+    # -- the review succeeds, commits, and the gate denies "not reviewed"
+    # forever. Fall back to the gate's own trunk resolution when there is no
+    # stored ref, or it no longer resolves (deleted branch, force-pushed
+    # history, etc.) -- that keeps the original retargeting protection intact.
+    base = None
+    resolved_ref = stored.get("resolved_base_ref") if stored else None
+    if resolved_ref:
+        try:
+            base = gitpaths.merge_base(resolved_ref, cwd)
+        except gitpaths.GitError:
+            base = None
+
+    if base is None:
+        try:
+            trunk = gitpaths.resolve_trunk(cwd)
+            base = gitpaths.merge_base(trunk, cwd)
+        except gitpaths.GitError:
+            return None  # fail open
+        except OSError:
+            return None  # fail open
+
     if receipt.is_valid(stored, tree, base):
         return None
     return _deny(REASON)

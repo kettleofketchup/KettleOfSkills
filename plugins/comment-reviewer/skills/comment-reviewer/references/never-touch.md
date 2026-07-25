@@ -9,7 +9,7 @@ touched.
 
 The extractor already decided these; the agent's job is only to **report the exact reason
 string** it emits, never to re-derive the rule. The strings, verbatim from
-`scripts/extract_comments.py`:
+`${CLAUDE_PLUGIN_ROOT}/skills/comment-reviewer/scripts/extract_comments.py`:
 
 | Reason string | What it means |
 |---|---|

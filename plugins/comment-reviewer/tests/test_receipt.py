@@ -92,6 +92,46 @@ def test_prune_keeps_only_the_newest(repo):
     assert survivors == expected
 
 
+def test_prune_never_touches_the_sentinel_file(repo):
+    """I3: prune() used to treat every file in the receipt root as a receipt
+    and keep only the newest KEEP_NEWEST by mtime. The gate's durable
+    opt-out sentinel (`<receipt_root>/skip`) lives in that same directory and,
+    being the oldest file there, was evicted first -- a user's opt-out
+    silently evaporating after enough reviews."""
+    root = gitpaths.receipt_root(repo)
+    root.mkdir(parents=True, exist_ok=True)
+    sentinel = root / "skip"
+    sentinel.write_text("")
+
+    total = receipt.KEEP_NEWEST + 5
+    for i in range(total):
+        receipt.write(repo, payload(tree_sha=f"{i:040d}"), now=T0 + timedelta(minutes=i))
+
+    assert sentinel.is_file()
+    survivors = {p.name for p in root.iterdir()}
+    assert len(survivors - {"skip"}) == receipt.KEEP_NEWEST
+
+
+def test_is_valid_rejects_a_naive_written_at(repo):
+    """T2-b: the `tzinfo is None` guard in is_valid is the only thing
+    standing between a naive `written_at` and a TypeError on the subtraction
+    below it -- an exception the gate's blanket `except Exception` would
+    swallow, causing the gate to PASS silently instead of denying."""
+    p = payload()
+    p["written_at"] = datetime(2026, 7, 25, 12, 0).isoformat()  # no tzinfo
+    assert not receipt.is_valid(p, "t" * 40, "b" * 40, now=T0)
+
+
+def test_is_valid_rejects_a_malformed_or_missing_written_at(repo):
+    p = payload()
+    p["written_at"] = "not-a-timestamp"
+    assert not receipt.is_valid(p, "t" * 40, "b" * 40, now=T0)
+
+    q = payload()
+    del q["written_at"]
+    assert not receipt.is_valid(q, "t" * 40, "b" * 40, now=T0)
+
+
 def test_cli_write_survives_empty_stdin(repo):
     """Piping from /dev/null (or any malformed body) must degrade to a
     zero-count receipt rather than crash -- this file is vendored into

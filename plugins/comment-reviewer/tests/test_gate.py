@@ -134,6 +134,55 @@ def test_worktree_with_valid_receipt_passes(worktree):
     assert decision(invoke("gh pr create", worktree)) is None
 
 
+def test_explicit_non_trunk_base_ref_receipt_passes(cloned_with_remote):
+    """I2: `/comment-review <explicit-ref>` writes a receipt whose
+    `resolved_base_ref` is that explicit ref, not the gate's own trunk pick.
+    The gate used to compare the receipt's `base_sha` only against a base it
+    re-derived from ITS OWN `resolve_trunk()`, so any explicit ref that
+    disagrees with the gate's trunk choice produced a receipt the gate could
+    never accept -- the review succeeds, commits, and the gate denies "not
+    reviewed" forever. This constructs exactly that disagreement: a branch
+    ("explicit-base") that is an ancestor of HEAD closer than trunk is, so
+    merge-base against it differs from merge-base against trunk."""
+    cwd = cloned_with_remote
+    first_feat_commit = subprocess.run(
+        ["git", "rev-parse", "HEAD"], cwd=cwd, capture_output=True, text=True, check=True,
+    ).stdout.strip()
+    subprocess.run(["git", "branch", "explicit-base", first_feat_commit], cwd=cwd, check=True)
+    (cwd / "c.go").write_text("// second\n")
+    subprocess.run(["git", "add", "c.go"], cwd=cwd, check=True)
+    subprocess.run(["git", "commit", "-q", "-m", "second"], cwd=cwd, check=True)
+
+    explicit_base = gitpaths.merge_base("explicit-base", cwd)
+    trunk_base = gitpaths.merge_base(gitpaths.resolve_trunk(cwd), cwd)
+    assert explicit_base != trunk_base  # the whole point: the two bases disagree
+
+    payload = receipt.build(
+        commit_sha=gitpaths.head_commit(cwd), tree_sha=gitpaths.head_tree(cwd),
+        base_sha=explicit_base, resolved_base_ref="explicit-base",
+        fixed={"A": 0, "B": 0, "C": 0}, skipped=[], reported=[], partial=False, now=T0,
+    )
+    receipt.write(cwd, payload, now=T0)
+
+    assert decision(invoke("gh pr create --fill", cwd)) is None
+
+
+def test_explicit_base_ref_that_no_longer_resolves_falls_back_to_trunk(cloned_with_remote):
+    """When the receipt's resolved_base_ref has been deleted (branch removed,
+    force-pushed away, etc.), the gate must fall back to its own trunk
+    resolution rather than crash or fail open -- the retargeting protection
+    the original trunk-only comparison existed for."""
+    cwd = cloned_with_remote
+    trunk_base = gitpaths.merge_base(gitpaths.resolve_trunk(cwd), cwd)
+    payload = receipt.build(
+        commit_sha=gitpaths.head_commit(cwd), tree_sha=gitpaths.head_tree(cwd),
+        base_sha=trunk_base, resolved_base_ref="refs/heads/does-not-exist",
+        fixed={"A": 0, "B": 0, "C": 0}, skipped=[], reported=[], partial=False, now=T0,
+    )
+    receipt.write(cwd, payload, now=T0)
+    assert decision(invoke("gh pr create --fill", cwd)) is None
+
+
 def test_primary_clone_receipt_does_not_satisfy_worktree_gate(repo, worktree):
     """receipt_root resolves via `--absolute-git-dir`, not `--git-common-dir`,
     precisely so a receipt written for the primary clone's tree cannot leak

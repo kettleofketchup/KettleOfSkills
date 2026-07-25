@@ -40,8 +40,12 @@ python3 ~/.claude/skills/kettle-skill-creator/scripts/promote-skill.py <name> --
 ```
 
 `promote-skill.py` copies `SKILL.md` and mirrors `references/` and `scripts/` from the dotfiles
-skill into the plugin dir. It **never** overwrites an existing `config.yaml`. For a new plugin
-it requires `--categories` and writes the `config.yaml`. Then run `just sync` and validate.
+skill into `plugins/<name>/skills/<name>/`. For plugins that ship more than a skill, it also
+mirrors `agents/`, `hooks/`, `commands/`, `tests/`, and `.claude-plugin/` from the dotfiles
+source into the plugin root (`plugins/<name>/`). It **never** overwrites an existing
+`config.yaml`. For a new plugin it requires `--categories` and writes the `config.yaml` — on an
+existing plugin `--categories` is ignored, so categories must be set correctly on the first
+promotion. Then run `just sync` and validate.
 
 ## Create a new skill from scratch
 
@@ -71,10 +75,13 @@ categories. Every skill is automatically added to the `all` group -- do NOT list
 ```bash
 python3 ~/.claude/skills/kettle-skill-creator/scripts/validate-plugin.py <name>
 python3 ~/.claude/skills/kettle-skill-creator/scripts/validate-plugin.py --all
+just test
 ```
 
 Checks: SKILL.md frontmatter, name matches dir, description <200 chars and no angle brackets,
 config.yaml categories valid, SKILL.md body <150 lines, each reference file <150 lines.
+`just test` runs every plugin's test suite (both `tests/` at the plugin root and each skill's
+`scripts/tests/`).
 
 ## Sync and verify
 

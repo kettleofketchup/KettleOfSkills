@@ -10,6 +10,7 @@ its own receipt would rubber-stamp itself.
 
 import json
 import os
+import re
 import sys
 import tempfile
 from datetime import datetime, timedelta, timezone
@@ -19,6 +20,13 @@ import gitpaths
 
 TTL_DAYS = 14
 KEEP_NEWEST = 20
+
+# A receipt is named after a full git tree sha: 40 lowercase hex characters.
+# prune() must not treat every file in the receipt root as a receipt -- the
+# gate's durable opt-out sentinel (SENTINEL_NAME in pr-create-gate.py) lives
+# in the same directory, and being the oldest file there, was evicted first
+# under mtime-based pruning that had no name filter.
+_RECEIPT_NAME = re.compile(r"[0-9a-f]{40}")
 
 
 def _now(now):
@@ -93,7 +101,9 @@ def prune(root, now=None):
     root = Path(root)
     if not root.is_dir():
         return
-    entries = [p for p in root.iterdir() if p.is_file()]
+    entries = [
+        p for p in root.iterdir() if p.is_file() and _RECEIPT_NAME.fullmatch(p.name)
+    ]
     entries.sort(key=lambda p: p.stat().st_mtime, reverse=True)
     for stale in entries[KEEP_NEWEST:]:
         try:

@@ -16,18 +16,121 @@ Checks:
   - Each reference file is <150 lines
 """
 
+import json
+import os
 import re
 import sys
 from pathlib import Path
 
 VALID_CATEGORIES = {
     "k8s-core", "k8s-storage", "k8s-apps", "homelab", "devops",
-    "frontend", "golang", "docs", "claude-tooling", "shell", "discord",
+    "frontend", "golang", "cli", "tui", "docs", "claude-tooling", "shell", "discord",
     "linux",
 }
 
 # Group plugin names (these are auto-generated, not individual skills)
 GROUP_NAMES = VALID_CATEGORIES | {"all"}
+
+PLUGIN_ROOT_VAR = "${CLAUDE_PLUGIN_ROOT}"
+
+
+def validate_plugin_root(plugin_dir: Path, name: str) -> list[str]:
+    """Wiring checks for plugins that ship more than a skill.
+
+    Purely additive: a skill-only plugin has none of these files and collects no
+    errors. Each check covers a failure that is invisible at runtime -- the
+    plugin simply does nothing.
+
+    `plugin_dir` here is the PLUGIN ROOT (repo_root/plugins/<name>/), not the
+    skill directory used elsewhere in this file.
+    """
+    errors = []
+
+    stray = plugin_dir / "plugin.json"
+    manifest = plugin_dir / ".claude-plugin" / "plugin.json"
+    if stray.is_file() and not manifest.is_file():
+        errors.append(
+            f"{name}: plugin.json must live in .claude-plugin/, not the plugin root"
+        )
+    if manifest.is_file():
+        try:
+            data = json.loads(manifest.read_text(encoding="utf-8"))
+        except ValueError as exc:
+            errors.append(f"{name}: .claude-plugin/plugin.json does not parse: {exc}")
+        else:
+            if not isinstance(data, dict):
+                errors.append(
+                    f"{name}: .claude-plugin/plugin.json must contain a JSON object"
+                )
+            elif data.get("name") != name:
+                errors.append(
+                    f"{name}: manifest name {data.get('name')!r} does not match the directory"
+                )
+
+    hooks_file = plugin_dir / "hooks" / "hooks.json"
+    if hooks_file.is_file():
+        parsed_ok = True
+        try:
+            payload = json.loads(hooks_file.read_text(encoding="utf-8"))
+        except ValueError as exc:
+            errors.append(f"{name}: hooks/hooks.json does not parse: {exc}")
+            parsed_ok = False
+            payload = None
+        if parsed_ok and not isinstance(payload, dict):
+            errors.append(f"{name}: hooks/hooks.json must contain a JSON object")
+        elif isinstance(payload, dict):
+            if "hooks" not in payload:
+                errors.append(
+                    f"{name}: hooks/hooks.json needs a top-level 'hooks' key; "
+                    "an unwrapped file registers nothing"
+                )
+            # Every level is type-checked. A validator that raises on the malformed
+            # input it exists to catch is worse than none: under --all it aborts
+            # the whole catalog run with a traceback.
+            hooks_map = payload.get("hooks")
+            if "hooks" in payload and not isinstance(hooks_map, dict):
+                errors.append(f"{name}: hooks/hooks.json 'hooks' must be an object")
+                hooks_map = {}
+            for event, entries in (hooks_map or {}).items():
+                if not isinstance(entries, list):
+                    errors.append(f"{name}: hooks.json {event} must map to a list")
+                    continue
+                for entry in entries:
+                    if not isinstance(entry, dict):
+                        errors.append(f"{name}: hooks.json {event} entries must be objects")
+                        continue
+                    for hook in entry.get("hooks") or []:
+                        if not isinstance(hook, dict):
+                            errors.append(f"{name}: hooks.json {event} hooks must be objects")
+                            continue
+                        command = hook.get("command", "")
+                        if not isinstance(command, str) or PLUGIN_ROOT_VAR not in command:
+                            errors.append(
+                                f"{name}: hook command must use {PLUGIN_ROOT_VAR}: {command!r}"
+                            )
+                            continue
+                        if PLUGIN_ROOT_VAR + "/" not in command:
+                            errors.append(
+                                f"{name}: cannot locate hook script relative to "
+                                f"{PLUGIN_ROOT_VAR}: {command!r}"
+                            )
+                            continue
+                        relative = command.split(PLUGIN_ROOT_VAR + "/", 1)[1]
+                        relative = relative.strip().strip('"').strip("'")
+                        target = plugin_dir / relative
+                        if not target.is_file():
+                            errors.append(f"{name}: hook script not found: {relative}")
+                        elif not os.access(target, os.X_OK):
+                            errors.append(f"{name}: hook script is not executable: {relative}")
+
+    scripts = plugin_dir / "skills" / name / "scripts"
+    vendored = plugin_dir / "hooks" / "scripts"
+    for shared in ("gitpaths.py", "receipt.py"):
+        left, right = scripts / shared, vendored / shared
+        if left.is_file() and right.is_file() and left.read_bytes() != right.read_bytes():
+            errors.append(f"{name}: vendored {shared} has drifted from skills/*/scripts/")
+
+    return errors
 
 
 def find_repo_root() -> Path:
@@ -87,6 +190,11 @@ def validate_plugin(name: str, repo_root: Path) -> list[str]:
     # Directory structure
     if not plugin_dir.is_dir():
         return [f"Plugin directory not found: plugins/{name}/skills/{name}/"]
+
+    # Plugin-root wiring checks (manifest location, hooks.json, hook scripts).
+    # Note: plugin_dir above is the SKILL directory; the plugin root is one
+    # level up, so this is computed independently rather than reused.
+    errors.extend(validate_plugin_root(repo_root / "plugins" / name, name))
 
     # SKILL.md
     skill_md = plugin_dir / "SKILL.md"

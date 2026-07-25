@@ -24,8 +24,9 @@ before opening its PR, or whenever a `pr create`/`mr create` call was denied pen
    with pre-existing staged or unstaged modifications (reason `dirty`); never mix this sweep's
    edits with work already in progress.
 3. **Extract** — pipe the touched paths (repo-relative, newline-separated on stdin) to
-   `scripts/extract_comments.py`. It returns every comment span per file, each already tagged
-   with a mechanical skip reason where one applies. Do not re-derive those reasons yourself.
+   `${CLAUDE_PLUGIN_ROOT}/skills/comment-reviewer/scripts/extract_comments.py`. It returns every
+   comment span per file, each already tagged with a mechanical skip reason where one applies.
+   Do not re-derive those reasons yourself.
 4. **Judge** every remaining span using the precedence order below.
 5. **Edit** — apply accepted fixes **per file, in descending `start_line` order.** Deletions
    and multi-line condensing invalidate every later line number in that file; editing
