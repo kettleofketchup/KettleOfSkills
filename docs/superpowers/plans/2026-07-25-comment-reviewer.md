@@ -537,9 +537,14 @@ git commit -m "comment-reviewer: add gitpaths repo-state resolver"
 - [ ] **Step 1: Write the failing tests**
 
 ```python
+import json
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
+
+import pytest
 
 import gitpaths
+import paths
 import receipt
 
 T0 = datetime(2026, 7, 25, 12, 0, tzinfo=timezone.utc)
@@ -601,12 +606,44 @@ def test_is_valid_expires_after_ttl(repo):
     assert not receipt.is_valid(p, "t" * 40, "b" * 40, now=later)
 
 
-def test_prune_keeps_only_the_newest(repo):
+def test_prune_keeps_the_newest_by_identity(repo):
+    """Assert WHICH receipts survive, not how many. Reversing the sort so prune
+    keeps the oldest KEEP_NEWEST yields an identical count, so a count-only
+    assertion passes against a broken implementation."""
+    total = receipt.KEEP_NEWEST + 5
     root = gitpaths.receipt_root(repo)
-    for i in range(receipt.KEEP_NEWEST + 5):
+    for i in range(total):
         receipt.write(repo, payload(tree_sha=f"{i:040d}"), now=T0 + timedelta(minutes=i))
     receipt.prune(root, now=T0 + timedelta(hours=1))
-    assert len(list(root.iterdir())) == receipt.KEEP_NEWEST
+
+    survivors = {p.name for p in root.iterdir()}
+    expected = {f"{i:040d}" for i in range(total - receipt.KEEP_NEWEST, total)}
+    assert survivors == expected
+
+
+def test_write_cleans_up_temp_file_on_failure(repo):
+    """An orphaned temp file consumes a KEEP_NEWEST slot and can evict a real
+    receipt, blocking a PR that was genuinely reviewed."""
+    root = gitpaths.receipt_root(repo)
+    with pytest.raises(TypeError):
+        receipt.write(repo, payload(fixed={"A": object()}), now=T0)
+    assert list(root.iterdir()) == []
+
+
+def test_cli_write_survives_empty_stdin(repo):
+    """receipt.py is vendored into hooks/scripts/, where a traceback breaks the turn."""
+    import subprocess
+    import sys as _sys
+
+    script = paths.SCRIPTS / "receipt.py"
+    trunk = gitpaths.resolve_trunk(repo)
+    proc = subprocess.run(
+        [_sys.executable, str(script), "write", "--cwd", str(repo), "--base-ref", trunk],
+        input="", capture_output=True, text=True,
+    )
+    assert proc.returncode == 0, proc.stderr
+    written = json.loads(Path(proc.stdout.strip()).read_text())
+    assert written["fixed"] == {"A": 0, "B": 0, "C": 0}
 ```
 
 - [ ] **Step 2: Run the tests to verify they fail**
@@ -666,9 +703,20 @@ def write(cwd, payload, now=None):
     # Write-then-rename: a half-written receipt read by a concurrent gate would
     # parse as absent, denying a PR that was in fact reviewed.
     handle, temp = tempfile.mkstemp(dir=str(root))
-    with os.fdopen(handle, "w", encoding="utf-8") as fh:
-        json.dump(payload, fh, indent=2, sort_keys=True)
-    os.replace(temp, target)
+    try:
+        with os.fdopen(handle, "w", encoding="utf-8") as fh:
+            json.dump(payload, fh, indent=2, sort_keys=True)
+        os.replace(temp, target)
+    except Exception:
+        # A failed dump-and-replace must not leave an orphan in the receipt
+        # directory: prune() treats every file here as a receipt, so a leaked
+        # temp file would consume a KEEP_NEWEST slot and could evict a
+        # legitimate one -- blocking a user from opening a PR they did review.
+        try:
+            os.unlink(temp)
+        except OSError:
+            pass
+        raise
     prune(root, now=now)
     return target
 
@@ -728,7 +776,17 @@ def main(argv=None):
     writer.add_argument("--partial", action="store_true")
     args = parser.parse_args(argv)
 
-    body = {} if sys.stdin.isatty() else (json.load(sys.stdin) or {})
+    body = {}
+    if not sys.stdin.isatty():
+        try:
+            body = json.load(sys.stdin) or {}
+        except (ValueError, OSError) as exc:
+            # A malformed or empty report body must degrade to a zero-count
+            # receipt, not crash: this file is vendored into hooks/scripts/,
+            # where an uncaught traceback breaks the turn.
+            print(f"receipt.py: stdin was not valid JSON ({exc}); using empty body",
+                  file=sys.stderr)
+            body = {}
     payload = build(
         commit_sha=gitpaths.head_commit(args.cwd),
         tree_sha=gitpaths.head_tree(args.cwd),
