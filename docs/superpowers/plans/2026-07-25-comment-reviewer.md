@@ -1797,6 +1797,21 @@ LANGS = {
         (('"""', '"""', True, True), ("'''", "'''", True, True)) + _C_STRINGS,
         docstrings=True,
     ),
+    # Kotlin nests block comments per its specification; Java does not. Both
+    # have triple-quoted forms (raw strings / text blocks) whose contents must
+    # never be scanned for comment tokens.
+    "kotlin": Lang(
+        ("//",), (("/*", "*/", True),), (('"""', '"""', False, True),) + _C_STRINGS
+    ),
+    "java": Lang(
+        ("//",), (("/*", "*/", False),), (('"""', '"""', True, True),) + _C_STRINGS
+    ),
+    "toml": Lang(
+        ("#",), (),
+        (('"""', '"""', True, True), ("'''", "'''", False, True)) + _C_STRINGS,
+    ),
+    # Shell-family scanning additionally skips heredoc bodies: a `#` in a
+    # heredoc payload is data passed to a command, not a comment.
     "shell": Lang(("#",), (), _C_STRINGS),
     "yaml": Lang(("#",), (), _C_STRINGS),
     "nix": Lang(("#",), (("/*", "*/", False),), _C_STRINGS),
@@ -1805,13 +1820,20 @@ LANGS = {
     "html": Lang((), (("<!--", "-->", False),), _C_STRINGS),
 }
 
+# Map an extension only to a table that models THAT language's string forms.
+# Mapping to the closest-looking table is how data literals get emitted as
+# editable comments: .toml -> shell missed TOML's \"\"\" strings, and
+# .kt/.java -> c missed Kotlin raw strings and Java text blocks, so a # or //
+# inside one was handed to the reviewer as a comment to rewrite. When no table
+# fits, omit the extension entirely -- unknown-language is a safe miss.
 EXTENSIONS = {
     ".go": "go", ".rs": "rust",
     ".ts": "typescript", ".tsx": "typescript", ".js": "typescript", ".jsx": "typescript",
-    ".c": "c", ".h": "c", ".cc": "c", ".cpp": "c", ".hpp": "c", ".java": "c", ".kt": "c",
+    ".c": "c", ".h": "c", ".cc": "c", ".cpp": "c", ".hpp": "c",
+    ".java": "java", ".kt": "kotlin",
     ".py": "python", ".pyi": "python",
     ".sh": "shell", ".bash": "shell", ".zsh": "shell",
-    ".yaml": "yaml", ".yml": "yaml", ".toml": "shell",
+    ".yaml": "yaml", ".yml": "yaml", ".toml": "toml",
     ".nix": "nix",
     ".sql": "sql",
     ".lua": "lua",
