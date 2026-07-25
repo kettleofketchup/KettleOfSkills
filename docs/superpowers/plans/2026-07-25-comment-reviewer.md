@@ -33,9 +33,10 @@ tests, git CLI, Claude Code plugin conventions (`.claude-plugin/plugin.json`, `h
   linked worktree `.git` is a *file*, so `mkdir .git/claude/...` raises `NotADirectoryError`.
 - **Never use the branch's own upstream as the diff base.** After `git push -u origin feat`,
   `@{u}` is `origin/feat` and the diff is empty. Use `merge-base <trunk> HEAD`.
-- **The gate fails open.** Any resolution error (not a repo, `rev-parse` fails, no commits,
-  unreadable git dir, unparseable receipt) exits 0. Only a genuinely-absent receipt for a
-  resolved HEAD denies.
+- **The gate fails open.** Any resolution error — not a repo, `rev-parse` fails, no commits,
+  unreadable git dir, unresolvable trunk — exits 0. A receipt that is **absent, stale, or
+  unparseable** denies: fail-open covers only cases where the reviewer itself could not run, and a
+  corrupt receipt is indistinguishable from no receipt and is fixed by re-running the review.
 - **Commit messages:** one subject line, no body, **no watermark line, no `Co-Authored-By`
   trailer**. Applies both to your own commits in this plan and to the message the agent is
   pinned to emit.
@@ -355,7 +356,9 @@ This file is vendored to two directories that cannot import each other:
 tests/test_vendoring.py fails if they drift.
 """
 
+import json
 import subprocess
+import sys
 from pathlib import Path
 
 RECEIPT_SUBDIR = ("claude", "comment-review")
@@ -448,7 +451,34 @@ def in_progress_operation(cwd):
         if any((directory / marker).exists() for marker in markers):
             return name
     return None
+
+
+def main():
+    """Print resolved repository state as JSON.
+
+    The agent has Bash, not a Python import path, so every value it needs to run
+    a sweep is available from one command.
+    """
+    cwd = sys.argv[1] if len(sys.argv) > 1 else "."
+    trunk = resolve_trunk(cwd)
+    base = merge_base(trunk, cwd)
+    json.dump({
+        "receipt_root": str(receipt_root(cwd)),
+        "head_commit": head_commit(cwd),
+        "head_tree": head_tree(cwd),
+        "trunk": trunk,
+        "base": base,
+        "in_progress": in_progress_operation(cwd),
+        "touched": touched_files(base, cwd),
+    }, sys.stdout, indent=2)
+    sys.stdout.write("\n")
+
+
+if __name__ == "__main__":
+    main()
 ```
+
+Add `import json` and `import sys` to the module imports. The vendored copy stays byte-identical.
 
 - [ ] **Step 6: Vendor the copy and write the drift test**
 
@@ -599,6 +629,7 @@ its own receipt would rubber-stamp itself.
 
 import json
 import os
+import sys
 import tempfile
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -677,7 +708,45 @@ def prune(root, now=None):
             stale.unlink()
         except OSError:
             pass
+
+
+def main(argv=None):
+    """CLI, so the agent can write a receipt with Bash alone.
+
+        receipt.py write --base-ref origin/main [--cwd .] [--partial]
+
+    The report body arrives as JSON on stdin:
+        {"fixed": {"A": 3, "B": 1, "C": 2}, "skipped": [], "reported": []}
+    """
+    import argparse
+
+    parser = argparse.ArgumentParser(prog="receipt.py")
+    sub = parser.add_subparsers(dest="command", required=True)
+    writer = sub.add_parser("write")
+    writer.add_argument("--cwd", default=".")
+    writer.add_argument("--base-ref", required=True)
+    writer.add_argument("--partial", action="store_true")
+    args = parser.parse_args(argv)
+
+    body = {} if sys.stdin.isatty() else (json.load(sys.stdin) or {})
+    payload = build(
+        commit_sha=gitpaths.head_commit(args.cwd),
+        tree_sha=gitpaths.head_tree(args.cwd),
+        base_sha=gitpaths.merge_base(args.base_ref, args.cwd),
+        resolved_base_ref=args.base_ref,
+        fixed=body.get("fixed") or {"A": 0, "B": 0, "C": 0},
+        skipped=body.get("skipped") or [],
+        reported=body.get("reported") or [],
+        partial=args.partial,
+    )
+    print(write(args.cwd, payload))
+
+
+if __name__ == "__main__":
+    main()
 ```
+
+Add `import sys` to the module imports. The Task 4 vendored copy carries this CLI with it.
 
 - [ ] **Step 4: Run the tests to verify they pass**
 
@@ -1253,7 +1322,8 @@ git commit -m "comment-reviewer: add PreToolUse pr-create gate (fails open)"
 
 **Files:**
 - Create: `~/dotfiles/.claude/plugin-skills/comment-reviewer/scripts/extract_comments.py`
-- Create: `~/dotfiles/.claude/plugin-skills/comment-reviewer/tests/fixtures/` (per-language files)
+- Create: `~/dotfiles/.claude/plugin-skills/comment-reviewer/tests/samples/` (per-language files)
+- Create: `~/dotfiles/.claude/plugin-skills/comment-reviewer/tests/samples/negative/` (must-not-touch)
 - Test: `~/dotfiles/.claude/plugin-skills/comment-reviewer/tests/test_extract.py`
 
 **Interfaces:**
@@ -1269,7 +1339,7 @@ git commit -m "comment-reviewer: add PreToolUse pr-create gate (fails open)"
 
 - [ ] **Step 1: Write fixture files**
 
-`tests/fixtures/sample.go`:
+`tests/samples/sample.go`:
 ```go
 // leading comment
 package main
@@ -1283,7 +1353,7 @@ func main() {
 }
 ```
 
-`tests/fixtures/sample.py` — note the two triple-quoted literals: the first is a docstring and
+`tests/samples/sample.py` — note the two triple-quoted literals: the first is a docstring and
 must be reviewable, the second is data and must be protected. Line numbers are asserted, so copy
 it byte for byte.
 
@@ -1303,41 +1373,97 @@ def f():
     return 1  # trailing
 ```
 
-`tests/fixtures/sample.sh`:
+`tests/samples/sample.sh`:
 ```bash
 #!/usr/bin/env bash
 # real comment
 echo "hash # inside quotes"
 ```
 
-`tests/fixtures/sample.sql`:
+`tests/samples/sample.sql`:
 ```sql
 -- leading comment
 SELECT 1; -- trailing
 ```
 
-`tests/fixtures/sample.ts`:
+`tests/samples/sample.ts`:
 ```typescript
 // line
 const s = "slash // inside";
 /* block */
 ```
 
-`tests/fixtures/sample.lua`, `sample.nix`, `sample.yaml`, `sample.html`, `sample.rs` follow the
-same shape: one leading comment, one comment token embedded in a string, one trailing comment.
+The remaining five samples are written out in full rather than described, because tests assert on
+them. Each carries an **apostrophe in prose** — the case that used to open a string and swallow
+every later comment.
+
+`tests/samples/sample.yaml`:
+```yaml
+# leading comment
+message: it's fine
+other: "hash # inside"
+# trailing comment
+```
+
+`tests/samples/sample.html`:
+```html
+<!-- leading comment -->
+<p>don't do that</p>
+<!-- trailing comment -->
+```
+
+`tests/samples/sample.rs`:
+```rust
+// leading comment
+/* outer /* inner */ still outer */
+fn main() {
+    let s = "slash // inside";
+    println!("{} don't", s); // trailing
+}
+```
+
+`tests/samples/sample.lua`:
+```lua
+--[[ block
+  comment ]]
+local s = "dash -- inside"
+-- trailing comment
+```
+
+`tests/samples/sample.nix`:
+```nix
+# leading comment
+{
+  text = "hash # inside";
+  other = "it's fine";
+}
+# trailing comment
+```
+
+`tests/samples/negative/dense.go` — the Class C no-loss counter-case. The correct outcome for
+this file is **left alone and reported**, never rewritten:
+```go
+package negative
+
+// Retry at most 3 times with 250ms backoff: the upstream rate-limiter returns
+// 429 without a Retry-After header, and the SRE runbook owns this constant.
+//
+//nolint:gomnd
+const maxRetries = 3
+
+// Output:
+// 3
+```
 
 - [ ] **Step 2: Write the failing tests**
 
 ```python
-from pathlib import Path
-
 import extract_comments as ec
-
-FIXTURES = Path(__file__).resolve().parent / "fixtures"
+import paths
 
 
 def spans(name):
-    return ec.extract(FIXTURES / name)["comments"]
+    return ec.extract(paths.SAMPLES / name)["comments"]
 
 
 def texts(name):
@@ -1353,8 +1479,13 @@ def test_go_line_and_block_spans():
 
 
 def test_go_ignores_double_slash_inside_strings():
-    assert not any("example.com" in t for t in texts("sample.go"))
-    assert not any("back" in t for t in texts("sample.go"))
+    """The positive count is load-bearing: every `assert not any(...)` below
+    passes trivially on an empty list, which is exactly what happened when the
+    samples lived in a directory the extractor skips."""
+    found = texts("sample.go")
+    assert len(found) == 3          # leading, block, trailing
+    assert not any("example.com" in t for t in found)
+    assert not any("back" in t for t in found)
 
 
 def test_go_finds_the_trailing_comment():
@@ -1362,8 +1493,10 @@ def test_go_finds_the_trailing_comment():
 
 
 def test_python_ignores_hash_inside_strings():
-    assert not any("not a comment" in t for t in texts("sample.py"))
-    assert not any("single" in t for t in texts("sample.py"))
+    found = texts("sample.py")
+    assert len(found) == 4          # module docstring, line, fn docstring, trailing
+    assert not any("not a comment" in t for t in found)
+    assert not any("single" in t for t in found)
 
 
 def test_python_captures_the_module_docstring_span():
@@ -1383,8 +1516,10 @@ def test_python_captures_the_function_docstring():
 def test_python_leaves_a_triple_quoted_data_string_alone():
     """A triple-quoted literal that is not in docstring position is data. Emitting
     it as a comment would invite the reviewer to rewrite a live string."""
-    assert not any("not a docstring" in t for t in texts("sample.py"))
-    assert not any("just data" in t for t in texts("sample.py"))
+    found = texts("sample.py")
+    assert len(found) == 4
+    assert not any("not a docstring" in t for t in found)
+    assert not any("just data" in t for t in found)
 
 
 def test_python_line_comment_after_the_docstring():
@@ -1394,7 +1529,9 @@ def test_python_line_comment_after_the_docstring():
 
 
 def test_shell_ignores_hash_inside_quotes():
-    assert not any("inside quotes" in t for t in texts("sample.sh"))
+    found = texts("sample.sh")
+    assert len(found) == 2          # shebang, real comment
+    assert not any("inside quotes" in t for t in found)
 
 
 def test_sql_double_dash():
@@ -1402,7 +1539,41 @@ def test_sql_double_dash():
 
 
 def test_typescript_ignores_slashes_in_strings():
-    assert not any("inside" in t for t in texts("sample.ts"))
+    found = texts("sample.ts")
+    assert len(found) == 2          # line, block
+    assert not any("inside" in t for t in found)
+
+
+def test_yaml_finds_the_comment_after_an_apostrophe():
+    """An apostrophe in prose used to open a string that swallowed the rest of
+    the file."""
+    assert any("trailing" in t for t in texts("sample.yaml"))
+
+
+def test_html_finds_the_comment_after_an_apostrophe():
+    assert any("trailing" in t for t in texts("sample.html"))
+
+
+def test_rust_nested_block_span_covers_the_whole_comment():
+    block = [c for c in spans("sample.rs") if c["kind"] == "block"][0]
+    assert block["text"].endswith("*/")
+    assert block["text"].count("/*") == 2
+
+
+def test_lua_long_bracket_comment_is_one_block():
+    assert any(c["kind"] == "block" for c in spans("sample.lua"))
+
+
+def test_nix_finds_its_comments():
+    assert len(texts("sample.nix")) >= 2
+
+
+def test_multi_language_files_are_skipped_not_half_scanned(tmp_path):
+    """A .vue file needs per-block token selection; scanning it with the HTML
+    table would silently miss every comment in its script block."""
+    target = tmp_path / "c.vue"
+    target.write_text("<template><!-- t --></template>\n<script>// s\n</script>\n")
+    assert ec.extract(target)["skipped"] == "multi-language-unsupported"
 
 
 def test_detect_language_by_extension():
@@ -1446,7 +1617,7 @@ def test_markdown_is_out_of_scope(tmp_path):
 
 def test_main_reads_paths_from_stdin(tmp_path, capsys, monkeypatch):
     import io, json, sys
-    target = FIXTURES / "sample.go"
+    target = paths.SAMPLES / "sample.go"
     monkeypatch.setattr(sys, "stdin", io.StringIO(f"{target}\n"))
     ec.main()
     payload = json.loads(capsys.readouterr().out)
@@ -1764,7 +1935,7 @@ Every entry here is a comment that is not commentary: deleting `-- +goose Down` 
 
 **Files:**
 - Modify: `~/dotfiles/.claude/plugin-skills/comment-reviewer/scripts/extract_comments.py`
-- Create: `~/dotfiles/.claude/plugin-skills/comment-reviewer/tests/fixtures/skips/` (samples)
+- (no new sample files: `test_skips.py` builds every case under `tmp_path`)
 - Test: `~/dotfiles/.claude/plugin-skills/comment-reviewer/tests/test_skips.py`
 
 **Interfaces:**
@@ -1877,6 +2048,29 @@ def test_ordinary_comment_is_not_skipped(tmp_path):
     assert skips(target)["// ordinary explanation"] is None
 
 
+def test_the_plugins_own_samples_are_not_excluded():
+    """tests/samples/ must stay outside the skip patterns. When the directory was
+    named fixtures/ it matched, and every extractor assertion silently went vacuous."""
+    import paths
+    assert ec.file_skip_reason(paths.SAMPLES / "sample.go", "") is None
+
+
+def test_a_fixtures_path_is_still_excluded(tmp_path):
+    """The pattern itself is correct and spec-mandated -- only our own directory
+    name was wrong."""
+    assert ec.file_skip_reason(tmp_path / "fixtures" / "z.go", "") == "excluded-path"
+
+
+def test_a_repo_living_under_a_skip_named_directory_is_not_skipped(tmp_path, monkeypatch):
+    """A checkout at ~/build/proj must not skip every file in itself."""
+    repo = tmp_path / "build" / "proj" / "pkg"
+    repo.mkdir(parents=True)
+    target = repo / "z.go"
+    target.write_text("package p\n\n// ordinary\n")
+    monkeypatch.chdir(repo.parent)
+    assert ec.extract(target)["skipped"] is None
+
+
 def test_dockerfile_syntax_directive_is_protected(tmp_path):
     target = write(tmp_path, "Dockerfile.sh", "# syntax=docker/dockerfile:1\n# free\n")
     assert skips(target)["# syntax=docker/dockerfile:1"] == "position-locked"
@@ -1975,8 +2169,24 @@ def _body(text):
     return stripped.strip()
 
 
+def _match_path(path):
+    """Directory patterns are repo-relative.
+
+    An absolute path such as /home/u/build/proj/x.go otherwise matches
+    `(^|/)build/` and the entire repository is skipped -- a silent, total
+    no-op that looks like a clean sweep.
+    """
+    path = Path(path)
+    if path.is_absolute():
+        try:
+            path = path.relative_to(Path.cwd())
+        except ValueError:
+            pass
+    return path.as_posix()
+
+
 def file_skip_reason(path, head_text):
-    posix = Path(path).as_posix()
+    posix = _match_path(path)
     if any(pattern.search(posix) for pattern in SKIP_FILE_PATH_PATTERNS):
         return "excluded-path"
     head = "\n".join(head_text.splitlines()[:GENERATED_MARKER_LINES])
@@ -2030,7 +2240,10 @@ Then change `extract` to consult both. Replace its body after the binary check w
 - [ ] **Step 4: Run both extractor suites**
 
 Run: `cd ~/dotfiles/.claude/plugin-skills/comment-reviewer && python3 -m pytest tests/test_extract.py tests/test_skips.py -v`
-Expected: all PASS. `test_extract.py` still passes because `skip` is additive.
+
+Expected: all PASS. `tests/samples/` is deliberately outside `SKIP_FILE_PATH_PATTERNS`. If any
+sample returns `skipped: excluded-path`, the directory was named `fixtures/` — which matches the
+spec-mandated pattern and silently zeroes every extractor assertion rather than failing loudly.
 
 - [ ] **Step 5: Commit**
 
@@ -2198,13 +2411,23 @@ git commit -m "comment-reviewer: add plugin manifest and PreToolUse hook registr
 
 ```python
 """The marketplace validator enforces these limits repo-wide. Catching them here
-means a promotion never lands a plugin that fails validation."""
+means a promotion never lands a plugin that fails validation.
 
-from pathlib import Path
+Paths come from paths.py, not from ROOT: after promotion SKILL.md and references/
+move under skills/<name>/ while tests/ stays at the plugin root, and `just test`
+runs the promoted tree.
+"""
 
-ROOT = Path(__file__).resolve().parent.parent
+import paths
+
 MAX_BODY_LINES = 150
 MAX_DESCRIPTION_CHARS = 200
+REQUIRED_REFERENCES = {"comment-classes.md", "never-touch.md", "rewrite-guidelines.md"}
+
+
+def skill_text():
+    assert paths.SKILL_MD.is_file(), f"SKILL.md not found at {paths.SKILL_MD}"
+    return paths.SKILL_MD.read_text()
 
 
 def frontmatter_and_body(text):
@@ -2213,13 +2436,19 @@ def frontmatter_and_body(text):
     return front, body
 
 
+def test_the_three_references_exist():
+    """The class rules and both never-touch tiers live only in these files. The
+    loop-based tests below pass on an empty directory, so this one carries them."""
+    assert {p.name for p in paths.REFERENCES.glob("*.md")} == REQUIRED_REFERENCES
+
+
 def test_skill_frontmatter_name_matches_the_directory():
-    front, _ = frontmatter_and_body((ROOT / "SKILL.md").read_text())
+    front, _ = frontmatter_and_body(skill_text())
     assert "name: comment-reviewer" in front
 
 
 def test_skill_description_fits_the_validator_limits():
-    front, _ = frontmatter_and_body((ROOT / "SKILL.md").read_text())
+    front, _ = frontmatter_and_body(skill_text())
     line = next(l for l in front.splitlines() if l.startswith("description:"))
     description = line.split("description:", 1)[1].strip()
     assert 0 < len(description) <= MAX_DESCRIPTION_CHARS
@@ -2227,23 +2456,22 @@ def test_skill_description_fits_the_validator_limits():
 
 
 def test_skill_body_is_within_the_line_budget():
-    _, body = frontmatter_and_body((ROOT / "SKILL.md").read_text())
+    _, body = frontmatter_and_body(skill_text())
     assert len(body.splitlines()) <= MAX_BODY_LINES
 
 
 def test_every_reference_is_within_the_line_budget():
-    for reference in (ROOT / "references").glob("*.md"):
+    for reference in paths.REFERENCES.glob("*.md"):
         assert len(reference.read_text().splitlines()) <= MAX_BODY_LINES, reference
 
 
 def test_skill_documents_the_group_install_limitation():
-    body = (ROOT / "SKILL.md").read_text()
-    assert "comment-reviewer@kettleofskills" in body
+    assert "comment-reviewer@kettleofskills" in skill_text()
 
 
 def test_references_are_all_linked_from_the_skill():
-    body = (ROOT / "SKILL.md").read_text()
-    for reference in (ROOT / "references").glob("*.md"):
+    body = skill_text()
+    for reference in paths.REFERENCES.glob("*.md"):
         assert reference.name in body, f"{reference.name} is unreachable"
 ```
 
@@ -2397,15 +2625,31 @@ precedence order. This file covers only the mechanics of a run.
 
 ## Pipeline
 
-1. Resolve trunk and base. `python3 "${CLAUDE_PLUGIN_ROOT}/skills/comment-reviewer/scripts/gitpaths.py"`
-   is importable, or run the equivalent git commands. **Never use the branch's own upstream** —
-   after `git push -u origin feat` the diff against `@{u}` is empty, which would sweep zero files
-   and still satisfy the gate.
-2. If the base cannot be resolved, stop: write **no receipt** and return `base_unresolved` so the
-   main session can supply an explicit ref.
-3. If a rebase, merge, cherry-pick, revert, or bisect is **in progress**, stop: write no receipt.
-4. List touched files, extract comments, and judge each span. Spans arriving with a non-null
+Everything below runs through two scripts. Set this once:
+
+```bash
+SCRIPTS="${CLAUDE_PLUGIN_ROOT}/skills/comment-reviewer/scripts"
+```
+
+1. Resolve repository state in one call:
+
+   ```bash
+   python3 "$SCRIPTS/gitpaths.py" .
+   ```
+
+   It prints `receipt_root`, `head_commit`, `head_tree`, `trunk`, `base`, `in_progress`, and
+   `touched`. **Never use the branch's own upstream** — after `git push -u origin feat` the diff
+   against `@{u}` is empty, which would sweep zero files and still satisfy the gate.
+2. If that command fails to resolve a trunk, stop: write **no receipt** and return
+   `base_unresolved` so the main session can supply an explicit ref.
+3. If `in_progress` is non-null — a rebase, merge, cherry-pick, revert, or bisect — stop and
+   write no receipt.
+4. Extract comments from the touched files and judge each span. Spans arriving with a non-null
    `skip` are never edited.
+
+   ```bash
+   printf '%s\n' "${TOUCHED[@]}" | python3 "$SCRIPTS/extract_comments.py"
+   ```
 5. Apply edits per file in **descending `start_line` order** — deletions and multi-line
    condensing invalidate every later line number in that file.
 6. Skip any file with pre-existing staged or unstaged modifications; report it as `dirty`. Never
@@ -2419,8 +2663,22 @@ precedence order. This file covers only the mechanics of a run.
 9. If the commit fails, or HEAD did not move while edits were pending, **abort and write no
    receipt** — otherwise the receipt certifies an unfixed tree and the PR ships without the
    rewrites.
-10. Write the receipt against the resulting HEAD tree.
+10. Write the receipt against the resulting HEAD tree, passing the report on stdin:
+
+    ```bash
+    printf '%s' "$REPORT_JSON" | python3 "$SCRIPTS/receipt.py" write --base-ref "$TRUNK"
+    ```
+
+    where `$REPORT_JSON` is `{"fixed": {"A": n, "B": n, "C": n}, "skipped": [...],
+    "reported": [...]}`. Add `--partial` when a cap was hit (below).
 11. Return per-class fixed counts plus every report-only finding as `{file, line, class, reason}`.
+
+## Caps
+
+At most **60 files** and **150 edits** per run. On overflow: stop editing, write the receipt with
+`--partial`, and list the unprocessed files in the report so a repeat dispatch resumes rather
+than re-hitting the same wall. Never silently truncate — a partial sweep that looks complete is
+worse than an explicit one.
 
 ## No-edit runs
 
@@ -2657,7 +2915,8 @@ git commit -m "kettle-skill-creator: mirror plugin-root dirs during promotion"
 - Test: `~/.claude/skills/kettle-skill-creator/scripts/tests/test_validate.py`
 
 **Interfaces:**
-- Consumes: existing `validate_plugin(name) -> list[str]` (errors) and its `VALID_CATEGORIES`.
+- Consumes: existing `validate_plugin(name: str, repo_root: Path) -> list[str]` — returns errors
+  and prints warnings; its local `plugin_dir` is the **skill** directory, not the plugin root.
 - Produces: additional checks, purely additive — the function currently inspects only
   `plugins/<name>/skills/<name>/`, so plugin-root directories are not flagged today.
 
@@ -2742,6 +3001,19 @@ def test_non_executable_hook_script_is_rejected(tmp_path):
     assert "executable" in (result.stdout + result.stderr).lower()
 
 
+def test_malformed_hooks_json_reports_an_error_not_a_traceback(tmp_path):
+    """Under --all a traceback aborts the whole catalog run."""
+    repo = make_plugin(tmp_path)
+    (repo / "plugins" / "demo" / "hooks" / "hooks.json").write_text(
+        json.dumps({"hooks": {"PreToolUse": ["Bash"]}})
+    )
+    result = validate(repo)
+    combined = result.stdout + result.stderr
+    assert result.returncode != 0
+    assert "Traceback" not in combined
+    assert "objects" in combined or "must" in combined
+
+
 def test_skill_only_plugin_still_validates(tmp_path):
     """The other 60+ plugins have no plugin-root dirs at all."""
     repo = tmp_path / "market"
@@ -2806,9 +3078,25 @@ def validate_plugin_root(plugin_dir, name):
                     f"{name}: hooks/hooks.json needs a top-level 'hooks' key; "
                     "an unwrapped file registers nothing"
                 )
-            for entries in (payload.get("hooks") or {}).values():
-                for entry in entries or []:
+            # Every level is type-checked. A validator that raises on the malformed
+            # input it exists to catch is worse than none: under --all it aborts
+            # the whole catalog run with a traceback.
+            hooks_map = payload.get("hooks")
+            if "hooks" in payload and not isinstance(hooks_map, dict):
+                errors.append(f"{name}: hooks/hooks.json 'hooks' must be an object")
+                hooks_map = {}
+            for event, entries in (hooks_map or {}).items():
+                if not isinstance(entries, list):
+                    errors.append(f"{name}: hooks.json {event} must map to a list")
+                    continue
+                for entry in entries:
+                    if not isinstance(entry, dict):
+                        errors.append(f"{name}: hooks.json {event} entries must be objects")
+                        continue
                     for hook in entry.get("hooks") or []:
+                        if not isinstance(hook, dict):
+                            errors.append(f"{name}: hooks.json {event} hooks must be objects")
+                            continue
                         command = hook.get("command", "")
                         if PLUGIN_ROOT_VAR not in command:
                             errors.append(
@@ -2833,13 +3121,19 @@ def validate_plugin_root(plugin_dir, name):
     return errors
 ```
 
-Call it from `validate_plugin`, adding `import json`, `import os` if absent:
+Call it from `validate_plugin`:
 
 ```python
     errors.extend(validate_plugin_root(repo_root / "plugins" / name, name))
 ```
 
-Use the plugin-directory variable the file already computes rather than rebuilding the path.
+**Pass `repo_root / "plugins" / name` exactly as written — do not reuse the function's local
+`plugin_dir`.** That variable is the *skill* directory
+(`repo_root/plugins/<name>/skills/<name>/`, `validate-plugin.py:85`), so passing it makes all four
+checks silently find nothing and the validator prints `OK` for a plugin whose hook is not wired.
+`repo_root` is already a parameter of `validate_plugin(name: str, repo_root: Path)` (line 81), so
+it is in scope. Insert the call after the `if not plugin_dir.is_dir()` guard (line 88) and before
+the warning loop (line 163). Add `import json` and `import os` — neither is imported today.
 
 - [ ] **Step 4: Run the tests to verify they pass**
 
@@ -2898,25 +3192,48 @@ git commit -m "kettle-skill-creator: validate plugin manifest, hooks.json, and v
 test:
     #!/usr/bin/env bash
     set -euo pipefail
+    shopt -s nullglob
 
-    found=0
     for dir in plugins/*/tests plugins/*/skills/*/scripts/tests; do
         [[ -d "$dir" ]] || continue
-        found=1
+        # sync-groups symlinks each skill into `all` plus every category, so the
+        # same suite matches once per group. Skip the symlinked copies.
+        skill_dir="${dir%/scripts/tests}"
+        [[ -L "$skill_dir" ]] && continue
         echo "== $dir"
-        python3 -m pytest "$dir" -q
+        PYTHONDONTWRITEBYTECODE=1 python3 -m pytest "$dir" -q -p no:cacheprovider
     done
-
-    if [[ "$found" -eq 0 ]]; then
-        echo "No test directories found"
-    fi
 ```
 
-- [ ] **Step 2: Verify the recipe finds nothing yet, then that it runs after promotion**
+`PYTHONDONTWRITEBYTECODE` and `-p no:cacheprovider` matter: `tests/` is in `PLUGIN_ROOT_DIRS`, so
+without them `__pycache__` and `.pytest_cache` land under `plugins/comment-reviewer/tests/`, get
+committed by Task 13's `git add plugins/`, and are then deleted by the next promotion's
+`mirror_dir` rmtree — permanent add/delete churn.
+
+- [ ] **Step 1b: Create `.gitignore`**
+
+The repo has none. Create `/home/kettle/git_repos/KettleOfSkills/.gitignore`:
+
+```gitignore
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+```
+
+- [ ] **Step 2: Verify the recipe against its real pre-state**
 
 Run: `cd ~/git_repos/KettleOfSkills && just test`
-Expected before Task 13's promotion: "No test directories found". This is the correct pre-state —
-`plugins/comment-reviewer/` does not exist until promotion.
+
+Expected **before** Task 13's promotion: exactly two suites run —
+`plugins/media-processing/skills/media-processing/scripts/tests` and
+`plugins/ui-styling/skills/ui-styling/scripts/tests`. These are pre-existing orphan test
+directories that no recipe invoked until now; both must be green. If either fails, that is a
+pre-existing breakage to report and fix, not something to skip past.
+
+Without the symlink guard these two suites would each run three times (once real, twice through
+the `all` and category group symlinks), reporting 339 tests where there are 113. After Task 13 a
+third line, `plugins/comment-reviewer/tests`, appears.
 
 - [ ] **Step 3: Update `README.md`**
 
@@ -3060,8 +3377,13 @@ PY
 Build a scratch repo with a branch, then in a **fresh Claude Code session** (plugin hooks load
 only at session start) attempt a PR creation and confirm the denial reason appears.
 
+`$SCRATCH` must survive across steps and across the session restart, so it is a fixed path rather
+than `mktemp -d` — Steps 6 and 7 run in a different shell and would otherwise `cd "/work"` and
+abort the whole assertion block under `set -e` before a single assertion ran.
+
 ```bash
-SCRATCH=$(mktemp -d)
+SCRATCH="${SCRATCH:-$HOME/.cache/comment-reviewer-wiring}"
+rm -rf "$SCRATCH" && mkdir -p "$SCRATCH"
 git init -q -b main "$SCRATCH/up.git" --bare
 git clone -q "$SCRATCH/up.git" "$SCRATCH/work"
 cd "$SCRATCH/work"
@@ -3084,9 +3406,26 @@ var _ = retry
 // Output:
 // 2
 EOF
+mkdir -p negative
+cat > negative/dense.go <<'EOF'
+package negative
+
+// Retry at most 3 times with 250ms backoff: the upstream rate-limiter returns
+// 429 without a Retry-After header, and the SRE runbook owns this constant.
+//
+//nolint:gomnd
+const maxRetries = 3
+
+// Output:
+// 3
+EOF
 git add . && git commit -q -m "add retry"
 echo "scratch repo: $SCRATCH/work"
 ```
+
+`negative/dense.go` is the Class C counter-case: every line carries a load-bearing fact (a count,
+a duration, a cause, an owner), so the no-loss test must leave it byte-identical. A sweep that
+"tidies" it has failed even though nothing looks broken.
 
 In the fresh session, from that directory, run `gh pr create --fill`.
 Expected: denied, with the reason naming comment-reviewer.
@@ -3098,41 +3437,141 @@ Dispatch the `comment-reviewer` agent (or run `/comment-review`), then retry.
 Assert all of:
 
 ```bash
+SCRATCH="${SCRATCH:-$HOME/.cache/comment-reviewer-wiring}"
 cd "$SCRATCH/work"
-# Class A leakage gone
+
+# The negative sample: dense, correct, already minimal. The correct outcome is
+# "left alone and reported" -- if any byte changed, the no-loss test is not being
+# applied and Class C is just shortening things.
+git diff --quiet HEAD~1 -- negative/dense.go 2>/dev/null || \
+  git show HEAD:negative/dense.go | diff - negative/dense.go
+
+# Class A: provenance dropped, the FACT retained
 ! grep -q "step 3 of the plan" svc.go
-! grep -q "Mark found" svc.go
+grep -qi "retry twice\|retries twice" svc.go
+
+# Class A report-only valve: an unrecoverable reason is REPORTED, never deleted.
+# The spec is explicit that "// This function was changed to fix the bug Mark
+# found" must survive -- its reason is in neither the comment nor the code.
+grep -q "Mark found" svc.go
+
 # never-touch preserved byte-for-byte
 grep -qx "//nolint:errcheck" svc.go
 grep -qx "// Output:" svc.go
+
 # one commit, correct subject, no trailer
 git log -1 --pretty=%s | grep -q '^comments: '
 test -z "$(git log -1 --pretty=%b)"
 ! git log -1 --pretty=%B | grep -qi "co-authored-by\|claude code"
+
 # receipt matches the new HEAD tree
 test -f "$(git rev-parse --absolute-git-dir)/claude/comment-review/$(git rev-parse 'HEAD^{tree}')"
 echo "all wiring assertions passed"
 ```
 
+Additionally, the agent's returned report **must list `svc.go` as a class A report-only finding**.
+If it deleted the "Mark found" comment instead of reporting it, the run failed the spec's safety
+valve even though every `grep` above would still pass.
+
 Then run `gh pr create --fill` again. Expected: no denial.
 
-- [ ] **Step 7: Wiring verification — idempotency and worktree**
+- [ ] **Step 7: Record the pre-state for the idempotency check**
+
+The dispatch must happen *between* two shell blocks. Collapsing them into one — with the dispatch
+as a shell comment — makes `test "$(git rev-parse HEAD)" = "$BEFORE"` compare HEAD to itself and
+print `idempotent OK` unconditionally, certifying nothing.
+
+```bash
+SCRATCH="${SCRATCH:-$HOME/.cache/comment-reviewer-wiring}"
+cd "$SCRATCH/work"
+BEFORE=$(git rev-parse HEAD)
+RECEIPT="$(git rev-parse --absolute-git-dir)/claude/comment-review/$(git rev-parse 'HEAD^{tree}')"
+echo "BEFORE=$BEFORE"
+echo "RECEIPT=$RECEIPT"
+```
+
+- [ ] **Step 8: Dispatch the agent a second time**
+
+Dispatch `comment-reviewer` again on the same branch and wait for its summary. It must report
+**zero fixed in all three classes** — the first run already cleaned the branch.
+
+- [ ] **Step 9: Assert idempotency**
+
+```bash
+test "$(git rev-parse HEAD)" = "$BEFORE"      # no second commit
+test -f "$RECEIPT"                             # receipt still present
+python3 -c "
+import json, sys
+d = json.load(open(sys.argv[1]))
+assert sum(d['fixed'].values()) == 0, d['fixed']
+print('idempotent OK')
+" "$RECEIPT"
+```
+
+- [ ] **Step 10: Pre-commit rejection must write no receipt**
+
+A rejecting pre-commit hook leaves HEAD unmoved. If a receipt were written anyway it would
+certify an unfixed tree, the gate would pass, and the PR would ship with none of the rewrites.
 
 ```bash
 cd "$SCRATCH/work"
-BEFORE=$(git rev-parse HEAD)
-# Dispatch the agent a second time.
-# Expect: zero edits, no new commit, receipt still valid.
-test "$(git rev-parse HEAD)" = "$BEFORE" && echo "idempotent OK"
+git checkout -q -b reject-test
+cat > svc2.go <<'EOF'
+package main
 
-git worktree add -q "$SCRATCH/wt" -b feat2
-cd "$SCRATCH/wt"
-test -f .git && echo ".git is a file, as expected"
-# Dispatch the agent here; it must not crash and must write a receipt.
-test -d "$(git rev-parse --absolute-git-dir)/claude/comment-review" && echo "worktree receipt OK"
+// As per step 3 of the plan, this needs cleaning.
+func two() int { return 2 }
+EOF
+git add svc2.go && git commit -q -m "add svc2"
+printf '#!/bin/sh\nexit 1\n' > .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
+BEFORE=$(git rev-parse HEAD)
+RECEIPT="$(git rev-parse --absolute-git-dir)/claude/comment-review/$(git rev-parse 'HEAD^{tree}')"
 ```
 
-- [ ] **Step 8: Commit the marketplace changes**
+Dispatch the agent. Then:
+
+```bash
+test "$(git rev-parse HEAD)" = "$BEFORE"      # commit was rejected
+! test -f "$RECEIPT"                           # and NO receipt was written
+rm .git/hooks/pre-commit
+echo "pre-commit rejection handled"
+```
+
+- [ ] **Step 11: A file with unrelated staged work is skipped as dirty**
+
+```bash
+cd "$SCRATCH/work"
+git checkout -q feat
+echo "var unrelated = 1" >> svc.go
+git add svc.go
+```
+
+Dispatch the agent. It must report `svc.go` as `dirty` and make no edit to it — the sweep never
+mixes its changes with work in progress. Then:
+
+```bash
+git diff --cached --name-only | grep -qx "svc.go"   # your staged work is untouched
+git stash -q && echo "dirty-file skip handled"
+```
+
+- [ ] **Step 12: Worktree verification**
+
+```bash
+cd "$SCRATCH/work"
+git worktree add -q "$SCRATCH/wt" -b feat2
+cd "$SCRATCH/wt"
+test -f .git && echo ".git is a FILE here, as expected"
+```
+
+Dispatch the agent from `$SCRATCH/wt`. It must not crash, and:
+
+```bash
+cd "$SCRATCH/wt"
+test -d "$(git rev-parse --absolute-git-dir)/claude/comment-review"
+echo "worktree receipt OK"
+```
+
+- [ ] **Step 13: Commit the marketplace changes**
 
 ```bash
 cd ~/git_repos/KettleOfSkills
@@ -3157,10 +3596,24 @@ never-touch tiers → Tasks 6 and 8; report-only destination → Tasks 8 and 9; 
 → Task 10; `validate-plugin.py` → Task 11; group-install limitation, category, repo docs → Task
 12; all six verification layers → Tasks 1-7 (unit), 13 (end-to-end and wiring).
 
-**Deliberate deferral.** The spec's post-edit "run the repo's build/lint/test and revert on
-failure" step and the file/edit caps with `partial: true` are specified as agent instructions in
-Task 9 rather than as code. They are judgement applied per repository, not a function with a
-signature; the end-to-end assertions in Task 13 Step 6 verify the outcome.
+**Deliberate deferral, stated honestly.** Three spec requirements are agent instructions in Task 9
+rather than code, because each is judgement applied per repository rather than a function with a
+signature:
+
+1. the post-edit "run the repo's build/lint/test, revert the sweep on failure" step;
+2. the 60-file / 150-edit caps and `--partial` receipt flag (the flag and field are real code in
+   Task 2; deciding when to set it is not);
+3. the Class C fact enumeration emitted in the report.
+
+None of these has a unit test. Their only verification is the end-to-end layer — Task 13 Steps 6
+and 9-11 — which is why those steps assert on `git diff`, on the receipt body, and on the agent's
+returned report rather than only on exit codes. An implementer who skips them will produce a green
+unit suite and a plugin that silently drops findings; the end-to-end steps are not optional.
+
+**Class-rule verification.** The spec's fourth verification layer (negative fixtures whose correct
+outcome is "left alone and reported") is `tests/samples/negative/dense.go`, written in Task 5 Step
+1 and asserted byte-identical in Task 13 Step 6. It has no unit test because "should this comment
+be condensed" is not decidable by a script — that is precisely why it is an end-to-end assertion.
 
 **Type consistency.** `receipt_root(cwd)`, `head_tree(cwd)`, `resolve_trunk(cwd)`,
 `merge_base(trunk, cwd)`, `touched_files(base, cwd)` are used with these exact names and

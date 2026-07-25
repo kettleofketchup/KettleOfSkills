@@ -120,12 +120,18 @@ A `PreToolUse` hook on `Bash`. It decides between three outcomes, never two.
 | Skip requested (below) | exit 0, pass through |
 | Valid receipt exists for HEAD tree | exit 0, pass through |
 | Receipt genuinely absent for a resolved HEAD | `deny` with instructions |
-| **Any resolution error** — not a repo, `rev-parse` fails, no commits, git dir unreadable or unwritable, receipt unparseable | **exit 0 with a warning note** |
+| **Any resolution error** — not a repo, `rev-parse` fails, no commits, git dir unreadable or unwritable, trunk unresolvable | **exit 0 with a warning note** |
+| Receipt present but unparseable | `deny` — see below |
 
 **The gate fails open.** As originally written, every infrastructure error was
 indistinguishable from "unreviewed" and denied — and because running the reviewer hits the same
 wall, the user would be locked out with advice that cannot help. The repo's own hook precedent
 (`~/dotfiles/.claude/hooks/preexisting-nudge.py`) exits 0 on malformed input for the same reason.
+
+**An unparseable receipt is the one exception, and it denies.** Fail-open is for cases where the
+reviewer itself cannot run. A corrupt receipt is not one of those: it is indistinguishable from no
+receipt, and re-running the review overwrites it. Denying there costs one review and loses
+nothing, whereas passing would let a PR ship on the strength of a file nobody can read.
 
 Denial shape:
 
@@ -142,13 +148,24 @@ Denial is not fatal: the tool call is refused and the reason is fed back as text
 Tokenised, never a substring regex over the raw command. A regex matches
 `git commit -m "prep for gh pr create"`, which the verification layer explicitly forbids.
 
-1. Split the command on `;`, `&&`, `||`, `|`.
-2. Drop text after an unquoted `#`.
-3. Drop leading `VAR=value` assignments and a leading `env`.
-4. `shlex.split` each segment; on `ValueError`, pass through.
-5. Match only when a segment's first token is `gh`, `fj`, `mj`, or `glab`, **and** its first two
-   non-option arguments are `pr` or `mr`, then `create`. Skipping options also handles
-   `fj -H host pr create`.
+**Lex first, then split.** Splitting the raw string before lexing cuts through quotes:
+`gh pr create --title "fix; refactor"` becomes two unbalanced halves, `shlex` raises on both, and
+a genuine PR creation goes invisible to the gate. A multi-line `--body` fails identically, and
+both are mainline shapes. Verified by reproduction.
+
+1. Strip heredoc bodies — their contents are data, not commands.
+2. Lex the whole command with `shlex.shlex(..., posix=True, punctuation_chars=True)` and
+   `whitespace_split = True`. On `ValueError` (unbalanced quotes), pass through.
+3. Split the resulting token stream on the operator tokens `;`, `&&`, `||`, `|`, `&`, newline.
+   `posix=True` already removes unquoted `#` comments.
+4. Per segment, drop leading `VAR=value` assignments and a leading `env`.
+5. Match when a segment's first token is `gh`, `fj`, `mj`, or `glab` **and** an adjacent
+   `(pr|mr, create)` token pair appears in it. Scanning for the adjacent pair rather than the
+   first two non-option arguments is what handles option *values* such as
+   `fj -H codeberg.org pr create`.
+6. A skip assignment releases only **its own segment**. In
+   `CLAUDE_SKIP_COMMENT_REVIEW=1 ls; gh pr create` the skip belongs to `ls`; treating it as
+   global would be a free bypass.
 
 **Accepted bypasses**, documented rather than pretended away: `gh api .../pulls -X POST`, user
 `gh` aliases, the web UI, and wrapper recipes such as `just pr`. The last is concrete here —
