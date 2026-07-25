@@ -2763,9 +2763,20 @@ cd ~/git_repos/KettleOfSkills
 python3 ~/.claude/skills/kettle-skill-creator/scripts/validate-plugin.py --all 2>&1 | tail -20
 ```
 
-Expected: the same catalog-wide violation count as before this task — roughly 300 pre-existing
-line-length findings, which this change must not increase. Capture the count before and after;
-if it rose, a new check is firing on skill-only plugins and must be narrowed.
+Expected: **exactly 283 errors and exit code 1** — the measured baseline on 2026-07-25, before
+any change in this plan. Every one is a pre-existing reference-file line-length violation; the
+catalog has never validated clean, so exit 1 here is the correct pre-state, not a regression.
+
+If the count rises above 283, a new check from Task 11 is firing on skill-only plugins and must
+be narrowed until it returns to 283. Compare against the captured baseline:
+
+```bash
+diff <(python3 ~/.claude/skills/kettle-skill-creator/scripts/validate-plugin.py --all 2>&1) \
+     /tmp/claude-1000/-home-kettle-git-repos-KettleOfSkills/498d4648-44fa-41f2-ac40-73bfc2fdece7/scratchpad/validate-baseline.txt
+```
+
+Expected diff: only lines concerning `comment-reviewer` itself. If the baseline file is gone,
+regenerate it from `git stash`-ed tooling or accept 283 as the target number.
 
 - [ ] **Step 6: Commit**
 
