@@ -119,14 +119,58 @@ is a file in worktrees, and a branch's upstream is the wrong diff base.
   `touched_files(base, cwd) -> list[str]`. All take `cwd` as a `str | Path` and raise `GitError`
   on any git failure.
 
-- [ ] **Step 1: Write `conftest.py` with git repository fixtures**
+- [ ] **Step 1: Write `tests/paths.py` — layout resolution**
+
+The source tree and the promoted marketplace tree put `scripts/` in *different* places relative
+to `tests/`, and `just test` runs the promoted copy. Hard-coding `ROOT/"scripts"` passes locally
+and fails in the tree the release ships.
+
+```python
+"""Resolve this plugin's layout, which differs between the two trees it lives in.
+
+    source:    <root>/SKILL.md          <root>/scripts/       <root>/tests/
+    promoted:  <root>/skills/<name>/SKILL.md, .../scripts/    <root>/tests/
+
+`just test` globs plugins/*/tests, so the promoted layout is the one CI exercises.
+Every test module imports its paths from here rather than deriving them.
+"""
+
+from pathlib import Path
+
+NAME = "comment-reviewer"
+
+ROOT = Path(__file__).resolve().parent.parent
+_PROMOTED_SKILL = ROOT / "skills" / NAME
+
+SKILL_DIR = _PROMOTED_SKILL if _PROMOTED_SKILL.is_dir() else ROOT
+SCRIPTS = SKILL_DIR / "scripts"
+REFERENCES = SKILL_DIR / "references"
+SKILL_MD = SKILL_DIR / "SKILL.md"
+HOOK_SCRIPTS = ROOT / "hooks" / "scripts"
+FIXTURES = Path(__file__).resolve().parent / "fixtures"
+```
+
+- [ ] **Step 2: Write `conftest.py` with git repository fixtures**
 
 ```python
 """Git repository fixtures. Every fixture builds a real repo -- these scripts
 exist to handle git's actual layout quirks, which a mock would hide."""
 
 import subprocess
-import pytest
+import sys
+from pathlib import Path
+
+# Make paths.py importable before anything else, then put the script
+# directories on sys.path using the layout it resolved.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+import paths  # noqa: E402
+
+for _candidate in (paths.SCRIPTS, paths.HOOK_SCRIPTS):
+    if _candidate.is_dir():
+        sys.path.insert(0, str(_candidate))
+
+import pytest  # noqa: E402
 
 
 def run(cwd, *args):
@@ -192,7 +236,7 @@ def cloned_with_remote(tmp_path):
     return work
 ```
 
-- [ ] **Step 2: Write the failing tests**
+- [ ] **Step 3: Write the failing tests**
 
 ```python
 import subprocess
@@ -269,23 +313,12 @@ def test_repo_without_commits_raises_on_head(repo_no_commits):
         gitpaths.head_tree(repo_no_commits)
 ```
 
-- [ ] **Step 3: Run the tests to verify they fail**
+- [ ] **Step 4: Run the tests to verify they fail**
 
 Run: `cd ~/dotfiles/.claude/plugin-skills/comment-reviewer && python3 -m pytest tests/test_gitpaths.py -v`
-Expected: collection error — `ModuleNotFoundError: No module named 'gitpaths'`.
-
-- [ ] **Step 4: Add path wiring so tests import the scripts**
-
-Create `tests/conftest.py` additions at the top of the file (before the fixtures already written):
-
-```python
-import sys
-from pathlib import Path
-
-ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(ROOT / "scripts"))
-sys.path.insert(0, str(ROOT / "hooks" / "scripts"))
-```
+Expected: collection error — `ModuleNotFoundError: No module named 'gitpaths'`. The failure must
+name `gitpaths`, not `paths` or `conftest`: if it names either of those, the layout resolution in
+Steps 1-2 is wrong and fixing `gitpaths.py` will not help.
 
 - [ ] **Step 5: Implement `scripts/gitpaths.py`**
 
@@ -418,14 +451,12 @@ import each other, so gitpaths.py is vendored to both. Drift between them is a
 silent split-brain bug: the gate and the reviewer would disagree about where
 receipts live."""
 
-from pathlib import Path
-
-ROOT = Path(__file__).resolve().parent.parent
+import paths
 
 
 def test_gitpaths_copies_are_byte_identical():
-    source = (ROOT / "scripts" / "gitpaths.py").read_bytes()
-    vendored = (ROOT / "hooks" / "scripts" / "gitpaths.py").read_bytes()
+    source = (paths.SCRIPTS / "gitpaths.py").read_bytes()
+    vendored = (paths.HOOK_SCRIPTS / "gitpaths.py").read_bytes()
     assert source == vendored, "run: cp scripts/gitpaths.py hooks/scripts/gitpaths.py"
 ```
 
@@ -1037,10 +1068,13 @@ import pytest
 
 @pytest.mark.parametrize("name", ["gitpaths.py", "receipt.py"])
 def test_vendored_copies_are_byte_identical(name):
-    source = (ROOT / "scripts" / name).read_bytes()
-    vendored = (ROOT / "hooks" / "scripts" / name).read_bytes()
+    source = (paths.SCRIPTS / name).read_bytes()
+    vendored = (paths.HOOK_SCRIPTS / name).read_bytes()
     assert source == vendored, f"run: cp scripts/{name} hooks/scripts/{name}"
 ```
+
+Replace the single-file test written in Task 1 with this parametrized version rather than keeping
+both — two tests asserting the same thing about `gitpaths.py` is duplication that will drift.
 
 - [ ] **Step 4: Implement `hooks/scripts/pr-create-gate.py`**
 
@@ -1174,10 +1208,11 @@ git commit -m "comment-reviewer: add PreToolUse pr-create gate (fails open)"
 
 **Interfaces:**
 - Consumes: nothing.
-- Produces: `Lang(line, block, strings)` namedtuple; `LANGS: dict[str, Lang]`;
+- Produces: `Lang(line, block, strings, docstrings=False)` namedtuple;
+  `_in_docstring_position(text, index) -> bool`; `LANGS: dict[str, Lang]`;
   `EXTENSIONS: dict[str, str]`; `detect_language(path) -> str | None`;
   `scan(text, lang) -> list[dict]` where each dict is
-  `{"start_line": int, "end_line": int, "text": str, "kind": "line"|"block"}`
+  `{"start_line": int, "end_line": int, "text": str, "kind": "line"|"block"|"docstring"}`
   (1-indexed, inclusive); `extract(path) -> dict` returning
   `{"file": str, "lang": str, "comments": [...], "skipped": str | None}`;
   `main()` reading newline-separated paths from stdin and writing one JSON object to stdout.
@@ -1198,17 +1233,23 @@ func main() {
 }
 ```
 
-`tests/fixtures/sample.py`:
+`tests/fixtures/sample.py` — note the two triple-quoted literals: the first is a docstring and
+must be reviewable, the second is data and must be protected. Line numbers are asserted, so copy
+it byte for byte.
+
 ```python
+"""Module docstring
+spanning two lines."""
+
 # leading comment
 VALUE = "text with # not a comment"
 OTHER = 'single # quoted'
-
-"""Module-level docstring
-spanning two lines."""
+BLOB = """not a docstring
+just data with # inside"""
 
 
 def f():
+    """Function docstring."""
     return 1  # trailing
 ```
 
@@ -1275,10 +1316,31 @@ def test_python_ignores_hash_inside_strings():
     assert not any("single" in t for t in texts("sample.py"))
 
 
-def test_python_captures_the_multiline_docstring_span():
-    docstrings = [c for c in spans("sample.py") if "Module-level" in c["text"]]
+def test_python_captures_the_module_docstring_span():
+    docstrings = [c for c in spans("sample.py") if "Module docstring" in c["text"]]
     assert len(docstrings) == 1
-    assert docstrings[0]["start_line"] == 6 and docstrings[0]["end_line"] == 7
+    assert (docstrings[0]["start_line"], docstrings[0]["end_line"]) == (1, 2)
+    assert docstrings[0]["kind"] == "docstring"
+
+
+def test_python_captures_the_function_docstring():
+    docstrings = [c for c in spans("sample.py") if "Function docstring" in c["text"]]
+    assert len(docstrings) == 1
+    assert docstrings[0]["start_line"] == 12
+    assert docstrings[0]["kind"] == "docstring"
+
+
+def test_python_leaves_a_triple_quoted_data_string_alone():
+    """A triple-quoted literal that is not in docstring position is data. Emitting
+    it as a comment would invite the reviewer to rewrite a live string."""
+    assert not any("not a docstring" in t for t in texts("sample.py"))
+    assert not any("just data" in t for t in texts("sample.py"))
+
+
+def test_python_line_comment_after_the_docstring():
+    leading = [c for c in spans("sample.py") if "leading comment" in c["text"]]
+    assert len(leading) == 1
+    assert leading[0]["start_line"] == 4 and leading[0]["kind"] == "line"
 
 
 def test_shell_ignores_hash_inside_quotes():
@@ -1374,6 +1436,7 @@ argv limits) and writes one JSON object on stdout.
 """
 
 import json
+import re
 import sys
 from collections import namedtuple
 from pathlib import Path
@@ -1381,20 +1444,41 @@ from pathlib import Path
 MAX_BYTES = 1_000_000
 BINARY_SNIFF_BYTES = 8192
 
-# line:    tokens that start a comment running to end of line
-# block:   (open, close) pairs
-# strings: (open, close, escapes) -- escapes means a backslash escapes the next
-#          character inside the literal
-Lang = namedtuple("Lang", "line block strings")
+# line:       tokens that start a comment running to end of line
+# block:      (open, close) pairs
+# strings:    (open, close, escapes) -- escapes means a backslash escapes the
+#             next character inside the literal
+# docstrings: whether a 3-character string delimiter in docstring position is a
+#             reviewable comment (Python) rather than data
+Lang = namedtuple("Lang", "line block strings docstrings", defaults=(False,))
 
 _C_STRINGS = (('"', '"', True), ("'", "'", True))
+
+# A triple-quoted literal is a docstring only as the first statement of a module,
+# class, or function. Anywhere else it is data, and rewriting it would change what
+# the program does -- so the same delimiter has to be read two ways.
+_DOCSTRING_OWNER = re.compile(r"^(async\s+def|def|class)\b")
+
+
+def _in_docstring_position(text, index):
+    """True when the literal opening at `index` is a docstring, not data."""
+    preceding = [line.strip() for line in text[:index].splitlines()]
+    meaningful = [line for line in preceding if line and not line.startswith("#")]
+    if not meaningful:
+        return True  # module docstring, possibly preceded by comments
+    last = meaningful[-1]
+    return last.endswith(":") and bool(_DOCSTRING_OWNER.match(last))
+
 
 LANGS = {
     "go": Lang(("//",), (("/*", "*/"),), _C_STRINGS + (("`", "`", False),)),
     "rust": Lang(("//",), (("/*", "*/"),), _C_STRINGS),
     "typescript": Lang(("//",), (("/*", "*/"),), _C_STRINGS + (("`", "`", True),)),
     "c": Lang(("//",), (("/*", "*/"),), _C_STRINGS),
-    "python": Lang(("#",), (), (('"""', '"""', True), ("'''", "'''", True)) + _C_STRINGS),
+    "python": Lang(
+        ("#",), (), (('"""', '"""', True), ("'''", "'''", True)) + _C_STRINGS,
+        docstrings=True,
+    ),
     "shell": Lang(("#",), (), _C_STRINGS),
     "yaml": Lang(("#",), (), _C_STRINGS),
     "nix": Lang(("#",), (("/*", "*/"),), _C_STRINGS),
@@ -1464,6 +1548,15 @@ def scan(text, lang):
         )
         if matched_string:
             opener, closer, escapes = matched_string
+            # A docstring is a string literal to the parser but a comment to a
+            # reader, so it is the one string we emit rather than skip.
+            is_docstring = (
+                lang.docstrings
+                and len(opener) == 3
+                and _in_docstring_position(text, index)
+            )
+            start_line = line
+            start_index = index
             index += len(opener)
             while index < length:
                 if escapes and text[index] == "\\":
@@ -1477,6 +1570,11 @@ def scan(text, lang):
                 if text[index] == "\n":
                     line += 1
                 index += 1
+            if is_docstring:
+                spans.append({
+                    "start_line": start_line, "end_line": line,
+                    "text": text[start_index:index], "kind": "docstring",
+                })
             continue
 
         matched_block = next(
