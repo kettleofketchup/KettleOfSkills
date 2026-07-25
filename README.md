@@ -16,7 +16,16 @@ A Claude Code marketplace that packages curated skills as individually installab
 
 # Install a single skill
 /plugin install helm@kettleofskills
+
+# Install a plugin that ships hooks or agents (must be installed directly)
+/plugin install comment-reviewer@kettleofskills
 ```
+
+> **Plugins with hooks or agents must be installed directly, not via a group.** Group bundles
+> (`all`, `claude-tooling`, …) symlink each skill's directory, so they carry the skill and its
+> scripts but not the plugin-root `hooks/`, `agents/`, or `commands/`. `comment-reviewer` needs
+> its hook to gate `pr create`, so install it by name. Do not enable both the direct plugin and
+> a group containing it — the skill would load twice.
 
 ## Group plugins
 
@@ -46,6 +55,7 @@ A Claude Code marketplace that packages curated skills as individually installab
 | `claude-code` | Claude Code CLI features, setup, and integration |
 | `cloudflare` | Cloudflare Tunnel deployment, Access tokens, and DNS management |
 | `cloudnative-pg` | CloudNativePG (CNPG) Kubernetes operator for PostgreSQL |
+| `comment-reviewer` | Reviews branch comments before a PR opens; gates `pr create` until it runs |
 | `context-engineering` | Context engineering for AI agent systems |
 | `copyparty` | Portable file server with resumable uploads, dedup, and WebDAV |
 | `dicebear` | DiceBear avatar generation and Gravatar API integration |
