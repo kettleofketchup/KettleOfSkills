@@ -826,6 +826,37 @@ git commit -m "comment-reviewer: add receipt lifecycle (tree-keyed, TTL, pruning
 Split from the gate because it is a pure function with the densest test matrix, and because a
 substring regex here would deny `git commit -m "prep for gh pr create"`.
 
+> **AMENDED AFTER EXECUTION (2026-07-25).** The reference implementation below was found defective
+> during review and the shipped module diverged from it substantially — 361 lines against ~90,
+> with 96 tests. **The source of truth is
+> `~/dotfiles/.claude/plugin-skills/comment-reviewer/hooks/scripts/prmatch.py`**, not the code in
+> this task. The code below is retained as the design rationale that produced it.
+>
+> Nine defects were found by executing the code against adversarial inputs, every one a silent
+> failure that reading the code did not reveal:
+>
+> 1. **`"\n"` in `_SEGMENT_OPERATORS` was dead code.** `shlex` classifies newline as whitespace
+>    and never emits it as a token, so `git push\ngh pr create --fill` — an ordinary multi-line
+>    Bash call — was invisible to the gate. Removing the constant changed no behaviour.
+> 2. Command substitution invisible: `url=$(gh pr create --fill)` and backtick forms.
+> 3. `--help` disqualification scanned all tokens, so appending `--title --help` to any real
+>    invocation bypassed the gate.
+> 4. Path-qualified `/usr/bin/gh` unrecognised.
+> 5. Wrapper prefixes `sudo`, `nohup`, `time`, `command` defeated detection.
+> 6. `_has_skip` ignored an `env` prefix, so an explicit skip was silently disregarded.
+> 7. Backslash-newline line continuation unrecognised.
+> 8. The heredoc regex misfired on `$((1 << N))`, swallowing a following real command.
+> 9. A first fix introduced a *new* false positive — a blunt line-continuation pre-pass collapsed
+>    backslash-newline inside single quotes, where bash preserves it literally.
+>
+> The resolution for 1, 2 and 9 is architectural: token-stream splitting cannot see newlines, and
+> a raw-string pre-pass cannot see quotes. `_split_top_level` is a quote-aware character scanner
+> that splits on unquoted separators and handles continuations per quote context (literal inside
+> single quotes, continuation elsewhere), then `shlex.split`s each piece.
+>
+> Accepted blind spots, documented in the module: `gh api`, user aliases, the web UI, `just pr`
+> wrappers, and `sh -c` / `bash -c` / `eval` where the invocation is one quoted token.
+
 **Files:**
 - Create: `~/dotfiles/.claude/plugin-skills/comment-reviewer/hooks/scripts/prmatch.py`
 - Test: `~/dotfiles/.claude/plugin-skills/comment-reviewer/tests/test_match.py`
