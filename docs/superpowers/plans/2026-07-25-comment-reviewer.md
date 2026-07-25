@@ -537,9 +537,14 @@ git commit -m "comment-reviewer: add gitpaths repo-state resolver"
 - [ ] **Step 1: Write the failing tests**
 
 ```python
+import json
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
+
+import pytest
 
 import gitpaths
+import paths
 import receipt
 
 T0 = datetime(2026, 7, 25, 12, 0, tzinfo=timezone.utc)
@@ -601,12 +606,44 @@ def test_is_valid_expires_after_ttl(repo):
     assert not receipt.is_valid(p, "t" * 40, "b" * 40, now=later)
 
 
-def test_prune_keeps_only_the_newest(repo):
+def test_prune_keeps_the_newest_by_identity(repo):
+    """Assert WHICH receipts survive, not how many. Reversing the sort so prune
+    keeps the oldest KEEP_NEWEST yields an identical count, so a count-only
+    assertion passes against a broken implementation."""
+    total = receipt.KEEP_NEWEST + 5
     root = gitpaths.receipt_root(repo)
-    for i in range(receipt.KEEP_NEWEST + 5):
+    for i in range(total):
         receipt.write(repo, payload(tree_sha=f"{i:040d}"), now=T0 + timedelta(minutes=i))
     receipt.prune(root, now=T0 + timedelta(hours=1))
-    assert len(list(root.iterdir())) == receipt.KEEP_NEWEST
+
+    survivors = {p.name for p in root.iterdir()}
+    expected = {f"{i:040d}" for i in range(total - receipt.KEEP_NEWEST, total)}
+    assert survivors == expected
+
+
+def test_write_cleans_up_temp_file_on_failure(repo):
+    """An orphaned temp file consumes a KEEP_NEWEST slot and can evict a real
+    receipt, blocking a PR that was genuinely reviewed."""
+    root = gitpaths.receipt_root(repo)
+    with pytest.raises(TypeError):
+        receipt.write(repo, payload(fixed={"A": object()}), now=T0)
+    assert list(root.iterdir()) == []
+
+
+def test_cli_write_survives_empty_stdin(repo):
+    """receipt.py is vendored into hooks/scripts/, where a traceback breaks the turn."""
+    import subprocess
+    import sys as _sys
+
+    script = paths.SCRIPTS / "receipt.py"
+    trunk = gitpaths.resolve_trunk(repo)
+    proc = subprocess.run(
+        [_sys.executable, str(script), "write", "--cwd", str(repo), "--base-ref", trunk],
+        input="", capture_output=True, text=True,
+    )
+    assert proc.returncode == 0, proc.stderr
+    written = json.loads(Path(proc.stdout.strip()).read_text())
+    assert written["fixed"] == {"A": 0, "B": 0, "C": 0}
 ```
 
 - [ ] **Step 2: Run the tests to verify they fail**
@@ -666,9 +703,20 @@ def write(cwd, payload, now=None):
     # Write-then-rename: a half-written receipt read by a concurrent gate would
     # parse as absent, denying a PR that was in fact reviewed.
     handle, temp = tempfile.mkstemp(dir=str(root))
-    with os.fdopen(handle, "w", encoding="utf-8") as fh:
-        json.dump(payload, fh, indent=2, sort_keys=True)
-    os.replace(temp, target)
+    try:
+        with os.fdopen(handle, "w", encoding="utf-8") as fh:
+            json.dump(payload, fh, indent=2, sort_keys=True)
+        os.replace(temp, target)
+    except Exception:
+        # A failed dump-and-replace must not leave an orphan in the receipt
+        # directory: prune() treats every file here as a receipt, so a leaked
+        # temp file would consume a KEEP_NEWEST slot and could evict a
+        # legitimate one -- blocking a user from opening a PR they did review.
+        try:
+            os.unlink(temp)
+        except OSError:
+            pass
+        raise
     prune(root, now=now)
     return target
 
@@ -728,7 +776,17 @@ def main(argv=None):
     writer.add_argument("--partial", action="store_true")
     args = parser.parse_args(argv)
 
-    body = {} if sys.stdin.isatty() else (json.load(sys.stdin) or {})
+    body = {}
+    if not sys.stdin.isatty():
+        try:
+            body = json.load(sys.stdin) or {}
+        except (ValueError, OSError) as exc:
+            # A malformed or empty report body must degrade to a zero-count
+            # receipt, not crash: this file is vendored into hooks/scripts/,
+            # where an uncaught traceback breaks the turn.
+            print(f"receipt.py: stdin was not valid JSON ({exc}); using empty body",
+                  file=sys.stderr)
+            body = {}
     payload = build(
         commit_sha=gitpaths.head_commit(args.cwd),
         tree_sha=gitpaths.head_tree(args.cwd),
@@ -767,6 +825,37 @@ git commit -m "comment-reviewer: add receipt lifecycle (tree-keyed, TTL, pruning
 
 Split from the gate because it is a pure function with the densest test matrix, and because a
 substring regex here would deny `git commit -m "prep for gh pr create"`.
+
+> **AMENDED AFTER EXECUTION (2026-07-25).** The reference implementation below was found defective
+> during review and the shipped module diverged from it substantially — 361 lines against ~90,
+> with 96 tests. **The source of truth is
+> `~/dotfiles/.claude/plugin-skills/comment-reviewer/hooks/scripts/prmatch.py`**, not the code in
+> this task. The code below is retained as the design rationale that produced it.
+>
+> Nine defects were found by executing the code against adversarial inputs, every one a silent
+> failure that reading the code did not reveal:
+>
+> 1. **`"\n"` in `_SEGMENT_OPERATORS` was dead code.** `shlex` classifies newline as whitespace
+>    and never emits it as a token, so `git push\ngh pr create --fill` — an ordinary multi-line
+>    Bash call — was invisible to the gate. Removing the constant changed no behaviour.
+> 2. Command substitution invisible: `url=$(gh pr create --fill)` and backtick forms.
+> 3. `--help` disqualification scanned all tokens, so appending `--title --help` to any real
+>    invocation bypassed the gate.
+> 4. Path-qualified `/usr/bin/gh` unrecognised.
+> 5. Wrapper prefixes `sudo`, `nohup`, `time`, `command` defeated detection.
+> 6. `_has_skip` ignored an `env` prefix, so an explicit skip was silently disregarded.
+> 7. Backslash-newline line continuation unrecognised.
+> 8. The heredoc regex misfired on `$((1 << N))`, swallowing a following real command.
+> 9. A first fix introduced a *new* false positive — a blunt line-continuation pre-pass collapsed
+>    backslash-newline inside single quotes, where bash preserves it literally.
+>
+> The resolution for 1, 2 and 9 is architectural: token-stream splitting cannot see newlines, and
+> a raw-string pre-pass cannot see quotes. `_split_top_level` is a quote-aware character scanner
+> that splits on unquoted separators and handles continuations per quote context (literal inside
+> single quotes, continuation elsewhere), then `shlex.split`s each piece.
+>
+> Accepted blind spots, documented in the module: `gh api`, user aliases, the web UI, `just pr`
+> wrappers, and `sh -c` / `bash -c` / `eval` where the invocation is one quoted token.
 
 **Files:**
 - Create: `~/dotfiles/.claude/plugin-skills/comment-reviewer/hooks/scripts/prmatch.py`
@@ -1708,6 +1797,21 @@ LANGS = {
         (('"""', '"""', True, True), ("'''", "'''", True, True)) + _C_STRINGS,
         docstrings=True,
     ),
+    # Kotlin nests block comments per its specification; Java does not. Both
+    # have triple-quoted forms (raw strings / text blocks) whose contents must
+    # never be scanned for comment tokens.
+    "kotlin": Lang(
+        ("//",), (("/*", "*/", True),), (('"""', '"""', False, True),) + _C_STRINGS
+    ),
+    "java": Lang(
+        ("//",), (("/*", "*/", False),), (('"""', '"""', True, True),) + _C_STRINGS
+    ),
+    "toml": Lang(
+        ("#",), (),
+        (('"""', '"""', True, True), ("'''", "'''", False, True)) + _C_STRINGS,
+    ),
+    # Shell-family scanning additionally skips heredoc bodies: a `#` in a
+    # heredoc payload is data passed to a command, not a comment.
     "shell": Lang(("#",), (), _C_STRINGS),
     "yaml": Lang(("#",), (), _C_STRINGS),
     "nix": Lang(("#",), (("/*", "*/", False),), _C_STRINGS),
@@ -1716,13 +1820,20 @@ LANGS = {
     "html": Lang((), (("<!--", "-->", False),), _C_STRINGS),
 }
 
+# Map an extension only to a table that models THAT language's string forms.
+# Mapping to the closest-looking table is how data literals get emitted as
+# editable comments: .toml -> shell missed TOML's \"\"\" strings, and
+# .kt/.java -> c missed Kotlin raw strings and Java text blocks, so a # or //
+# inside one was handed to the reviewer as a comment to rewrite. When no table
+# fits, omit the extension entirely -- unknown-language is a safe miss.
 EXTENSIONS = {
     ".go": "go", ".rs": "rust",
     ".ts": "typescript", ".tsx": "typescript", ".js": "typescript", ".jsx": "typescript",
-    ".c": "c", ".h": "c", ".cc": "c", ".cpp": "c", ".hpp": "c", ".java": "c", ".kt": "c",
+    ".c": "c", ".h": "c", ".cc": "c", ".cpp": "c", ".hpp": "c",
+    ".java": "java", ".kt": "kotlin",
     ".py": "python", ".pyi": "python",
     ".sh": "shell", ".bash": "shell", ".zsh": "shell",
-    ".yaml": "yaml", ".yml": "yaml", ".toml": "shell",
+    ".yaml": "yaml", ".yml": "yaml", ".toml": "toml",
     ".nix": "nix",
     ".sql": "sql",
     ".lua": "lua",

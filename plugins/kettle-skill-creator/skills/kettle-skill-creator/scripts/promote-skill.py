@@ -30,12 +30,18 @@ from pathlib import Path
 
 VALID_CATEGORIES = {
     "k8s-core", "k8s-storage", "k8s-apps", "homelab", "devops",
-    "frontend", "golang", "docs", "claude-tooling", "shell", "discord",
+    "frontend", "golang", "cli", "tui", "docs", "claude-tooling", "shell", "discord",
     "linux",
 }
 
 # Subdirectories mirrored from source into the marketplace plugin.
 MIRRORED_DIRS = ("references", "scripts")
+
+# Directories that belong at the PLUGIN root rather than inside the skill dir.
+# Claude Code discovers components by directory convention, and the manifest is
+# only read at .claude-plugin/plugin.json -- so these cannot live under
+# skills/<name>/. Empty ones are skipped, leaving skill-only plugins untouched.
+PLUGIN_ROOT_DIRS = ("agents", "hooks", "commands", "tests", ".claude-plugin")
 
 # Generated artifacts never copied into the marketplace.
 IGNORE = shutil.ignore_patterns(
@@ -168,6 +174,11 @@ def main() -> None:
     # Mirror references/ and scripts/ (config.yaml untouched)
     for sub in MIRRORED_DIRS:
         mirror_dir(source_skill / sub, dest / sub, dry_run)
+
+    # Second destination root: plugins/<name>/ rather than the skill dir.
+    plugin_root = dest.parent.parent
+    for sub in PLUGIN_ROOT_DIRS:
+        mirror_dir(source_skill / sub, plugin_root / sub, dry_run)
 
     print("Done." if not dry_run else "Dry run complete.")
 

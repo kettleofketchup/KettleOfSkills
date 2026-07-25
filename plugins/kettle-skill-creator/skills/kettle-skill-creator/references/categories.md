@@ -12,8 +12,10 @@ Every skill is automatically added to `all` -- never list `all` in config.yaml.
 | `devops` | DevOps tooling | docker, github, gitlab-ci, goss, helm, argocd, just |
 | `frontend` | Frontend development | react, zustand, ui-styling, playwright, svg-logo-designer |
 | `golang` | Go development | golang-viper, go-dota2-steam, wails |
+| `cli` | Command-line tooling | charm-tui |
+| `tui` | Terminal UI development | charm-tui |
 | `docs` | Documentation tools | mkdocs-documentation, mermaidjs-v11, zensical, documentation-reviewer |
-| `claude-tooling` | Claude Code tooling | claude-code, context-engineering, mcp-management, skill-creator, kettle-skill-creator |
+| `claude-tooling` | Claude Code tooling | claude-code, context-engineering, mcp-management, skill-creator, kettle-skill-creator, comment-reviewer |
 | `shell` | Shell tooling | zinit-zsh, zsh-completions |
 | `discord` | Discord bot development | discord |
 | `linux` | Linux desktop (Wayland compositors, NixOS desktop) | hyprland, sway |

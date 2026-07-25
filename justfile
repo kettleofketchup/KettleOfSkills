@@ -182,3 +182,19 @@ sync-marketplace:
 
     plugin_count="$(python3 -c "import json; print(len(json.load(open('.claude-plugin/marketplace.json'))['plugins']))")"
     echo "sync-marketplace complete: ${plugin_count} plugins written"
+
+# Run every plugin test suite (plugin-root tests/ and skill scripts/tests)
+test:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    shopt -s nullglob
+
+    for dir in plugins/*/tests plugins/*/skills/*/scripts/tests; do
+        [[ -d "$dir" ]] || continue
+        # sync-groups symlinks each skill into `all` plus every category, so the
+        # same suite matches once per group. Skip the symlinked copies.
+        skill_dir="${dir%/scripts/tests}"
+        [[ -L "$skill_dir" ]] && continue
+        echo "== $dir"
+        PYTHONDONTWRITEBYTECODE=1 python3 -m pytest "$dir" -q -p no:cacheprovider
+    done

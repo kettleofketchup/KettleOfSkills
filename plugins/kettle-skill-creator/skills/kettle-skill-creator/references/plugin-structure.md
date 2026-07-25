@@ -63,9 +63,43 @@ Unknown categories produce warnings during `just sync-groups`.
 | Description metadata | 200 chars |
 | Scripts | No limit |
 
+## Plugins that ship more than a skill
+
+Some plugins are more than a single skill — they also ship agents, hooks, or slash commands at
+the plugin root. `comment-reviewer` is an example:
+
+```
+plugins/comment-reviewer/
+├── .claude-plugin/
+│   └── plugin.json          # Plugin manifest
+├── agents/
+│   └── comment-reviewer.md
+├── hooks/
+│   ├── hooks.json
+│   └── scripts/
+├── commands/
+│   └── comment-review.md
+├── tests/                    # Plugin-root test suite (see PLUGIN_ROOT_DIRS)
+└── skills/
+    └── comment-reviewer/
+        ├── SKILL.md
+        ├── config.yaml
+        ├── references/
+        └── scripts/
+```
+
+`agents/`, `hooks/`, `commands/`, and `tests/` are auto-discovered by Claude Code from the
+plugin root — no manifest entry is required beyond `.claude-plugin/plugin.json` declaring the
+plugin itself. Any command invoked from `hooks/hooks.json` must reference scripts via
+`${CLAUDE_PLUGIN_ROOT}` (never a relative or hardcoded path) — the plugin can be installed at
+any path once distributed through the marketplace.
+
+Group bundles (`all`, `claude-tooling`, …) only symlink each skill's `skills/<name>/` directory.
+A group install carries the skill and its `scripts/`, but **not** the plugin-root `hooks/`,
+`agents/`, or `commands/`. Plugins that depend on those must be installed directly by name.
+
 ## What NOT to Include
 
 - `assets/` directory (not used in kettleofskills plugins)
-- `scripts/` directory within individual skills (repo-level scripts handle tooling)
 - `.env` files or secrets
 - Generated files (marketplace.json, group symlinks are auto-generated)

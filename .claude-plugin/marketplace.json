@@ -47,6 +47,11 @@
       "source": "./plugins/cloudnative-pg"
     },
     {
+      "name": "comment-reviewer",
+      "description": "Reviews code comments across languages before a PR opens. Use when finishing a development branch, before merging, or...",
+      "source": "./plugins/comment-reviewer"
+    },
+    {
       "name": "context-engineering",
       "description": "Master context engineering for AI agent systems. Use when designing agent architectures, debugging context failures, ...",
       "source": "./plugins/context-engineering"
@@ -73,7 +78,7 @@
     },
     {
       "name": "docker",
-      "description": "Docker layer optimization for fast builds. This skill should be used when writing Dockerfiles, optimizing build times...",
+      "description": "Docker builds, Compose, and Docker-in-Docker for CI. Use when writing Dockerfiles, optimizing build times, multi-stag...",
       "source": "./plugins/docker"
     },
     {

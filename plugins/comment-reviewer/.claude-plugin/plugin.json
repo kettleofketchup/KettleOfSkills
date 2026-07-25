@@ -1,0 +1,6 @@
+{
+  "name": "comment-reviewer",
+  "description": "Reviews code comments across languages before a PR is opened: strips spec and plan leakage, rewrites comments that misdescribe their code, and condenses verbose ones without losing information.",
+  "author": "KettleOfKetchup",
+  "license": "MIT"
+}

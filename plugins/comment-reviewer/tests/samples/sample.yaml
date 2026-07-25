@@ -1,0 +1,4 @@
+# leading comment
+message: it's fine
+other: "hash # inside"
+# trailing comment
