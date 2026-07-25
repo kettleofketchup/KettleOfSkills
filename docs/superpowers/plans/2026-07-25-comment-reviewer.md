@@ -77,6 +77,7 @@ Source tree (authored). `SKILL.md`, `references/`, and `scripts/` promote into
 │       ├── gitpaths.py               # vendored copy #2 (byte-identical to #1)
 │       └── pr-create-gate.py         # command matching + gate decision
 └── tests/
+    ├── paths.py                      # layout resolution; imported by conftest and every module
     ├── conftest.py                   # git fixture factories
     ├── test_gitpaths.py
     ├── test_receipt.py
@@ -84,9 +85,18 @@ Source tree (authored). `SKILL.md`, `references/`, and `scripts/` promote into
     ├── test_gate.py                  # gate decisions over stdin JSON
     ├── test_extract.py               # spans per language + adversarial
     ├── test_skips.py                 # mechanical never-touch
-    ├── test_vendoring.py             # the two gitpaths.py copies match
-    └── fixtures/                     # per-language sample files
+    ├── test_wiring.py                # manifest / hooks.json shape
+    ├── test_skill_docs.py            # frontmatter and line budgets
+    ├── test_agent_docs.py            # agent and command contracts
+    ├── test_vendoring.py             # the vendored script copies match
+    └── samples/                      # per-language sample files
+        └── negative/                 # samples the sweep must leave untouched
 ```
+
+**The sample directory is named `samples/`, not `fixtures/`, deliberately.** `fixtures?/` is in
+`SKIP_FILE_PATH_PATTERNS` (Task 6) because the spec requires byte-compared fixture files to be
+skipped — so fixtures living there would be skipped by the extractor under test, failing 7 tests
+and making 5 more pass vacuously over empty lists.
 
 Marketplace-side changes: `~/.claude/skills/kettle-skill-creator/scripts/promote-skill.py`,
 `validate-plugin.py`, that skill's `references/plugin-structure.md` and `SKILL.md`, plus this
@@ -107,6 +117,7 @@ is a file in worktrees, and a branch's upstream is the wrong diff base.
 **Files:**
 - Create: `~/dotfiles/.claude/plugin-skills/comment-reviewer/scripts/gitpaths.py`
 - Create: `~/dotfiles/.claude/plugin-skills/comment-reviewer/hooks/scripts/gitpaths.py` (copy)
+- Create: `~/dotfiles/.claude/plugin-skills/comment-reviewer/tests/paths.py`
 - Create: `~/dotfiles/.claude/plugin-skills/comment-reviewer/tests/conftest.py`
 - Test: `~/dotfiles/.claude/plugin-skills/comment-reviewer/tests/test_gitpaths.py`
 - Test: `~/dotfiles/.claude/plugin-skills/comment-reviewer/tests/test_vendoring.py`
@@ -147,7 +158,11 @@ SCRIPTS = SKILL_DIR / "scripts"
 REFERENCES = SKILL_DIR / "references"
 SKILL_MD = SKILL_DIR / "SKILL.md"
 HOOK_SCRIPTS = ROOT / "hooks" / "scripts"
-FIXTURES = Path(__file__).resolve().parent / "fixtures"
+
+# Named samples/, never fixtures/: `fixtures?/` is one of the extractor's own
+# skip patterns, so samples stored there would be skipped by the code under test.
+SAMPLES = Path(__file__).resolve().parent / "samples"
+NEGATIVE_SAMPLES = SAMPLES / "negative"
 ```
 
 - [ ] **Step 2: Write `conftest.py` with git repository fixtures**
@@ -692,7 +707,8 @@ substring regex here would deny `git commit -m "prep for gh pr create"`.
 - Consumes: nothing.
 - Produces: `SKIP_VAR = "CLAUDE_SKIP_COMMENT_REVIEW"`; `strip_heredocs(command) -> str`;
   `segments(command) -> list[list[str]]`; `is_pr_create(tokens) -> bool`;
-  `wants_skip(command) -> bool`; `matches(command) -> bool`.
+  `_has_skip(tokens) -> bool`; `wants_skip(command) -> bool`; `matches(command) -> bool`.
+  `matches` already excludes skipped segments, so the gate calls only `matches`.
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -715,6 +731,16 @@ import prmatch
     "git push && gh pr create",               # later segment
     "gh pr list; gh pr create",
     "make build || gh pr create --draft",
+    # Shell metacharacters INSIDE quotes. Splitting the raw string first cuts
+    # through the quotes and loses the invocation entirely -- these are the cases
+    # that make the difference between a working gate and a decorative one.
+    'gh pr create --title "fix; refactor"',
+    'gh pr create --body "a|b"',
+    'gh pr create --title "A && B"',
+    'gh pr create --title t --body "line one\nline two"',
+    # A skip on a DIFFERENT segment must not release this one.
+    "CLAUDE_SKIP_COMMENT_REVIEW=1 ls; gh pr create",
+    "gh pr create && CLAUDE_SKIP_COMMENT_REVIEW=1 echo x",
 ])
 def test_matches_real_invocations(command):
     assert prmatch.matches(command)
@@ -759,6 +785,22 @@ def test_skip_not_detected_when_absent():
 
 def test_skip_zero_is_not_a_skip():
     assert not prmatch.wants_skip("CLAUDE_SKIP_COMMENT_REVIEW=0 gh pr create")
+
+
+def test_skip_is_segment_local():
+    """A shell assignment applies only to the command it prefixes."""
+    assert not prmatch.matches("CLAUDE_SKIP_COMMENT_REVIEW=1 gh pr create")
+    assert prmatch.matches("CLAUDE_SKIP_COMMENT_REVIEW=1 ls; gh pr create")
+
+
+def test_quoted_metacharacters_do_not_hide_the_invocation():
+    """Regression: the splitter used to run before the lexer, so a quoted ';'
+    produced two unbalanced halves and the gate saw nothing."""
+    for command in ('gh pr create --title "fix; refactor"',
+                    'gh pr create --body "a|b"',
+                    'gh pr create --body "one\ntwo"'):
+        assert prmatch.segments(command), command
+        assert prmatch.matches(command), command
 ```
 
 - [ ] **Step 2: Run the tests to verify they fail**
@@ -788,7 +830,7 @@ REQUEST_NOUNS = frozenset({"pr", "mr"})
 CREATE_VERB = "create"
 
 _ASSIGNMENT = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*=")
-_SEGMENT_SEPARATORS = re.compile(r"&&|\|\||[;|\n]")
+_SEGMENT_OPERATORS = frozenset({";", "&&", "||", "|", "&", "\n"})
 _HEREDOC_START = re.compile(r"<<-?\s*(['\"]?)([A-Za-z_][A-Za-z0-9_]*)\1")
 _SKIP_TRUTHY = frozenset({"1", "true", "yes", "on"})
 # `--help` prints usage and creates nothing; denying it is pure friction.
@@ -814,34 +856,30 @@ def strip_heredocs(command):
     return "\n".join(kept)
 
 
-def _strip_inline_comment(segment):
-    """Drop a trailing `# ...` comment when the hash is outside quotes."""
-    quote = None
-    for position, char in enumerate(segment):
-        if quote:
-            if char == quote:
-                quote = None
-        elif char in "'\"":
-            quote = char
-        elif char == "#" and (position == 0 or segment[position - 1].isspace()):
-            return segment[:position]
-    return segment
-
-
 def segments(command):
-    """Token lists for each independently-executed part of the command."""
-    cleaned = strip_heredocs(command)
-    out = []
-    for raw in _SEGMENT_SEPARATORS.split(cleaned):
-        piece = _strip_inline_comment(raw).strip()
-        if not piece:
-            continue
-        try:
-            tokens = shlex.split(piece)
-        except ValueError:
-            continue  # unbalanced quotes: treat as unmatchable, never raise
-        if tokens:
-            out.append(tokens)
+    """Token lists for each independently-executed part of the command.
+
+    Lexes FIRST, then splits on operator tokens. Splitting the raw string first
+    cuts straight through quotes: `gh pr create --title "fix; refactor"` becomes
+    two unbalanced halves, shlex raises on both, and a genuine PR creation goes
+    invisible to the gate. A multi-line `--body` fails the same way, and both are
+    mainline invocation shapes.
+    """
+    lexer = shlex.shlex(strip_heredocs(command), posix=True, punctuation_chars=True)
+    lexer.whitespace_split = True
+    out, current = [], []
+    try:
+        for token in lexer:
+            if token in _SEGMENT_OPERATORS:
+                if current:
+                    out.append(current)
+                current = []
+            else:
+                current.append(token)
+    except ValueError:
+        return []  # unbalanced quotes: unmatchable, never raise
+    if current:
+        out.append(current)
     return out
 
 
@@ -871,25 +909,36 @@ def is_pr_create(tokens):
     )
 
 
-def wants_skip(command):
-    """True when the command itself carries a truthy skip assignment.
+def _has_skip(tokens):
+    """True when this segment's own leading assignments request a skip.
 
-    Reading it from the command string is the only option that works: the hook
-    is spawned by Claude Code and inherits Claude Code's environment, not the
+    Reading it from the command string is the only thing that works: the hook is
+    spawned by Claude Code and inherits Claude Code's environment, not the
     environment of the command being inspected.
     """
-    for tokens in segments(command):
-        for token in tokens:
-            if not _ASSIGNMENT.match(token):
-                break
-            name, _, value = token.partition("=")
-            if name == SKIP_VAR and value.lower() in _SKIP_TRUTHY:
-                return True
+    for token in tokens:
+        if not _ASSIGNMENT.match(token):
+            return False
+        name, _, value = token.partition("=")
+        if name == SKIP_VAR and value.lower() in _SKIP_TRUTHY:
+            return True
     return False
 
 
+def wants_skip(command):
+    return any(_has_skip(tokens) for tokens in segments(command))
+
+
 def matches(command):
-    return any(is_pr_create(tokens) for tokens in segments(command))
+    """True when some segment creates a PR and that same segment carries no skip.
+
+    Per-segment, because a shell assignment applies only to the command it
+    prefixes: in `CLAUDE_SKIP_COMMENT_REVIEW=1 ls; gh pr create` the skip belongs
+    to `ls`, and treating it as global would hand out a free bypass.
+    """
+    return any(
+        is_pr_create(tokens) and not _has_skip(tokens) for tokens in segments(command)
+    )
 ```
 
 - [ ] **Step 4: Run the tests to verify they pass**
@@ -1136,7 +1185,8 @@ def decide(event):
     if event.get("tool_name") != "Bash":
         return None
     command = (event.get("tool_input") or {}).get("command") or ""
-    if not prmatch.matches(command) or prmatch.wants_skip(command):
+    # matches() already excludes any segment carrying its own skip assignment.
+    if not prmatch.matches(command):
         return None
 
     cwd = event.get("cwd") or "."
@@ -1445,14 +1495,18 @@ MAX_BYTES = 1_000_000
 BINARY_SNIFF_BYTES = 8192
 
 # line:       tokens that start a comment running to end of line
-# block:      (open, close) pairs
-# strings:    (open, close, escapes) -- escapes means a backslash escapes the
-#             next character inside the literal
+# block:      (open, close, nests) -- Rust nests /* */ by language rule, so the
+#             first closer is not necessarily the end of the comment
+# strings:    (open, close, escapes, multiline) -- escapes means a backslash
+#             escapes the next character; multiline=False means a literal whose
+#             closer is not on the same line is not a literal at all. Without
+#             that, an apostrophe in YAML or HTML prose ("don't") opens a string
+#             that swallows every comment in the rest of the file.
 # docstrings: whether a 3-character string delimiter in docstring position is a
 #             reviewable comment (Python) rather than data
 Lang = namedtuple("Lang", "line block strings docstrings", defaults=(False,))
 
-_C_STRINGS = (('"', '"', True), ("'", "'", True))
+_C_STRINGS = (('"', '"', True, False), ("'", "'", True, False))
 
 # A triple-quoted literal is a docstring only as the first statement of a module,
 # class, or function. Anywhere else it is data, and rewriting it would change what
@@ -1471,20 +1525,24 @@ def _in_docstring_position(text, index):
 
 
 LANGS = {
-    "go": Lang(("//",), (("/*", "*/"),), _C_STRINGS + (("`", "`", False),)),
-    "rust": Lang(("//",), (("/*", "*/"),), _C_STRINGS),
-    "typescript": Lang(("//",), (("/*", "*/"),), _C_STRINGS + (("`", "`", True),)),
-    "c": Lang(("//",), (("/*", "*/"),), _C_STRINGS),
+    "go": Lang(("//",), (("/*", "*/", False),), _C_STRINGS + (("`", "`", False, True),)),
+    # Rust is the one language here that nests block comments by specification.
+    "rust": Lang(("//",), (("/*", "*/", True),), _C_STRINGS),
+    "typescript": Lang(
+        ("//",), (("/*", "*/", False),), _C_STRINGS + (("`", "`", True, True),)
+    ),
+    "c": Lang(("//",), (("/*", "*/", False),), _C_STRINGS),
     "python": Lang(
-        ("#",), (), (('"""', '"""', True), ("'''", "'''", True)) + _C_STRINGS,
+        ("#",), (),
+        (('"""', '"""', True, True), ("'''", "'''", True, True)) + _C_STRINGS,
         docstrings=True,
     ),
     "shell": Lang(("#",), (), _C_STRINGS),
     "yaml": Lang(("#",), (), _C_STRINGS),
-    "nix": Lang(("#",), (("/*", "*/"),), _C_STRINGS),
-    "sql": Lang(("--",), (("/*", "*/"),), (("'", "'", False),)),
-    "lua": Lang(("--",), (("--[[", "]]"),), _C_STRINGS),
-    "html": Lang((), (("<!--", "-->"),), _C_STRINGS),
+    "nix": Lang(("#",), (("/*", "*/", False),), _C_STRINGS),
+    "sql": Lang(("--",), (("/*", "*/", False),), (("'", "'", False, False),)),
+    "lua": Lang(("--",), (("--[[", "]]", False),), _C_STRINGS),
+    "html": Lang((), (("<!--", "-->", False),), _C_STRINGS),
 }
 
 EXTENSIONS = {
@@ -1497,8 +1555,13 @@ EXTENSIONS = {
     ".nix": "nix",
     ".sql": "sql",
     ".lua": "lua",
-    ".html": "html", ".htm": "html", ".xml": "html", ".vue": "html", ".svelte": "html",
+    ".html": "html", ".htm": "html", ".xml": "html",
 }
+
+# Per-block token selection (`//` inside <script> versus `<!--` in the template)
+# is not implemented, so these are skipped and counted rather than half-scanned
+# with the HTML table, which would silently miss every script-block comment.
+MULTI_LANGUAGE_SUFFIXES = {".vue", ".svelte", ".astro"}
 
 SHEBANGS = (
     ("python", "python"), ("bash", "shell"), ("sh", "shell"), ("zsh", "shell"),
@@ -1547,7 +1610,16 @@ def scan(text, lang):
             (s for s in strings if text.startswith(s[0], index)), None
         )
         if matched_string:
-            opener, closer, escapes = matched_string
+            opener, closer, escapes, multiline = matched_string
+            if not multiline:
+                # A single-line literal whose closer is not on this line is not a
+                # literal: it is an apostrophe in prose. Treating it as one would
+                # swallow every comment in the rest of the file.
+                probe = text.find(closer, index + len(opener))
+                newline = text.find("\n", index + len(opener))
+                if probe == -1 or (newline != -1 and newline < probe):
+                    index += 1
+                    continue
             # A docstring is a string literal to the parser but a comment to a
             # reader, so it is the one string we emit rather than skip.
             is_docstring = (
@@ -1581,10 +1653,25 @@ def scan(text, lang):
             (b for b in blocks if text.startswith(b[0], index)), None
         )
         if matched_block:
-            opener, closer = matched_block
+            opener, closer, nests = matched_block
             start_line = line
-            end = text.find(closer, index + len(opener))
-            end = length if end == -1 else end + len(closer)
+            # Walk to the matching closer by depth. Taking the first closer would
+            # end a nested Rust comment early, and rewriting that span would leave
+            # a dangling tail behind -- the reviewer editing live code.
+            cursor, depth = index + len(opener), 1
+            while cursor < length:
+                if nests and text.startswith(opener, cursor):
+                    depth += 1
+                    cursor += len(opener)
+                    continue
+                if text.startswith(closer, cursor):
+                    depth -= 1
+                    cursor += len(closer)
+                    if depth == 0:
+                        break
+                    continue
+                cursor += 1
+            end = cursor
             body = text[index:end]
             line += body.count("\n")
             spans.append({
@@ -1618,6 +1705,9 @@ def extract(path):
 
     if path.suffix.lower() in OUT_OF_SCOPE_SUFFIXES:
         record["skipped"] = "markdown-out-of-scope"
+        return record
+    if path.suffix.lower() in MULTI_LANGUAGE_SUFFIXES:
+        record["skipped"] = "multi-language-unsupported"
         return record
     try:
         raw = path.read_bytes()
