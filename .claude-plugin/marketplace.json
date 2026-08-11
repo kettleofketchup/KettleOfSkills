@@ -213,7 +213,7 @@
     },
     {
       "name": "openhands",
-      "description": "Self-hosted OpenHands AI coding agent. Use for Docker/Helm deploys, sandbox runtimes, LLM and LiteLLM config, subscri...",
+      "description": "Self-hosted OpenHands AI coding agent. Use for Docker/Helm deploys, sandbox runtimes, LLM and LiteLLM config, attachi...",
       "source": "./plugins/openhands"
     },
     {

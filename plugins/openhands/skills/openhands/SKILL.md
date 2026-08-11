@@ -1,8 +1,8 @@
 ---
 name: openhands
-last_updated: 2026-08-07
-version: app 1.8 (V1), agent-server 1.26.0, agent-canvas Helm chart (OSS)
-description: Self-hosted OpenHands AI coding agent. Use for Docker/Helm deploys, sandbox runtimes, LLM and LiteLLM config, subscription auth, Python SDK, MCP, skills/hooks, or multi-user auth.
+last_updated: 2026-08-11
+version: app 1.8 (V1), agent-server 1.26.0 (workspace/repo behavior verified on 1.40.1), agent-canvas Helm chart (OSS)
+description: Self-hosted OpenHands AI coding agent. Use for Docker/Helm deploys, sandbox runtimes, LLM and LiteLLM config, attaching repos/workspaces/backends, Python SDK, MCP, skills/hooks, or multi-user auth.
 ---
 
 # OpenHands
@@ -58,10 +58,15 @@ access — never expose that instance beyond localhost without an auth proxy in 
 
 ### LLM Configuration
 - [LLM Providers](references/llm-config.md) — model strings, LiteLLM gateway, local models, custom profiles
-- [Subscription Auth](references/llm-subscriptions.md) — ChatGPT/Codex OAuth login instead of API keys
+- [Subscription Auth](references/llm-subscriptions.md) — ChatGPT OAuth instead of API keys, plus the separate
+  `CODEX_AUTH_JSON` path the codex ACP harness uses
 
 ### Auth & Multi-User
 - [Auth & Tenancy](references/auth-tenancy.md) — Keycloak, Authentik forward-auth, per-user isolation, secrets
+
+### Projects
+- [Workspaces, Repos & Backends](references/workspaces-repos.md) — attaching a repo, the workspaces API, why
+  there is no git-provider UI when self-hosted
 
 ### Extending
 - [Python SDK](references/sdk.md) — `LLM`/`Agent`/`Conversation`, tools, workspaces, agent-server API
@@ -84,6 +89,11 @@ the only things between a stuck agent loop and a large invoice.
 
 **The server and agent-server images are versioned separately** and must be compatible. Mismatches surface as
 sandboxes that start and immediately disconnect.
+
+**Git provider integration is a Cloud/enterprise feature — it does not exist in a self-hosted agent-server.**
+There is no "add a repository" UI and no provider endpoints. You clone onto the agent-server and register the
+directory as a *workspace*. A "backend" is another agent-server, never a repo.
+→ `references/workspaces-repos.md`
 
 ## Deployment Decision
 
@@ -108,3 +118,7 @@ Authentik gating the route. It duplicates infrastructure but keeps the isolation
 | Runaway spend | `MAX_BUDGET_PER_TASK` / `MAX_ITERATIONS` unset |
 | Writes fail on K8s PVC | `fsGroup` ≠ `10001` (agent-canvas runs as UID 10001) |
 | Model not found via gateway | Missing `litellm_proxy/` prefix on `LLM_MODEL` |
+| No way to add a repo in the UI | Working as designed — clone onto the agent-server, then `+ Add Workspace` |
+| "ChatGPT authentication is invalid" from an ACP agent | `CODEX_AUTH_JSON` failed an offline *shape* check — usually a wrapped paste, or an api-key auth.json. Not expiry |
+| Codex ignores `~/.codex/auth.json` | By design; the ACP harness reads the `CODEX_AUTH_JSON` secret into a temp `CODEX_HOME` |
+| Workspace list empties on restart | `workspaces.json` under `$OH_PERSISTENCE_DIR` not on a persisted volume |
