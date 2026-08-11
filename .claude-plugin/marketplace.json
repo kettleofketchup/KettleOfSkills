@@ -47,6 +47,11 @@
       "source": "./plugins/cloudnative-pg"
     },
     {
+      "name": "coder",
+      "description": "Self-hosted Coder cloud dev environments. Use for Helm/Kubernetes deploys, OIDC/Authentik SSO, IdP group-role sync, R...",
+      "source": "./plugins/coder"
+    },
+    {
       "name": "comment-reviewer",
       "description": "Reviews code comments across languages before a PR opens. Use when finishing a development branch, before merging, or...",
       "source": "./plugins/comment-reviewer"
@@ -205,6 +210,11 @@
       "name": "nixos",
       "description": "NixOS and Nix flake development for multi-repo architectures, airgapped deployments, and K3s infrastructure. Use when...",
       "source": "./plugins/nixos"
+    },
+    {
+      "name": "openhands",
+      "description": "Self-hosted OpenHands AI coding agent. Use for Docker/Helm deploys, sandbox runtimes, LLM and LiteLLM config, subscri...",
+      "source": "./plugins/openhands"
     },
     {
       "name": "opentelemetry",
