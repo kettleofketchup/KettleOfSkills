@@ -1,14 +1,28 @@
 import json
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import gitpaths
 import receipt
 
 GATE = Path(__file__).resolve().parent.parent / "hooks" / "scripts" / "pr-create-gate.py"
-T0 = datetime(2026, 7, 25, 12, 0, tzinfo=timezone.utc)
+
+
+def fresh():
+    """A timestamp the gate will consider current.
+
+    These tests drive the gate as a SUBPROCESS, so there is no way to inject a
+    clock into it -- `receipt.is_valid` compares against real wall-clock time and
+    expires anything older than TTL_DAYS. A hardcoded date here is a time bomb:
+    it works until TTL_DAYS elapse after that date, then every "valid receipt
+    passes" test starts failing for a reason unrelated to the code under test.
+    That happened once already. Seed from the real clock instead.
+
+    Tests that need an EXPIRED receipt subtract from this explicitly.
+    """
+    return datetime.now(timezone.utc)
 
 
 def invoke(command, cwd):
@@ -26,7 +40,8 @@ def decision(out):
     return (out or {}).get("hookSpecificOutput", {}).get("permissionDecision")
 
 
-def seed_receipt(cwd, now=T0):
+def seed_receipt(cwd, now=None):
+    now = now or fresh()
     trunk = gitpaths.resolve_trunk(cwd)
     base = gitpaths.merge_base(trunk, cwd)
     payload = receipt.build(
@@ -160,9 +175,9 @@ def test_explicit_non_trunk_base_ref_receipt_passes(cloned_with_remote):
     payload = receipt.build(
         commit_sha=gitpaths.head_commit(cwd), tree_sha=gitpaths.head_tree(cwd),
         base_sha=explicit_base, resolved_base_ref="explicit-base",
-        fixed={"A": 0, "B": 0, "C": 0}, skipped=[], reported=[], partial=False, now=T0,
+        fixed={"A": 0, "B": 0, "C": 0}, skipped=[], reported=[], partial=False, now=fresh(),
     )
-    receipt.write(cwd, payload, now=T0)
+    receipt.write(cwd, payload, now=fresh())
 
     assert decision(invoke("gh pr create --fill", cwd)) is None
 
@@ -177,9 +192,9 @@ def test_explicit_base_ref_that_no_longer_resolves_falls_back_to_trunk(cloned_wi
     payload = receipt.build(
         commit_sha=gitpaths.head_commit(cwd), tree_sha=gitpaths.head_tree(cwd),
         base_sha=trunk_base, resolved_base_ref="refs/heads/does-not-exist",
-        fixed={"A": 0, "B": 0, "C": 0}, skipped=[], reported=[], partial=False, now=T0,
+        fixed={"A": 0, "B": 0, "C": 0}, skipped=[], reported=[], partial=False, now=fresh(),
     )
-    receipt.write(cwd, payload, now=T0)
+    receipt.write(cwd, payload, now=fresh())
     assert decision(invoke("gh pr create --fill", cwd)) is None
 
 
@@ -189,3 +204,13 @@ def test_primary_clone_receipt_does_not_satisfy_worktree_gate(repo, worktree):
     into a linked worktree sitting on a different branch."""
     seed_receipt(repo)
     assert decision(invoke("gh pr create", worktree)) == "deny"
+
+
+def test_expired_receipt_denies(cloned_with_remote):
+    """The TTL is enforced against real wall-clock time inside the gate
+    subprocess. This is the one test that WANTS an old receipt, so it derives
+    the age from `fresh()` rather than a fixed date -- keeping it correct on
+    every future calendar day."""
+    stale = fresh() - timedelta(days=receipt.TTL_DAYS + 1)
+    seed_receipt(cloned_with_remote, now=stale)
+    assert decision(invoke("gh pr create --fill", cloned_with_remote)) == "deny"
