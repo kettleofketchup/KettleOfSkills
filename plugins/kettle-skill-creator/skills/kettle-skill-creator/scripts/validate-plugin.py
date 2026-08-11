@@ -66,6 +66,21 @@ def validate_plugin_root(plugin_dir: Path, name: str) -> list[str]:
                 errors.append(
                     f"{name}: manifest name {data.get('name')!r} does not match the directory"
                 )
+            # Claude Code's runtime schema requires `author` to be an OBJECT.
+            # plugin-dev's manifest-reference.md documents a bare string as an
+            # "alternative format" -- the loader rejects it, and the plugin fails
+            # to load with "author: expected object, received string". Caught only
+            # by a live install, so it is checked here.
+            if isinstance(data, dict) and "author" in data:
+                author = data["author"]
+                if not isinstance(author, dict):
+                    errors.append(
+                        f"{name}: manifest 'author' must be an object such as "
+                        f'{{"name": "you"}}, not {type(author).__name__} '
+                        f"-- Claude Code refuses to load the plugin otherwise"
+                    )
+                elif not author.get("name"):
+                    errors.append(f"{name}: manifest 'author' object needs a 'name'")
 
     hooks_file = plugin_dir / "hooks" / "hooks.json"
     if hooks_file.is_file():

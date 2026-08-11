@@ -129,3 +129,35 @@ def test_skill_only_plugin_still_validates(tmp_path):
     (skill / "SKILL.md").write_text("---\nname: plain\ndescription: d\n---\n\nBody\n")
     (skill / "config.yaml").write_text("categories:\n  - claude-tooling\n")
     assert validate(repo, "plain").returncode == 0
+
+
+def test_string_author_is_rejected(tmp_path):
+    """Claude Code's loader requires an author OBJECT. A bare string makes the
+    plugin fail to load with 'author: expected object, received string' -- a
+    failure only a live install surfaces, so the validator must catch it."""
+    repo = make_plugin(tmp_path)
+    manifest = repo / "plugins" / "demo" / ".claude-plugin" / "plugin.json"
+    manifest.write_text(json.dumps({"name": "demo", "description": "d", "author": "Someone"}))
+    result = validate(repo)
+    combined = result.stdout + result.stderr
+    assert result.returncode != 0
+    assert "author" in combined
+    assert "Traceback" not in combined
+
+
+def test_object_author_is_accepted(tmp_path):
+    repo = make_plugin(tmp_path)
+    manifest = repo / "plugins" / "demo" / ".claude-plugin" / "plugin.json"
+    manifest.write_text(json.dumps(
+        {"name": "demo", "description": "d", "author": {"name": "someone"}}
+    ))
+    assert validate(repo).returncode == 0
+
+
+def test_author_object_without_name_is_rejected(tmp_path):
+    repo = make_plugin(tmp_path)
+    manifest = repo / "plugins" / "demo" / ".claude-plugin" / "plugin.json"
+    manifest.write_text(json.dumps(
+        {"name": "demo", "description": "d", "author": {"email": "a@b.c"}}
+    ))
+    assert validate(repo).returncode != 0
