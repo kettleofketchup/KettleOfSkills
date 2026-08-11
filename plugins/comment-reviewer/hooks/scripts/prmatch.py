@@ -12,6 +12,7 @@ token that would need a second, recursive pass of this same lexing to reach.
 """
 
 import posixpath
+import os
 import re
 import shlex
 
@@ -343,6 +344,50 @@ def _has_skip(tokens):
         if name == SKIP_VAR and value.lower() in _SKIP_TRUTHY:
             return True
     return False
+
+
+def _apply_cd(tokens, cwd):
+    """Directory after running this segment, or None if it cannot be resolved.
+
+    Only plain `cd` forms are honoured. `cd -` depends on shell history the hook
+    cannot see, so it returns None and the caller falls back to the event cwd --
+    guessing there would be worse than admitting ignorance.
+    """
+    tokens = _strip_wrapper_clis(_drop_env_prefix(tokens))
+    if not tokens or tokens[0] != "cd":
+        return cwd
+    operands = [t for t in tokens[1:] if not t.startswith("-")]
+    if "-" in tokens[1:]:
+        return None
+    if not operands:
+        return os.path.expanduser("~")
+    target = os.path.expanduser(operands[0])
+    if not os.path.isabs(target):
+        target = os.path.join(cwd, target)
+    return os.path.normpath(target)
+
+
+def pr_create_cwd(command, cwd):
+    """The directory the PR-creating segment actually runs in, or None.
+
+    The hook event's `cwd` is the SESSION's directory, not the directory a `cd`
+    earlier in the same command moved to. Without this, `cd other-repo && gh pr
+    create` is judged against the wrong repository -- which denies a reviewed
+    branch, and worse, PASSES an unreviewed one whenever the session directory
+    happens to hold a valid receipt.
+
+    Segments run left to right in one shell, so a `cd` applies to everything
+    after it. Returns None when the command creates no PR.
+    """
+    current = cwd
+    for tokens in segments(command):
+        if is_pr_create(tokens) and not _has_skip(tokens):
+            return current
+        moved = _apply_cd(tokens, current)
+        if moved is None:
+            return current
+        current = moved
+    return None
 
 
 def wants_skip(command):

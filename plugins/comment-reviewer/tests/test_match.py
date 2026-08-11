@@ -194,3 +194,31 @@ def test_double_quoted_line_continuation_still_matches():
     bash (unlike single quotes) -- it only affects the quoted argument's
     contents, not the invocation itself, which must still match."""
     assert prmatch.matches('gh pr create --title "a\\\nb"')
+
+
+@pytest.mark.parametrize("command,base,expected", [
+    ("gh pr create --fill", "/repo", "/repo"),
+    ("cd /other && gh pr create", "/repo", "/other"),
+    ("cd sub && gh pr create", "/repo", "/repo/sub"),
+    ("cd /a && cd /b && gh pr create", "/repo", "/b"),
+    ("cd /a && cd .. && gh pr create", "/repo", "/"),
+    ("gh pr create && cd /other", "/repo", "/repo"),   # cd AFTER: irrelevant
+    ("cd /other; ls; gh pr create", "/repo", "/other"),
+    ("sudo cd /other && gh pr create", "/repo", "/other"),
+    ("ls -la", "/repo", None),                          # no pr create at all
+])
+def test_pr_create_cwd_tracks_directory_changes(command, base, expected):
+    assert prmatch.pr_create_cwd(command, base) == expected
+
+
+def test_pr_create_cwd_falls_back_when_cd_is_unresolvable():
+    """`cd -` depends on shell history the hook cannot see. Falling back to the
+    known directory beats guessing."""
+    assert prmatch.pr_create_cwd("cd - && gh pr create", "/repo") == "/repo"
+
+
+def test_pr_create_cwd_is_not_confused_by_a_quoted_cd():
+    """A `cd` inside a quoted argument is data, not a directory change."""
+    assert prmatch.pr_create_cwd(
+        'gh pr create --title "cd /elsewhere"', "/repo"
+    ) == "/repo"

@@ -59,7 +59,14 @@ def decide(event):
     if not prmatch.matches(command):
         return None
 
-    cwd = event.get("cwd") or "."
+    # The event's `cwd` is the SESSION's directory. If the command cd's into
+    # another repository first, that is the repository whose comments are about
+    # to ship, so it is the one whose receipt must be checked. Judging the
+    # session directory instead denies a reviewed branch -- and, in the
+    # direction that actually matters, PASSES an unreviewed one whenever the
+    # session directory happens to hold a valid receipt of its own.
+    session_cwd = event.get("cwd") or "."
+    cwd = prmatch.pr_create_cwd(command, session_cwd) or session_cwd
     try:
         root = gitpaths.receipt_root(cwd)
         # An unreadable root (e.g. `chmod 000`) resolves differently by Python

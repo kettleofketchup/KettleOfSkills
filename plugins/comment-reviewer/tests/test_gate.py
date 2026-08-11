@@ -214,3 +214,48 @@ def test_expired_receipt_denies(cloned_with_remote):
     stale = fresh() - timedelta(days=receipt.TTL_DAYS + 1)
     seed_receipt(cloned_with_remote, now=stale)
     assert decision(invoke("gh pr create --fill", cloned_with_remote)) == "deny"
+
+
+def test_cd_into_an_unreviewed_repo_denies_despite_a_session_receipt(
+    cloned_with_remote, repo
+):
+    """THE SILENT BYPASS. The session directory holds a valid receipt; the
+    command creates a PR in a DIFFERENT, unreviewed repository. Judging the
+    session directory would pass it.
+
+    `repo` is a real git repo with a resolvable trunk (`main`) and no receipt,
+    so the gate CAN reach a verdict there -- without that, a fail-open would
+    make this test pass for a reason unrelated to the fix.
+    """
+    seed_receipt(cloned_with_remote)                     # session dir: reviewed
+    gitpaths.resolve_trunk(repo)                          # target resolves cleanly
+    event = {
+        "tool_name": "Bash",
+        "tool_input": {"command": f"cd {repo} && gh pr create --fill"},
+        "cwd": str(cloned_with_remote),
+    }
+    proc = subprocess.run([sys.executable, str(GATE)], input=json.dumps(event),
+                          capture_output=True, text=True)
+    assert proc.returncode == 0
+    out = json.loads(proc.stdout) if proc.stdout.strip() else None
+    assert decision(out) == "deny"
+
+
+def test_cd_into_a_reviewed_repo_passes_despite_an_unreviewed_session(
+    cloned_with_remote, repo
+):
+    """The friction direction. The session directory is a real repo with a
+    resolvable trunk and NO receipt -- so judging it would deny -- while the
+    repo being PR'd has a valid receipt."""
+    seed_receipt(cloned_with_remote)                      # target: reviewed
+    gitpaths.resolve_trunk(repo)                          # session resolves cleanly
+    event = {
+        "tool_name": "Bash",
+        "tool_input": {"command": f"cd {cloned_with_remote} && gh pr create --fill"},
+        "cwd": str(repo),
+    }
+    proc = subprocess.run([sys.executable, str(GATE)], input=json.dumps(event),
+                          capture_output=True, text=True)
+    assert proc.returncode == 0
+    out = json.loads(proc.stdout) if proc.stdout.strip() else None
+    assert decision(out) is None
