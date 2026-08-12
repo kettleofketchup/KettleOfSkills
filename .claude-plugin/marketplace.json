@@ -318,7 +318,7 @@
     },
     {
       "name": "zinit-zsh",
-      "description": "Zinit zsh plugin manager for this dotfiles repo. Use for plugins, gh-r binary installs, completions, turbo/wait, ice ...",
+      "description": "Zinit zsh plugin manager for dotfiles repos. Use for plugins, gh-r binary installs, completions, turbo/wait, ice modi...",
       "source": "./plugins/zinit-zsh"
     },
     {

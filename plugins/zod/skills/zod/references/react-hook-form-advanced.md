@@ -4,7 +4,7 @@ Split out of `react-hook-form.md`; see it for the preceding sections.
 
 ## Submission Handling
 
-### With Toast Promise (DTX Pattern)
+### With Toast Promise
 
 ```typescript
 import { toast } from 'sonner';
@@ -66,22 +66,22 @@ const { fields, append, remove } = useFieldArray({
 <Button onClick={() => append({ name: '' })}>Add</Button>
 ```
 
-## DTX Reference Implementation
+## Reference Implementation
 
-See `~/pages/profile/profile.tsx`:
+A profile page wiring the pieces together:
 
 ```typescript
 export const ProfilePage: React.FC = () => {
   const currentUser = useUserStore((state) => state.currentUser);
 
-  const form = useForm<z.infer<typeof UserSchema>>({
-    resolver: zodResolver(UserSchema),
+  const form = useForm<z.infer<typeof ProfileSchema>>({
+    resolver: zodResolver(ProfileSchema),
     defaultValues: {
-      positions: { ...currentUser?.positions },
+      proficiencies: { ...currentUser?.proficiencies },
     },
   });
 
-  async function onSubmit(data: z.infer<typeof UserSchema>) {
+  async function onSubmit(data: z.infer<typeof ProfileSchema>) {
     toast.promise(UpdateProfile(data), {
       loading: 'Updating...',
       success: (response) => {

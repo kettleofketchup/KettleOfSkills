@@ -1,6 +1,6 @@
 # Common Zinit Patterns
 
-Patterns extracted from this dotfiles repo for reference.
+Reference patterns for a zinit-managed dotfiles repo.
 
 ## GitHub Release Binaries
 

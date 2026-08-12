@@ -135,7 +135,10 @@ atclone"ln -sfn {dir} ~/.config/app/plugins"
 
 ## Stow Considerations
 
-This repo uses GNU Stow — run `stow .` (or `stow -R .`) from the dotfiles root after edits. Files symlink to $HOME.
+If the dotfiles repo is managed with GNU Stow, run `stow .` (or `stow -R .`) from its
+root after **adding or renaming** files. Edits to an already-symlinked file take effect
+immediately; a new file does nothing until it is stowed, which reads as "my config is
+being ignored". Not applicable to bare-git or chezmoi setups.
 
 ## Common Mistakes
 

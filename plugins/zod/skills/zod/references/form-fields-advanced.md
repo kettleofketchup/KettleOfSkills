@@ -59,9 +59,9 @@ import { format } from 'date-fns';
 
 ```typescript
 const items = [
-  { id: 'carry', label: 'Carry' },
-  { id: 'mid', label: 'Mid' },
-  { id: 'offlane', label: 'Offlane' },
+  { id: 'frontend', label: 'Frontend' },
+  { id: 'backend', label: 'Backend' },
+  { id: 'devops', label: 'DevOps' },
 ];
 
 <FormField
@@ -115,11 +115,11 @@ const items = [
 
 ```typescript
 <div className="grid grid-cols-5 gap-4">
-  <FormField control={form.control} name="positions.carry" ... />
-  <FormField control={form.control} name="positions.mid" ... />
-  <FormField control={form.control} name="positions.offlane" ... />
-  <FormField control={form.control} name="positions.soft_support" ... />
-  <FormField control={form.control} name="positions.hard_support" ... />
+  <FormField control={form.control} name="proficiencies.frontend" ... />
+  <FormField control={form.control} name="proficiencies.backend" ... />
+  <FormField control={form.control} name="proficiencies.devops" ... />
+  <FormField control={form.control} name="proficiencies.design" ... />
+  <FormField control={form.control} name="proficiencies.testing" ... />
 </div>
 ```
 
@@ -128,10 +128,10 @@ const items = [
 ```typescript
 <FormField
   control={form.control}
-  name="steamId"
+  name="employeeId"
   render={({ field }) => (
     <FormItem>
-      <FormLabel>Steam ID (read-only)</FormLabel>
+      <FormLabel>Employee ID (read-only)</FormLabel>
       <FormControl>
         <Input {...field} disabled />
       </FormControl>

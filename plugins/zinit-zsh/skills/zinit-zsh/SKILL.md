@@ -1,6 +1,6 @@
 ---
 name: zinit-zsh
-description: Zinit zsh plugin manager for this dotfiles repo. Use for plugins, gh-r binary installs, completions, turbo/wait, ice modifiers (sbin, atclone, atpull, as, from), OMZ snippets, or zshrc edits.
+description: Zinit zsh plugin manager for dotfiles repos. Use for plugins, gh-r binary installs, completions, turbo/wait, ice modifiers (sbin, atclone, atpull, as, from), OMZ snippets, or zshrc edits.
 version: 1.0.0
 last_updated: 2026-01-23
 zinit_version: "zdharma-continuum"
@@ -8,11 +8,12 @@ zinit_version: "zdharma-continuum"
 
 # Zinit ZSH Plugin Manager
 
-Manage zsh plugins, CLI binary installs, and completions using zinit in this dotfiles repo.
+Manage zsh plugins, CLI binary installs, and completions with zinit in a dotfiles repo.
 
 ## Repo Structure
 
-This repo uses GNU Stow. Files symlink to `$HOME`:
+A conventional zinit dotfiles layout. Where the repo is managed with GNU Stow these
+files symlink into `$HOME`; adapt the paths for bare-git, chezmoi, or plain copies.
 - `.zshrc` - main zinit config, plugin definitions, binary installs
 - `.config/zsh/` - modular zsh configs loaded via `zinit snippet`
   - `plugins.zsh` - additional plugin loads

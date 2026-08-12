@@ -73,10 +73,10 @@ import { Button } from '~/components/ui/button';
 ```typescript
 <FormField
   control={form.control}
-  name="mmr"
+  name="yearsExperience"
   render={({ field }) => (
     <FormItem>
-      <FormLabel>MMR</FormLabel>
+      <FormLabel>Years of Experience</FormLabel>
       <FormControl>
         <Input
           type="number"
@@ -137,15 +137,15 @@ import { Button } from '~/components/ui/button';
 
 ## Select (Number Values)
 
-DTX position forms use number values. Convert strings to numbers:
+Rating and proficiency selects hold number values. Convert strings to numbers:
 
 ```typescript
 <FormField
   control={form.control}
-  name="positions.carry"
+  name="proficiencies.frontend"
   render={({ field }) => (
     <FormItem>
-      <FormLabel>Carry</FormLabel>
+      <FormLabel>Frontend</FormLabel>
       <Select
         onValueChange={(value) => field.onChange(Number(value))}
         defaultValue={field.value?.toString()}

@@ -1,6 +1,6 @@
 # Zinit Ice Modifiers Reference
 
-Complete reference for zinit ice modifiers used in this dotfiles repo.
+Complete reference for zinit ice modifiers used in dotfiles repos.
 
 ## Source Selection
 

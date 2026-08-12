@@ -107,10 +107,10 @@ export const PositionForm = ({ form }: PositionFormProps) => {
   return (
     <FormField
       control={form.control}
-      name="positions.carry"  // Nested field
+      name="proficiencies.frontend"  // Nested field
       render={({ field }) => (
         <FormItem>
-          <FormLabel>Carry</FormLabel>
+          <FormLabel>Frontend</FormLabel>
           {/* ... */}
         </FormItem>
       )}

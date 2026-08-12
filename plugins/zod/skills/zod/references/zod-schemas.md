@@ -46,14 +46,14 @@ z.number().finite()
 ## Object Schemas
 
 ```typescript
-const UserSchema = z.object({
+const ProfileSchema = z.object({
   id: z.number(),
   username: z.string().min(2).max(100),
   email: z.string().email(),
   createdAt: z.date(),
 });
 
-type User = z.infer<typeof UserSchema>;
+type User = z.infer<typeof ProfileSchema>;
 ```
 
 ## Array Schemas
@@ -122,7 +122,7 @@ const LoginData = DBUser.pick({ email: true, password: true });
 ### Partial
 
 ```typescript
-const UpdateUser = UserSchema.partial(); // All fields optional
+const UpdateUser = ProfileSchema.partial(); // All fields optional
 ```
 
 ## Custom Refinements
@@ -150,7 +150,7 @@ z.object({
 
 ```typescript
 try {
-  const data = UserSchema.parse(input);
+  const data = ProfileSchema.parse(input);
 } catch (error) {
   if (error instanceof z.ZodError) {
     console.log(error.issues);
@@ -161,7 +161,7 @@ try {
 ### SafeParse (non-throwing)
 
 ```typescript
-const result = UserSchema.safeParse(input);
+const result = ProfileSchema.safeParse(input);
 if (result.success) {
   console.log(result.data);
 } else {
@@ -179,34 +179,34 @@ z.coerce.date()    // '2024-01-01' -> Date
 z.coerce.boolean() // 'true' -> true
 ```
 
-## DTX Project Examples
+## Worked Example: Profile Form
 
-### Position Schema
+### Nested Schema
 
 ```typescript
-export const PositionSchema = z.object({
+export const ProficiencySchema = z.object({
   pk: z.number().optional(),
-  carry: z.number().min(0, { message: 'Carry position must be selected.' }),
-  mid: z.number().min(0),
-  offlane: z.number().min(0),
-  soft_support: z.number().min(0),
-  hard_support: z.number().min(0),
+  frontend: z.number().min(0, { message: 'Frontend proficiency must be selected.' }),
+  backend: z.number().min(0),
+  devops: z.number().min(0),
+  design: z.number().min(0),
+  testing: z.number().min(0),
 });
 ```
 
-### User Schema
+### Parent Schema
 
 ```typescript
-export const UserSchema = z.object({
-  positions: PositionSchema.optional(),
+export const ProfileSchema = z.object({
+  proficiencies: ProficiencySchema.optional(),
   username: z.string().min(2).max(100),
-  nickname: z.string().min(2).max(100).nullable().optional(),
-  mmr: z.number().min(0).nullable().optional(),
-  steamid: z.number().min(0).nullable().optional(),
-  discordId: z.string().min(2).max(100).nullable().optional(),
+  displayName: z.string().min(2).max(100).nullable().optional(),
+  yearsExperience: z.number().min(0).nullable().optional(),
+  employeeId: z.number().min(0).nullable().optional(),
+  contactHandle: z.string().min(2).max(100).nullable().optional(),
 });
 
-export type UserType = z.infer<typeof UserSchema>;
+export type ProfileType = z.infer<typeof ProfileSchema>;
 ```
 
 ## API Validation Pattern
