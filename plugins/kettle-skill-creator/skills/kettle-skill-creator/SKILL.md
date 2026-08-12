@@ -92,6 +92,31 @@ just sync-marketplace   # Regenerate .claude-plugin/marketplace.json
 
 Verify the skill appears in the correct groups and in `marketplace.json`.
 
+## Make skills work outside Claude Code
+
+Skills authored here are `SKILL.md` files, which Codex, Cursor, Amp, opencode, and
+Copilot CLI all read natively — only the *location* differs per tool. To expose a repo's
+`.claude/skills/` to other harnesses, use the **`agent-harness`** skill rather than
+hand-rolling it: it symlinks `.agents/skills` (the cross-client path named by the Agent
+Skills spec), generates pointer files for harnesses that use a different format, and has
+a `--check` mode that fails when they drift.
+
+```bash
+uv run ~/.claude/skills/agent-harness/scripts/sync_harnesses.py --harness codex,openhands
+```
+
+That applies to a *consuming* repo. This marketplace repo is different: its skills live
+in `plugins/<name>/skills/<name>/` as published products, not in `.claude/skills/` as
+working knowledge, so the generator does not apply here — `AGENTS.md` at the repo root
+covers it instead.
+
+Two authoring habits keep skills portable across harnesses:
+
+- Keep `name` identical to the directory name. The spec requires it, and strict clients
+  skip a skill that violates it — silently, with no error.
+- Write `description` so it states what the skill does *and* when to use it. Harnesses
+  that match on keywords have nothing else to go on.
+
 ## Release
 
 See `references/release-workflow.md` for version bumping and tagging via
