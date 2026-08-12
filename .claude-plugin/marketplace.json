@@ -7,6 +7,11 @@
   },
   "plugins": [
     {
+      "name": "agent-harness",
+      "description": "Make a repo's .claude/ skills visible to Codex, OpenHands, Copilot, and Cursor. Use when another agent cannot see pro...",
+      "source": "./plugins/agent-harness"
+    },
+    {
       "name": "argocd",
       "description": "GitOps continuous delivery for Kubernetes with ArgoCD. Use when creating/managing ArgoCD Applications, ApplicationSet...",
       "source": "./plugins/argocd"
