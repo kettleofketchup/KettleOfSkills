@@ -1,4 +1,4 @@
-# Traefik Forward Auth Middleware
+# Traefik Forward Auth Middleware: Setup
 
 ## Overview
 
@@ -81,26 +81,7 @@ spec:
 
 #### Domain-Level Mode
 
-For domain-level, all apps on a domain share one authentication session:
-
-```yaml
-apiVersion: traefik.io/v1alpha1
-kind: Middleware
-metadata:
-  name: authentik-auth-domain
-  namespace: authentik
-spec:
-  forwardAuth:
-    address: http://ak-outpost-<outpost-name>.authentik.svc.cluster.local:9000/outpost.goauthentik.io/auth/traefik
-    trustForwardHeader: true
-    authResponseHeaders:
-      - X-authentik-username
-      - X-authentik-groups
-      - X-authentik-entitlements
-      - X-authentik-email
-      - X-authentik-name
-      - X-authentik-uid
-```
+All apps on a domain share one session. Use the same Middleware structure as single app but name it `authentik-auth-domain` and include only the 6 base headers (omit `X-authentik-meta-*`).
 
 ### 5. Apply Middleware to IngressRoute
 
@@ -149,46 +130,10 @@ spec:
 | `X-authentik-meta-provider` | Provider name |
 | `X-authentik-meta-app` | Application slug |
 
-## Unauthenticated Paths
+## Unauthenticated Paths / Logout
 
-Regex patterns to skip auth (compiled with Go regex):
-- Single app: matches request path
-- Domain-level: matches full URL
+Regex patterns to skip auth (compiled with Go regex): single app matches request path; domain-level matches full URL.
 
-## Logout
-
+Logout URLs:
 - Single app: `https://app.example.com/outpost.goauthentik.io/sign_out`
 - Domain-level: `https://auth.example.com/outpost.goauthentik.io/sign_out`
-
-## Blueprint Example
-
-```yaml
-- model: authentik_providers_proxy.proxyprovider
-  state: present
-  identifiers:
-    name: forward-auth-myapp
-  id: proxy-myapp
-  attrs:
-    authorization_flow: !Find [authentik_flows.flow, [slug, default-provider-authorization-implicit-consent]]
-    mode: forward_single
-    external_host: https://app.example.com
-
-- model: authentik_core.application
-  state: present
-  identifiers:
-    slug: myapp
-  attrs:
-    name: My Protected App
-    provider: !KeyOf proxy-myapp
-
-- model: authentik_outposts.outpost
-  state: present
-  identifiers:
-    name: authentik Embedded Outpost
-  attrs:
-    providers:
-      - !KeyOf proxy-myapp
-    type: proxy
-    config:
-      authentik_host: https://auth.example.com
-```

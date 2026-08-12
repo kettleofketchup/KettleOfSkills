@@ -36,7 +36,7 @@ YAML-based declarative configuration for flows, stages, providers, applications.
 - Tags: `!KeyOf` (intra-blueprint only), `!Find`, `!FindObject` (2025.8+), `!Env`, `!Context`, `!Format`, `!If`, `!Condition`, `!Enumerate`. **`!Slice` does not exist** — common mis-citation.
 - `state:` values: `present` (reconcile drift), `created` (create-once-ignore-after), `must_created` (fail if exists), `absent` (delete)
 - Mount via ConfigMap at `/blueprints/custom/` in server + worker pods, atomic per-file transactions, 60min reapply cadence
-- See [blueprints.md](references/blueprints.md) for the structural overview
+- See [blueprints.md](references/blueprints.md) for the structural overview; [blueprints-examples-auth.md](references/blueprints-examples-auth.md) and [blueprints-examples-proxy.md](references/blueprints-examples-proxy.md) for full examples
 - **State semantics, !KeyOf scoping, first-boot chicken-and-egg**: [blueprints/sync_states.md](references/blueprints/sync_states.md)
 - **LDAP sources** (`user_matching_mode`, password sync, delete_not_found): [blueprints/ldap_sources.md](references/blueprints/ldap_sources.md)
 
@@ -45,7 +45,18 @@ Protect apps behind Traefik using Authentik proxy provider outpost.
 - Proxy provider → embedded or standalone outpost
 - Traefik `forwardAuth` middleware pointing to outpost
 - Headers: `X-authentik-username`, `X-authentik-groups`, `X-authentik-email`
-- See [middleware.md](references/middleware.md)
+- See [middleware-setup.md](references/middleware-setup.md) for setup, CRDs, and headers
+- See [middleware-blueprint.md](references/middleware-blueprint.md) for blueprint example
+- **Fronting an SPA or anything using XHR/SSE/WebSocket? Read
+  [forward-auth-xhr-cors.md](references/forward-auth-xhr-cors.md) BEFORE shipping.**
+  `access_token_validity` defaults to `hours=1`, and the outpost re-mints by **302 to
+  the authorize flow**. That is invisible on navigation and fatal on XHR — the redirect
+  crosses origin, so the browser turns it into a CORS error the page cannot intercept,
+  and the token can never be re-minted without a manual reload. Presents as random
+  disconnects/timeouts, not as an auth problem. Fix is a longer
+  `access_token_validity` (bounded above by `refresh_token_validity`, and equal to the
+  group-revocation lag) plus a second middleware on `/auth/nginx` (401, no redirect)
+  selected by `Sec-Fetch-Mode`.
 
 ### Hiding Applications from the User Library
 Use `meta_launch_url: "blank://blank"` to hide a proxy-provider Application's tile from My Applications without changing its policies. The literal is `blank://blank` — `blank://` alone fails Authentik's URL validator with `Enter a valid URL`. Hide forward-auth proxies that **duplicate** an existing OIDC/SAML user-facing app; keep visible (with a real launch URL) for proxies that ARE the only user-facing entry.
@@ -59,7 +70,8 @@ Use `meta_launch_url: "blank://blank"` to hide a proxy-provider Application's ti
 
 ### Application Integrations
 SAML/OIDC setup for common self-hosted apps.
-- ArgoCD SAML via Dex (recommended) → [integrations/argocd.md](references/integrations/argocd.md)
+- ArgoCD OIDC via Dex (recommended, supports CLI) → [integrations/argocd-oidc.md](references/integrations/argocd-oidc.md)
+- ArgoCD SAML via Dex → [integrations/argocd-saml.md](references/integrations/argocd-saml.md)
 - Grafana, Gitea, MinIO, generic SAML → [integrations.md](references/integrations.md)
 - **Critical**: SAML SSO URLs must use `/sso/binding/post/` not `/sso/binding/redirect/` (CSRF)
 
@@ -71,7 +83,8 @@ All settings via `AUTHENTIK_*` env vars. Double underscore (`__`) separates nest
 - Web/Worker tuning: Gunicorn workers/threads, Dramatiq task settings
 - Listen addresses, cache timeouts, email/SMTP, outpost image base
 - Values support `env://` and `file://` URI syntax for indirection
-- See [configuration.md](references/configuration.md)
+- See [configuration-core.md](references/configuration-core.md) for core, PostgreSQL, cache, email, listeners, web/worker
+- See [configuration-storage.md](references/configuration-storage.md) for storage, outposts, security, airgapped settings
 
 ### Airgapped / Offline Deployment
 Disable all outbound connections for air-gapped environments:
@@ -82,7 +95,7 @@ Disable all outbound connections for air-gapped environments:
 - GeoIP: auto-skipped if DB files missing at `/geoip/`
 - Mirror container images and Helm chart to internal registries
 - Set `AUTHENTIK_OUTPOSTS__CONTAINER_IMAGE_BASE` to internal registry
-- See [configuration.md](references/configuration.md) (Airgapped Deployment Settings section)
+- See [configuration-storage.md](references/configuration-storage.md) (Airgapped Deployment Settings section)
 
 ### Branding & Theming
 Custom logos, colors, CSS, and per-domain visual identity via the `authentik_brands.brand` model.
@@ -93,8 +106,10 @@ Custom logos, colors, CSS, and per-domain visual identity via the `authentik_bra
 - Multi-domain brands: different branding per domain with wildcard support
 - Custom font loading, UI element hiding, Shadow DOM `::part()` targeting
 - See [branding/brand-model.md](references/branding/brand-model.md) — brand fields, attributes, asset serving, API
-- See [branding/custom-css.md](references/branding/custom-css.md) — CSS variables, color schemes, component styling
-- See [branding/blueprints.md](references/branding/blueprints.md) — declarative brand config, multi-domain, Kustomize
+- See [branding/custom-css-colors.md](references/branding/custom-css-colors.md) — CSS variables, color schemes, fonts
+- See [branding/custom-css-components.md](references/branding/custom-css-components.md) — login/card/nav styling, shadow DOM, hiding elements
+- See [branding/blueprints-basic.md](references/branding/blueprints-basic.md) — declarative brand config, multi-domain
+- See [branding/blueprints-flow.md](references/branding/blueprints-flow.md) — branded login flow with custom layout
 
 ### Property Mappings & Policies
 Custom attribute statements and access control.
