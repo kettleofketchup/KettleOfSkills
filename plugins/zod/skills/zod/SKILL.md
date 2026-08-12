@@ -103,7 +103,9 @@ toast.promise(apiCall(data), {
 For comprehensive documentation:
 - [Zod Schema Patterns](references/zod-schemas.md) - Schema types, validation, composition
 - [React Hook Form Integration](references/react-hook-form.md) - Form setup, field types, error handling
+- [React Hook Form: Submission & Arrays](references/react-hook-form-advanced.md) - Submission, nested fields, array fields, accessibility
 - [Form Field Components](references/form-fields.md) - Input, Select, Checkbox patterns
+- [Advanced Form Fields](references/form-fields-advanced.md) - Checkbox, date picker, multi-select, conditional fields
 
 ## Migration Guide
 

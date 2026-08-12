@@ -31,6 +31,42 @@ There is no repo field. Add a backend only when a second agent-server actually e
 release per repo *is* a legitimate architecture — separate PVC, separate LLM budget, separate blast radius —
 but it multiplies the whole deployment, so reach for it only when you want that isolation.
 
+### Running a backend to point it at
+
+A backend does not need the full Canvas deployment — it needs a backend-only agent-server:
+
+```bash
+export LOCAL_BACKEND_API_KEY="<high-entropy secret>"   # REQUIRED by --public
+agent-canvas --backend-only --public                   # listens on :8000
+```
+
+or as a container:
+
+```bash
+docker run -p 8000:8000 ghcr.io/openhands/agent-server:<tag>-python
+```
+
+`LOCAL_BACKEND_API_KEY` is exactly what goes in the API Key field above, and it travels as
+`X-Session-API-Key`. **That key is the entire security boundary** — the agent-server accepts any request
+carrying it, and there is no user auth behind it. Upstream's own guidance is to keep 8000 firewalled and reach
+it through an SSH tunnel, ngrok, or a TLS reverse proxy. In-cluster, a NetworkPolicy restricting who may reach
+:8000 is the equivalent, and it is not optional: anyone who can dial the port and guess the key drives an
+agent that executes arbitrary code.
+
+### What switching a backend actually switches
+
+Settings, LLM configuration, MCP servers and automations all live **on the backend**, not in the browser. So
+backends are environments to provision, not contexts to flip between — expect to configure each one. Whether
+an existing conversation can be reassigned to a different backend is undocumented; assume a conversation stays
+on the backend that created it unless you have verified otherwise.
+
+### Per-backend isolation is the OSS answer to "agents must not see each other"
+
+Conversations sharing one backend share its filesystem, processes and any Docker daemon it can reach. Separate
+backends share nothing. So the shape that buys real isolation is *N* agent-servers — one per user, per repo,
+or per long-running task — each a separate pod/VM/workspace, all registered in `Manage backends`. This is
+coarser than Enterprise's automatic per-run sandboxes, but it is real and it costs no license.
+
 ## Workspaces are the repo linkage
 
 From `openhands/agent_server/workspaces_router.py`:

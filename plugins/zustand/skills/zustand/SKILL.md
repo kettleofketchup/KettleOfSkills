@@ -49,6 +49,7 @@ For detailed patterns and advanced usage, load the appropriate reference:
 |-------|-----------|----------|
 | Store patterns | `references/store-patterns.md` | Creating stores, TypeScript setup, slice pattern, combining stores |
 | Middleware | `references/middleware.md` | persist, devtools, immer, subscribeWithSelector, custom middleware |
+| Custom middleware | `references/middleware-custom.md` | Writing custom middleware, common middleware stacks |
 | React integration | `references/react-integration.md` | Selectors, avoiding re-renders, subscriptions, context usage |
 | Async actions | `references/async-actions.md` | Async actions, data fetching, loading states, optimistic updates |
 | Testing | `references/testing.md` | Store reset, action testing, RTL, mocked fetch, subscriptions |

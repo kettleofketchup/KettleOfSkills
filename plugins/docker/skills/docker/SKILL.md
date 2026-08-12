@@ -1,7 +1,7 @@
 ---
 name: docker
-version: 2026-07-15
-description: Docker builds, Compose, and Docker-in-Docker for CI. Use when writing Dockerfiles, optimizing build times, multi-stage builds, BuildKit cache mounts, docker-compose.yml, or CI/CD pipelines (GitHub/GitLab/Forgejo Actions) — including docker-in-docker (dind) runners, rootless dind, bind-mount-vs-build-context confusion, and "mkdir <path>: permission denied" mount failures. Covers layer ordering, dependency caching, .dockerignore, multi-stage, BuildKit, Compose, and dind mount patterns.
+version: 2026-08-12
+description: Docker builds, Compose, and Docker-in-Docker for CI. Use when writing Dockerfiles, optimizing build times, multi-stage builds, BuildKit cache mounts, docker-compose.yml, or CI/CD pipelines (GitHub/GitLab/Forgejo Actions) — including docker-in-docker (dind) runners, rootless dind, bind-mount-vs-build-context confusion, and "mkdir PATH: permission denied" mount failures. Covers layer ordering, dependency caching, .dockerignore, multi-stage, BuildKit, Compose, and dind mount patterns.
 ---
 
 # Docker Layer Optimization
@@ -95,17 +95,20 @@ Slow build? Check in order:
 3. Not using BuildKit cache mounts? → Downloads deps every build
 4. Not using multi-stage? → Large final image, slow push/pull
 
-Bind mount / `mkdir <path>: permission denied` in a docker-in-docker CI runner, or files
-missing after switching a mount to `COPY`? → `references/docker-in-docker-mounts.md` (it's
-path visibility on the daemon, not permission).
+Bind mount or `mkdir PATH: permission denied` in a docker-in-docker CI runner, or files
+missing after switching a mount to `COPY`? See `references/docker-in-docker-mounts.md`
+(it is path visibility on the daemon, not permission).
 
 ## References
 
-For detailed patterns by language and CI/CD integration:
-
-- `references/language-patterns.md` - Node.js, Python, Go, Rust specific patterns
+- `references/language-patterns.md` - Node.js, Python patterns with cache mounts
+- `references/language-patterns-compiled.md` - Go, Rust patterns + base image table
 - `references/cicd-integration.md` - GitHub Actions & GitLab CI caching setup
-- `references/buildkit-advanced.md` - Advanced BuildKit features (bake, secrets, SSH)
-- `references/compose-services.md` - Compose file structure, services, build, networking, volumes, health checks, commands
-- `references/compose-patterns.md` - Dev patterns, override files, profiles, watch mode, environment variable priority
-- `references/docker-in-docker-mounts.md` - Docker-in-Docker: why bind mounts fail on rootless dind (path visibility, not permission), build-context vs bind-mount, `.dockerignore` gotchas, CI patterns (bake/named-volume/services/DooD), and dind version pinning
+- `references/cicd-optimization.md` - Cache strategy comparison & optimization tips
+- `references/buildkit-advanced.md` - BuildKit mounts (cache/bind/secret/SSH), heredocs, debugging
+- `references/buildkit-bake.md` - Docker Bake multi-target builds (HCL)
+- `references/compose-services.md` - Compose structure, build, health checks, dependencies
+- `references/compose-networking.md` - Compose networking, volumes, common commands
+- `references/compose-patterns.md` - Dev patterns, override files, profiles, watch mode
+- `references/docker-in-docker-mounts.md` - Rootless dind bind-mount failures, build-context
+  vs bind-mount, .dockerignore gotchas, CI patterns, dind version pinning

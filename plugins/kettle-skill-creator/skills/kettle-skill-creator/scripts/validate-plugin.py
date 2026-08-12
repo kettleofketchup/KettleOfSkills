@@ -10,10 +10,10 @@ Checks:
   - Directory structure (plugins/<name>/skills/<name>/)
   - SKILL.md exists with valid YAML frontmatter
   - name field matches directory name, is kebab-case
-  - description field exists and is <200 characters
+  - description field exists and is <1024 characters (Agent Skills spec limit)
   - config.yaml exists with valid categories
-  - SKILL.md body is <150 lines
-  - Each reference file is <150 lines
+  - SKILL.md body is <500 lines (Agent Skills spec recommendation)
+  - Each reference file is <250 lines (warns above 150)
 """
 
 import json
@@ -30,6 +30,23 @@ VALID_CATEGORIES = {
 
 # Group plugin names (these are auto-generated, not individual skills)
 GROUP_NAMES = VALID_CATEGORIES | {"all"}
+
+# Size limits, aligned to the Agent Skills spec (agentskills.io/specification).
+#
+# The description cap was previously 200, well under the spec's 1024. That is the
+# wrong direction to squeeze: the description is what an agent matches a task
+# against, so trimming it removes trigger keywords and hurts discovery, and
+# marketplace.json truncates to 120 for display anyway. The body cap was 150
+# against the spec's recommended 500.
+#
+# References are a house style rather than a spec rule. Files above the warn line
+# are worth splitting, but making that an error meant 240 of 1078 files failed and
+# the output was ignored. Erroring only on genuinely unwieldy files keeps the
+# signal actionable; the warning still records the rest.
+DESCRIPTION_MAX = 1024
+BODY_MAX_LINES = 500
+REFERENCE_MAX_LINES = 250
+REFERENCE_WARN_LINES = 150
 
 PLUGIN_ROOT_VAR = "${CLAUDE_PLUGIN_ROOT}"
 
@@ -242,8 +259,10 @@ def validate_plugin(name: str, repo_root: Path) -> list[str]:
                 desc = extract_description(fm)
                 if not desc or desc.startswith("TODO"):
                     warnings.append("Description is still a TODO placeholder")
-                elif len(desc) > 200:
-                    errors.append(f"Description is {len(desc)} chars (max 200)")
+                elif len(desc) > DESCRIPTION_MAX:
+                    errors.append(
+                        f"Description is {len(desc)} chars (max {DESCRIPTION_MAX})"
+                    )
                 if "<" in desc or ">" in desc:
                     errors.append("Description contains angle brackets")
 
@@ -252,8 +271,10 @@ def validate_plugin(name: str, repo_root: Path) -> list[str]:
         # Strip trailing empty lines
         while body_lines and not body_lines[-1].strip():
             body_lines.pop()
-        if len(body_lines) > 150:
-            errors.append(f"SKILL.md body is {len(body_lines)} lines (max 150)")
+        if len(body_lines) > BODY_MAX_LINES:
+            errors.append(
+                f"SKILL.md body is {len(body_lines)} lines (max {BODY_MAX_LINES})"
+            )
 
     # config.yaml
     config_yaml = plugin_dir / "config.yaml"
@@ -280,8 +301,16 @@ def validate_plugin(name: str, repo_root: Path) -> list[str]:
     if refs_dir.is_dir():
         for ref_file in refs_dir.rglob("*.md"):
             line_count = len(ref_file.read_text().split("\n"))
-            if line_count > 150:
-                errors.append(f"Reference {ref_file.name} is {line_count} lines (max 150)")
+            if line_count > REFERENCE_MAX_LINES:
+                errors.append(
+                    f"Reference {ref_file.name} is {line_count} lines "
+                    f"(max {REFERENCE_MAX_LINES})"
+                )
+            elif line_count > REFERENCE_WARN_LINES:
+                warnings.append(
+                    f"Reference {ref_file.name} is {line_count} lines "
+                    f"(prefer under {REFERENCE_WARN_LINES}; split it when convenient)"
+                )
 
     # Print warnings
     for w in warnings:

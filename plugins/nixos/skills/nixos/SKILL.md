@@ -142,11 +142,17 @@ For comprehensive documentation on specific topics:
 |-------|----------------|
 | Nix language syntax | `references/nix-language.md` |
 | Flake inputs/outputs | `references/flakes.md` |
+| Flake commands, args & lockfiles | `references/flakes-usage.md` |
 | NixOS modules & options | `references/nixos-modules.md` |
+| Module args, exports & debugging | `references/nixos-modules-advanced.md` |
 | Packaging & derivations | `references/packaging.md` |
-| DevShells & overlays | `references/devshells.md` |
+| OCI/Docker image packaging | `references/packaging-images.md` |
+| DevShells | `references/devshells.md` |
+| Nixpkgs overlays | `references/overlays.md` |
 | Home Manager | `references/home-manager.md` |
+| Home Manager flake/NixOS integration | `references/home-manager-integration.md` |
 | Private repos & SSH | `references/private-repos.md` |
+| Private repos: HTTPS tokens & overrides | `references/private-repos-auth.md` |
 | ISO building & closure consistency | `references/iso-building.md` |
 | Charmbracelet gum prompts & YAML config | `references/gum-prompts.md` |
 | Channel pinning & nixpkgs upgrades | `references/channel-pinning.md` |
