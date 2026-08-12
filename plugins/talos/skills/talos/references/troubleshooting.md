@@ -124,50 +124,14 @@ Global flags: `-n/--nodes`, `-e/--endpoints`, `-c/--cluster`, `--talosconfig`, `
 - Physical console only (not serial); 2nd virtual TTY
 - Switch TTY: `Alt+F1` (kernel logs), `Alt+F2` (dashboard)
 - Disable: kernel param `talos.dashboard.disabled=1`
-- Screens: `F1` Summary (hostname, version, uptime, CPU/mem, UUID, stage, k8s version, network), `F2` Monitor (CPU/mem/disk/net realtime), `F3` Network Config (metal only; hostname, DNS, NTP, DHCP/static)
-
-## Logging Configuration
-
-### Forward Service Logs
-```yaml
-machine:
-  logging:
-    destinations:
-      - endpoint: "udp://host:port/"   # or tcp://
-        format: "json_lines"
-        extraTags:
-          server: s03-rack07
-```
-- Protocols: UDP (one msg/packet), TCP (newline-separated)
-- Only format: `json_lines`; fields: `msg`, `talos-level`, `talos-service`, `talos-time`
-- Multiple destinations supported
-
-### Forward Kernel Logs
-Via kernel args:
-```yaml
-machine:
-  install:
-    extraKernelArgs:
-      - talos.logging.kernel=tcp://host:5044/
-```
-Via runtime document:
-```yaml
-apiVersion: v1alpha1
-kind: KmsgLogConfig
-name: remote-log
-url: tcp://host:5044/
-```
-Fields: `clock`, `facility`, `msg`, `priority`, `seq`, `talos-level`, `talos-time`
-
-### Collect Logs (Receiver)
-```bash
-nc -k -l 5140 | tee -a logs.txt
-```
+- Screens: `F1` Summary, `F2` Monitor (CPU/mem/disk/net realtime), `F3` Network Config (metal only)
 
 ## FAQs
 
 - **No SSH/shell** -- all access via gRPC API (port 50000); by design for security
 - **talosconfig vs kubeconfig** -- talosconfig for Talos API (always available); kubeconfig for k8s API
-- **Certificates** -- CAs valid 10yr; client certs (talosconfig/kubeconfig) default 1yr; server certs auto-rotate; renew kubeconfig via `talosctl kubeconfig`
+- **Certificates** -- CAs valid 10yr; client certs (talosconfig/kubeconfig) default 1yr; server certs auto-rotate
 - **Timezone** -- always UTC; not configurable
 - **Kernel config** -- `talosctl read /proc/config.gz | zgrep <PATTERN>`
+
+See `references/troubleshooting-logging.md` for log forwarding configuration.

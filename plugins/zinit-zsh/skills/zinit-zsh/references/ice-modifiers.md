@@ -9,7 +9,25 @@ Complete reference for zinit ice modifiers used in this dotfiles repo.
 | `from'gh-r'` | GitHub releases | `from'gh-r'` |
 | `from'gitlab'` | GitLab repo | `from'gitlab'` |
 | `ver'tag'` | Specific version/tag | `ver'nightly'`, `ver'v1.2.3'` |
-| `bpick'pattern'` | Binary asset pattern | `bpick'*linux*amd64*'` |
+| `bpick'pattern'` | Binary asset pattern (see below) | `bpick'*.tar.gz'` |
+
+### bpick and OS/Arch Auto-Detection
+
+Zinit's `from'gh-r'` automatically detects OS and architecture from release asset names. `bpick` does **not** disable this — it filters first, then auto-detection runs on the filtered results:
+
+1. `bpick` glob narrows the asset list (e.g., only `.tar.gz` files)
+2. OS/arch detection filters those results (matches `linux`/`darwin`, `x64`/`arm64`, etc.)
+
+This means `bpick'*.tar.gz'` is cross-platform safe — it excludes raw binaries or other formats while letting zinit pick the correct OS/arch tarball.
+
+**When to use bpick:**
+- Repo publishes both raw binaries and tarballs, and zinit grabs the wrong one (raw binary it can't extract)
+- Repo has multiple variants (e.g., `musl` vs `gnu`) — use `bpick'*musl*'` to prefer one
+- Multiple sub-projects in one repo — use `bpick'kubectx_*'` to pick the right asset
+
+**Do NOT hardcode OS/arch in bpick** (e.g., `bpick'*linux*amd64*'`) — this breaks cross-platform. Use format/variant filters instead and let auto-detection handle the rest.
+
+**Special case:** `bpick'src'` downloads the auto-generated source tarball and bypasses all detection.
 
 ## Binary Management (sbin)
 

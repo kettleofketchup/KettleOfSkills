@@ -38,26 +38,19 @@ jobs:
 
 ```yaml
 jobs:
-  lint:                       # These run in parallel
+  lint:                           # These three run in parallel
     runs-on: ubuntu-latest
-    steps:
-      - run: npm run lint
-
-  typecheck:                  # Parallel with lint
+    steps: [{ run: npm run lint }]
+  typecheck:
     runs-on: ubuntu-latest
-    steps:
-      - run: npm run typecheck
-
-  test:                       # Parallel with lint & typecheck
+    steps: [{ run: npm run typecheck }]
+  test:
     runs-on: ubuntu-latest
-    steps:
-      - run: npm test
-
+    steps: [{ run: npm test }]
   build:
-    needs: [lint, typecheck, test]  # Waits for all
+    needs: [lint, typecheck, test]
     runs-on: ubuntu-latest
-    steps:
-      - run: npm run build
+    steps: [{ run: npm run build }]
 ```
 
 ## Early Termination
@@ -74,7 +67,6 @@ on:
     paths-ignore:
       - '**.md'
       - 'docs/**'
-      - '.vscode/**'
 ```
 
 ### Conditional Jobs
@@ -98,12 +90,10 @@ jobs:
   backend-tests:
     needs: changes
     if: needs.changes.outputs.backend == 'true'
-    # ...
 
   frontend-tests:
     needs: changes
     if: needs.changes.outputs.frontend == 'true'
-    # ...
 ```
 
 ### Skip Conditions
@@ -111,14 +101,9 @@ jobs:
 ```yaml
 jobs:
   build:
-    # Skip for docs-only, drafts, or [skip ci]
     if: |
       !contains(github.event.head_commit.message, '[skip ci]') &&
-      !github.event.pull_request.draft &&
-      (
-        github.event_name != 'pull_request' ||
-        !contains(github.event.pull_request.labels.*.name, 'documentation')
-      )
+      !github.event.pull_request.draft
 ```
 
 ## Checkout Optimization
@@ -135,45 +120,18 @@ jobs:
     sparse-checkout: |
       packages/my-app
       shared/
-
-# No checkout (for API-only jobs)
-jobs:
-  notify:
-    runs-on: ubuntu-latest
-    steps:
-      - run: curl -X POST $WEBHOOK_URL
-        env:
-          WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
 ```
 
 ## Self-Hosted Runner Optimization
 
-### Runner Setup
-
 ```yaml
 runs-on: [self-hosted, linux, x64]
 
-# With container
-container:
-  image: node:20
-  options: --cpus 4 --memory 8g
-```
+# Pre-install on runner
+# npm install -g typescript eslint prettier
+# docker pull node:20 postgres:15
 
-### Persistent Cache
-
-```bash
-# Pre-install common dependencies on runner
-npm install -g typescript eslint prettier
-
-# Pre-pull Docker images
-docker pull node:20
-docker pull postgres:15
-```
-
-### Cleanup
-
-```yaml
-# Add cleanup step
+# Cleanup step
 - name: Cleanup
   if: always()
   run: |
@@ -181,20 +139,12 @@ docker pull postgres:15
     rm -rf node_modules dist
 ```
 
-## Workflow Optimization Checklist
+## Optimization Checklist
 
-### Before Running
-- [ ] Use `paths` filter to skip irrelevant changes
-- [ ] Add `concurrency` to cancel stale runs
-- [ ] Set `timeout-minutes` on all jobs
-
-### Parallelization
-- [ ] Run independent jobs in parallel
-- [ ] Use matrix for multi-version testing
-- [ ] Shard large test suites
-
-### Cost Reduction
-- [ ] Use ubuntu-latest when possible
-- [ ] Shallow checkout with `fetch-depth: 1`
-- [ ] Consider self-hosted for high volume
-- [ ] Use `if: failure()` for cleanup instead of `always()`
+- Use `paths` filter to skip irrelevant changes
+- Add `concurrency` to cancel stale runs
+- Set `timeout-minutes` on all jobs
+- Run independent jobs in parallel
+- Shard large test suites
+- Use ubuntu-latest (10x cheaper than macos)
+- Shallow checkout with `fetch-depth: 1`

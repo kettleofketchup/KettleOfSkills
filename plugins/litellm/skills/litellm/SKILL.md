@@ -2,7 +2,7 @@
 name: litellm
 last_updated: 2026-04-05
 version: v1.82.3-stable (latest stable), v1.83.1-nightly (latest nightly)
-description: "LiteLLM AI gateway proxy for unified LLM API access. Use when deploying LiteLLM proxy with Docker/Helm/Kubernetes, writing config.yaml (model_list, router_settings, litellm_settings, general_settings), managing virtual API keys and spend tracking, configuring JWT/OIDC token auth, setting up SSO with Generic OIDC (Authentik, Keycloak, Auth0), configuring RBAC (organizations, teams, users, roles), integrating with Langfuse observability, connecting Open WebUI as a frontend, adding vLLM as a provider backend, configuring Redis caching, setting up fallbacks and load balancing, health checks, or logging to 20+ backends."
+description: LiteLLM AI gateway proxy for unified LLM API access. Use when deploying via Docker/Helm/Kubernetes, config.yaml, virtual API keys, OIDC/SSO, RBAC, Langfuse, Open WebUI, vLLM, or fallback routing.
 ---
 
 # LiteLLM Proxy

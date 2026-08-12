@@ -20,14 +20,12 @@ Open URL in the user's default browser.
 
 | Go | JS | Description |
 |---|---|---|
-| `ClipboardGetText(ctx) (string, error)` | `window.runtime.ClipboardGetText() : Promise<string>` | Read clipboard text |
+| `ClipboardGetText(ctx) (string, error)` | `window.runtime.ClipboardGetText()` | Read clipboard text |
 | `ClipboardSetText(ctx, text string) error` | `window.runtime.ClipboardSetText(text)` | Write text to clipboard |
 
 ## Logging
 
 All log functions: `ctx context.Context, message string`. JS equivalents via `window.runtime.Log*`.
-
-### Log Functions
 
 | Go | JS | Level |
 |---|---|---|
@@ -38,25 +36,7 @@ All log functions: `ctx context.Context, message string`. JS equivalents via `wi
 | `LogError(ctx, message)` | `LogError(message)` | 5 - Error |
 | `LogFatal(ctx, message)` | `LogFatal(message)` | Logs then calls `os.Exit(1)` |
 
-### Additional Log Functions (Go only)
-
-| Go | Description |
-|---|---|
-| `LogPrint(ctx, message string)` | Print without level prefix |
-| `LogPrintln(ctx, message string)` | Print with newline, no level prefix |
-| `LogSetLogLevel(ctx, level logger.LogLevel)` | Set minimum log level at runtime |
-
-### Log Levels
-
-```go
-const (
-    TRACE   LogLevel = 1
-    DEBUG   LogLevel = 2
-    INFO    LogLevel = 3
-    WARNING LogLevel = 4
-    ERROR   LogLevel = 5
-)
-```
+Go-only: `LogPrint`, `LogPrintln`, `LogSetLogLevel(ctx, level logger.LogLevel)`.
 
 ## Screen
 
@@ -66,17 +46,7 @@ func ScreenGetAll(ctx context.Context) ([]Screen, error)
 
 JS: `window.runtime.ScreenGetAll() : Promise<Screen[]>`
 
-### Screen Struct
-
-| Field | Type | Description |
-|---|---|---|
-| `ID` | `string` | Monitor identifier |
-| `Name` | `string` | Monitor name |
-| `Size` | `Size` | Logical size `{Width, Height int}` |
-| `PhysSize` | `Size` | Physical size `{Width, Height int}` |
-| `IsCurrent` | `bool` | Window's current monitor |
-| `IsPrimary` | `bool` | Primary display |
-| `Rotation` | `float32` | Screen rotation in degrees |
+Screen struct fields: `ID` (string), `Name` (string), `Size` ({Width, Height int}), `PhysSize` ({Width, Height int}), `IsCurrent` (bool), `IsPrimary` (bool), `Rotation` (float32).
 
 ## Notification
 
@@ -84,42 +54,16 @@ JS: `window.runtime.ScreenGetAll() : Promise<Screen[]>`
 func SendNotification(ctx context.Context, opts NotificationOptions) error
 ```
 
-### NotificationOptions
-
-| Field | Type | Description |
-|---|---|---|
-| `Title` | `string` | Notification title |
-| `Subtitle` | `string` | Subtitle (macOS only) |
-| `Body` | `string` | Notification body text |
+NotificationOptions fields: `Title` (string), `Subtitle` (string, macOS only), `Body` (string).
 
 ## Drag and Drop
 
-### Go Functions
+Enable in app config: `DragAndDrop: &options.DragAndDrop{EnableFileDrop: true, CSSDropProperty: "--wails-drop-target", CSSDropValue: "drop"}`.
 
-| Go | Description |
+| Go | JS |
 |---|---|
-| `OnFileDrop(ctx, callback func(x, y int, paths []string))` | Register file drop handler with coordinates and paths |
-| `OnFileDropOff(ctx)` | Unregister file drop handler |
-
-### JS Functions
-
-| JS | Description |
-|---|---|
-| `window.runtime.OnFileDrop(callback, useDropTarget)` | Register file drop handler |
-| `window.runtime.OnFileDropOff()` | Unregister file drop handler |
-
-Enable drag and drop in app config via `DragAndDrop` options:
-
-```go
-app := wails.Run(&options.App{
-    DragAndDrop: &options.DragAndDrop{
-        EnableFileDrop:       true,
-        DisableWebViewDrop:   false,
-        CSSDropProperty:      "--wails-drop-target",
-        CSSDropValue:         "drop",
-    },
-})
-```
+| `OnFileDrop(ctx, callback func(x, y int, paths []string))` | `window.runtime.OnFileDrop(callback, useDropTarget)` |
+| `OnFileDropOff(ctx)` | `window.runtime.OnFileDropOff()` |
 
 CSS elements with `--wails-drop-target: drop` become valid drop targets.
 
@@ -129,13 +73,7 @@ CSS elements with `--wails-drop-target: drop` become valid drop targets.
 func Environment(ctx context.Context) EnvironmentInfo
 ```
 
-### EnvironmentInfo
-
-| Field | Type | Values |
-|---|---|---|
-| `BuildType` | `string` | `"dev"`, `"production"`, `"debug"` |
-| `Platform` | `string` | `"windows"`, `"linux"`, `"darwin"` |
-| `Arch` | `string` | `"amd64"`, `"arm64"`, etc. |
+EnvironmentInfo fields: `BuildType` ("dev"/"production"/"debug"), `Platform` ("windows"/"linux"/"darwin"), `Arch` ("amd64"/"arm64"/etc).
 
 ## Show / Hide (Application)
 
@@ -148,10 +86,8 @@ Application-level visibility (distinct from `WindowShow`/`WindowHide`).
 
 ## Quit
 
-Gracefully quit the application.
-
 | Go | JS |
 |---|---|
 | `Quit(ctx)` | `window.runtime.Quit()` |
 
-Triggers `OnBeforeClose` callback if configured in app options, allowing cancellation.
+Triggers `OnBeforeClose` callback if configured, allowing cancellation.

@@ -53,10 +53,8 @@ err := wails.Run(&options.App{
         UniqueId: "e3984e08-28dc-4e3d-b70a-45e961589cdc",
         OnSecondInstanceLaunch: func(data options.SecondInstanceData) {
             // data.Args contains CLI args from second launch
-            // data.WorkingDirectory is second instance's cwd
             runtime.WindowUnminimise(app.ctx)
             runtime.Show(app.ctx)
-            // handle file open if args contain file path
             if len(data.Args) > 1 {
                 app.OpenFile(data.Args[1])
             }
@@ -65,7 +63,7 @@ err := wails.Run(&options.App{
 })
 ```
 
-`UniqueId` must be a unique string (UUID recommended). Same ID = same lock.
+`UniqueId` must be a unique string (UUID recommended).
 
 ## Dynamic Assets / Custom API Routes
 
@@ -80,10 +78,8 @@ func (r *APIRouter) ServeHTTP(w http.ResponseWriter, req *http.Request) {
     switch {
     case strings.HasPrefix(req.URL.Path, "/api/users"):
         r.handleUsers(w, req)
-    case strings.HasPrefix(req.URL.Path, "/api/config"):
-        r.handleConfig(w, req)
     default:
-        w.WriteHeader(http.StatusNotFound) // fallback to embedded assets
+        w.WriteHeader(http.StatusNotFound)
     }
 }
 
@@ -92,13 +88,6 @@ AssetServer: &assetserver.Options{
     Assets:  assets,
     Handler: &APIRouter{db: db},
 },
-```
-
-Frontend fetches like standard HTTP:
-
-```js
-const response = await fetch('/api/users');
-const users = await response.json();
 ```
 
 ## File Association
@@ -122,20 +111,9 @@ Associate app with file types so OS opens files with your app:
 }
 ```
 
-Handle file opens via `SingleInstanceLock.OnSecondInstanceLaunch` - file path arrives in `data.Args`. On first launch, file path is in `os.Args`.
-
-```go
-func (a *App) startup(ctx context.Context) {
-    a.ctx = ctx
-    if len(os.Args) > 1 {
-        a.OpenFile(os.Args[1])
-    }
-}
-```
+Handle file opens via `OnSecondInstanceLaunch` - file path arrives in `data.Args`.
 
 ## Notifications
-
-Send system notifications:
 
 ```go
 runtime.SendNotification(ctx, &runtime.NotificationOptions{
@@ -145,50 +123,4 @@ runtime.SendNotification(ctx, &runtime.NotificationOptions{
 })
 ```
 
-## Mouse Button Handling
-
-Handle forward/back mouse buttons (mouse4/mouse5):
-
-```go
-// In options:
-EnableDefaultContextMenu: false,
-OnMouseDown: func(button int) {
-    switch button {
-    case 3: // back
-        runtime.EventsEmit(app.ctx, "navigate:back")
-    case 4: // forward
-        runtime.EventsEmit(app.ctx, "navigate:forward")
-    }
-},
-```
-
-## Obfuscated Builds
-
-Use [garble](https://github.com/burrowers/garble) to obfuscate Go binary:
-
-```bash
-wails build -obfuscated
-```
-
-Requires garble installed: `go install mvdan.cc/garble@latest`
-
-Obfuscates Go symbols, strings, and package paths. Does NOT obfuscate frontend code (use frontend bundler minification for that).
-
-## Overscroll Prevention
-
-Prevent rubber-band/bounce scrolling on macOS and overscroll glow on Windows:
-
-```css
-html, body {
-    overflow: hidden;
-    height: 100%;
-}
-
-/* Or target specific containers */
-.app-container {
-    overflow: auto;
-    overscroll-behavior: none;
-}
-```
-
-`overscroll-behavior: none` prevents pull-to-refresh and bounce effects while allowing normal scroll within containers.
+See [Advanced Features: Misc](advanced-features-misc.md) for obfuscated builds, overscroll prevention, and mouse button handling.

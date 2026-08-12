@@ -1,6 +1,6 @@
 ---
 name: cert-manager
-description: Kubernetes certificate management debugging and configuration. This skill should be used when troubleshooting cert-manager issues, configuring private CA issuers (SelfSigned, CA, Vault), integrating with Traefik IngressRoute TLS, diagnosing Certificate/CertificateRequest/Issuer problems, or debugging webhook connectivity issues.
+description: Kubernetes cert-manager for private CA issuers (SelfSigned, CA, Vault), Traefik IngressRoute TLS, Certificate/CertificateRequest/Issuer debugging, and webhook connectivity issues.
 ---
 
 # cert-manager
@@ -113,6 +113,7 @@ For wildcard certs and Ingress annotations, see `references/traefik-integration.
 ## References
 
 - `references/troubleshooting-workflow.md` - Step-by-step debugging
-- `references/private-ca-issuers.md` - SelfSigned, CA, Vault configuration
+- `references/private-ca-issuers.md` - SelfSigned and CA issuer configuration
+- `references/vault-issuer.md` - Vault PKI issuer configuration and auth methods
 - `references/traefik-integration.md` - IngressRoute TLS setup
 - `references/webhook-issues.md` - Webhook connectivity problems

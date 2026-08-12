@@ -110,17 +110,6 @@ zstyle ':completion:*:default' list-colors ${(s.:.)LS_COLORS}
 zstyle ':completion:*' select-prompt '%SScrolling: %p%s'
 ```
 
-## Per-Command Styling
-
-```zsh
-# Color kill process list
-zstyle ':completion:*:*:kill:*:processes' list-colors \
-    '=(#b) #([0-9]#)*=0=01;31'
-
-# Color git branches
-zstyle ':completion:*:*:git:*:heads' list-colors '=*=34'
-```
-
 ## Complete zstyle Setup
 
 ```zsh
@@ -148,14 +137,4 @@ zstyle ':completion:*' list-suffixes
 zstyle ':completion:*' expand prefix suffix
 ```
 
-## fzf-tab Integration
-
-When using fzf-tab, colors are handled differently:
-
-```zsh
-# fzf-tab uses FZF_DEFAULT_OPTS for colors
-zstyle ':fzf-tab:*' fzf-flags --color=fg:white,hl:blue,bg+:black
-
-# Preview window styling
-zstyle ':fzf-tab:complete:*' fzf-preview 'less ${(Q)realpath}'
-```
+See `references/fzf-tab.md` for fzf-tab color configuration.

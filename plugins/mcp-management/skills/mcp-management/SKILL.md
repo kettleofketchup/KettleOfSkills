@@ -1,6 +1,6 @@
 ---
 name: mcp-management
-description: Manage Model Context Protocol (MCP) servers - discover, analyze, and execute tools/prompts/resources from configured MCP servers. Use when working with MCP integrations, need to discover available MCP capabilities, filter MCP tools for specific tasks, execute MCP tools programmatically, access MCP prompts/resources, or implement MCP client functionality. Supports intelligent tool selection, multi-server management, and context-efficient capability discovery.
+description: Manage MCP servers: discover and execute tools/prompts/resources, filter by task, multi-server orchestration. Use for MCP integrations, capability discovery, or MCP client workflows.
 ---
 
 # MCP Management
@@ -140,37 +140,6 @@ See [references/gemini-cli-integration.md](references/gemini-cli-integration.md)
 
 ## Technical Details
 
-See [references/mcp-protocol.md](references/mcp-protocol.md) for:
-- JSON-RPC protocol details
-- Message types and formats
-- Error codes and handling
-- Transport mechanisms (stdio, HTTP+SSE)
-- Best practices
+See [references/mcp-protocol.md](references/mcp-protocol.md) for JSON-RPC protocol details, message types, error codes, and transport mechanisms (stdio, HTTP+SSE).
 
-## Integration Strategy
-
-### Execution Priority
-
-1. **Gemini CLI** (Primary): Fast, automatic, intelligent tool selection
-   - Check: `command -v gemini`
-   - Execute: `gemini -y -m gemini-2.5-flash -p "<task>"`
-   - Best for: All tasks when available
-
-2. **Direct CLI Scripts** (Secondary): Manual tool specification
-   - Use when: Need specific tool/server control
-   - Execute: `npx tsx scripts/cli.ts call-tool <server> <tool> <args>`
-
-3. **mcp-manager Subagent** (Fallback): Context-efficient delegation
-   - Use when: Gemini unavailable or failed
-   - Keeps main context clean
-
-### Integration with Agents
-
-The `mcp-manager` agent uses this skill to:
-- Check Gemini CLI availability first
-- Execute via `gemini` command if available
-- Fallback to direct script execution
-- Discover MCP capabilities without loading into main context
-- Report results back to main agent
-
-This keeps main agent context clean and enables efficient MCP integration.
+See [references/integration-strategy.md](references/integration-strategy.md) for execution priority, agent integration patterns, and multi-server orchestration guidance.

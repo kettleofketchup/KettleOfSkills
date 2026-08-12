@@ -93,21 +93,6 @@ case $state in
 esac
 ```
 
-## _values Function
-
-For comma-separated or space-separated value lists:
-
-```zsh
-# Comma-separated (default)
-_values 'features' \
-    'debug[Enable debugging]' \
-    'verbose[Verbose output]' \
-    'color[Colored output]'
-
-# With custom separator
-_values -s ' ' 'options' opt1 opt2 opt3
-```
-
 ## Mutually Exclusive Options
 
 ```zsh
@@ -149,3 +134,5 @@ _kubectl() {
     esac
 }
 ```
+
+See `references/arguments-values.md` for _values function.

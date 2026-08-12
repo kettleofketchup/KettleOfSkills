@@ -18,7 +18,6 @@ steps:
       registry-url: 'https://npm.pkg.github.com'
 
   - uses: ./.github/actions/custom  # Local action
-
   - uses: owner/repo/path@v1        # Subdirectory action
 ```
 
@@ -61,73 +60,40 @@ steps:
 
   - if: failure()             # Only on failure
     run: ./notify-failure.sh
-
-  - if: cancelled()           # Only if cancelled
-    run: echo "Workflow cancelled"
 ```
 
 ## Contexts
 
 ```yaml
-# github context
 ${{ github.actor }}           # User who triggered
 ${{ github.repository }}      # owner/repo
 ${{ github.ref }}             # refs/heads/main
 ${{ github.sha }}             # Commit SHA
 ${{ github.event_name }}      # push, pull_request, etc
 ${{ github.run_id }}          # Unique run ID
-${{ github.run_number }}      # Run counter
 ${{ github.workflow }}        # Workflow name
-
-# env context
 ${{ env.MY_VAR }}
-
-# secrets context
 ${{ secrets.GITHUB_TOKEN }}
-${{ secrets.MY_SECRET }}
-
-# job context
 ${{ job.status }}
-
-# steps context
 ${{ steps.step-id.outputs.value }}
 ${{ steps.step-id.outcome }}  # success, failure, cancelled, skipped
-
-# matrix context
 ${{ matrix.os }}
-${{ matrix.node }}
-
-# needs context
 ${{ needs.job-id.outputs.value }}
-${{ needs.job-id.result }}    # success, failure, cancelled, skipped
+${{ needs.job-id.result }}
 ```
 
 ## Expressions
 
 ```yaml
-# String functions
 ${{ contains(github.event.head_commit.message, '[skip ci]') }}
 ${{ startsWith(github.ref, 'refs/tags/') }}
 ${{ endsWith(github.repository, '-demo') }}
 ${{ format('Hello {0}!', github.actor) }}
-${{ join(matrix.os, ', ') }}
 ${{ toJSON(github.event) }}
 ${{ fromJSON(steps.data.outputs.json) }}
-
-# Logical
 ${{ github.ref == 'refs/heads/main' && github.event_name == 'push' }}
-${{ github.event_name == 'pull_request' || github.event_name == 'push' }}
 ${{ !cancelled() }}
-
-# Status checks
-${{ success() }}              # All previous succeeded
-${{ failure() }}              # Any previous failed
-${{ always() }}               # Always run
-${{ cancelled() }}            # Workflow cancelled
-
-# Hashfiles (for cache keys)
 ${{ hashFiles('**/package-lock.json') }}
-${{ hashFiles('**/*.go', 'go.sum') }}
 ```
 
 ## Environment & Secrets
@@ -150,9 +116,9 @@ steps:
   - run: echo "VERSION=1.0.0" >> $GITHUB_ENV
   - run: echo "Version is $VERSION"
 
-# Secrets
+# Secrets best practice
 steps:
-  - run: echo "${{ secrets.API_KEY }}"
+  - run: ./deploy.sh
     env:
       API_KEY: ${{ secrets.API_KEY }}
 
@@ -164,29 +130,4 @@ jobs:
       url: https://example.com
 ```
 
-## Artifacts & Caching
-
-```yaml
-# Upload artifact
-- uses: actions/upload-artifact@v4
-  with:
-    name: build-output
-    path: |
-      dist/
-      !dist/**/*.map
-    retention-days: 5
-
-# Download artifact
-- uses: actions/download-artifact@v4
-  with:
-    name: build-output
-    path: ./dist
-
-# Cache
-- uses: actions/cache@v4
-  with:
-    path: ~/.npm
-    key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
-    restore-keys: |
-      ${{ runner.os }}-npm-
-```
+See [optimization-caching.md](optimization-caching.md) for artifact upload/download patterns.

@@ -56,9 +56,7 @@ http:
       priority: 100  # High priority specific route
 ```
 
-## Router Configuration
-
-### HTTP Router (File Provider)
+## Router Configuration (File Provider)
 
 ```yaml
 http:
@@ -120,40 +118,4 @@ PathRegexp(`/users/[0-9]+/profile`)
 ClientIP(`10.0.0.0/8`, `192.168.0.0/16`)
 ```
 
-## TCP/UDP Routing
-
-### TCP Router
-
-```yaml
-tcp:
-  routers:
-    my-tcp-router:
-      entryPoints:
-        - tcp
-      rule: HostSNI(`example.com`)  # Requires TLS
-      service: my-tcp-service
-      tls:
-        passthrough: true  # TLS passthrough to backend
-```
-
-### TCP Matchers
-
-| Matcher | Description |
-|---------|-------------|
-| `HostSNI()` | Match TLS SNI (requires TLS) |
-| `HostSNIRegexp()` | SNI with regex |
-| `ClientIP()` | Match client IP |
-| `ALPN()` | Match TLS ALPN protocol |
-
-### UDP Router
-
-```yaml
-udp:
-  routers:
-    my-udp-router:
-      entryPoints:
-        - udp
-      service: my-udp-service
-```
-
-UDP routers have no rules - they forward all traffic on the entrypoint.
+For TCP/UDP routing → [routing-tcp-udp.md](routing-tcp-udp.md)

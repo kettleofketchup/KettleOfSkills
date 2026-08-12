@@ -1,6 +1,6 @@
 ---
 name: gitlab-tickets
-description: Create GitLab issues through conversational brainstorming. Use when user wants to capture ideas, features, bugs, or work items as GitLab tickets. Supports linking related issues, label management, and iterative refinement through dialogue.
+description: Create GitLab issues via conversational brainstorming. Use when capturing ideas, features, bugs, or work items as GitLab tickets, with label management and iterative refinement.
 ---
 
 # GitLab Tickets

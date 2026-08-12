@@ -1,6 +1,6 @@
 ---
 name: golang-viper
-description: Go Viper configuration library (github.com/spf13/viper). Use when working with config file reading (SetConfigName, AddConfigPath, ReadInConfig), setting defaults, environment variable binding (SetEnvPrefix, AutomaticEnv, BindEnv), unmarshaling to structs (Unmarshal, UnmarshalKey, mapstructure tags), or any spf13/viper configuration management.
+description: Go Viper config library (spf13/viper). Use for config files (SetConfigName, AddConfigPath), defaults, env binding (SetEnvPrefix, AutomaticEnv, BindEnv), or struct unmarshaling with mapstructure tags.
 ---
 
 # Golang Viper Configuration
@@ -59,9 +59,9 @@ viper.UnmarshalKey("server", &config.Server)
 
 Detailed documentation for each feature area:
 
-- `references/core-config.md` - Config files, paths, defaults, reading, multiple configs
-- `references/environment-vars.md` - Env binding, prefixes, key replacers, AutomaticEnv
-- `references/unmarshaling.md` - Structs, mapstructure tags, type getters, custom types
+- `references/core-config.md` - Config files, paths, defaults, reading; [multiple configs + AllSettings](references/core-config-multi.md)
+- `references/environment-vars.md` - Env binding, prefixes, key replacers, AutomaticEnv; [gotchas + patterns](references/environment-vars-patterns.md)
+- `references/unmarshaling.md` - Structs, mapstructure tags, type getters, custom types; [sub-configs, strict mode, gotcha](references/unmarshaling-advanced.md)
 - `references/advanced-features.md` - Watching changes, remote config, writing configs
 
 ## Common Patterns

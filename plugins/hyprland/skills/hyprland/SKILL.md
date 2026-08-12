@@ -25,6 +25,7 @@ Configure Hyprland (dynamic tiling Wayland compositor) on NixOS. Optimized for r
 | Sample `hyprland.conf` | `references/hyprland-conf.md` |
 | Complete `flake.nix` example | `references/flake-example.md` |
 | Ecosystem packages (hypr*, waybar) | `references/ecosystem-packages.md` |
+| Validation commands + common traps | `references/validation.md` |
 
 For NixOS-level concerns (flakes, modules, packaging, devShells, home-manager), see the sibling `nixos` skill: `~/.claude/skills/nixos/`. Cross-references: `flakes.md`, `nixos-modules.md`, `home-manager.md`, `packaging.md`, `devshells.md`.
 
@@ -138,23 +139,6 @@ nix.settings = {
 };
 ```
 
-## Validation
+## Validation & Common Traps
 
-```bash
-hyprctl version                              # confirms running flake binary
-echo $XDG_SESSION_TYPE                       # → wayland
-busctl --user list | grep xdg-desktop-portal # portal alive
-nix-shell -p libva-utils --run vainfo        # iGPU VA-API
-pkg-config --modversion webkit2gtk-4.1       # webkit available
-wails doctor                                 # Wails sees deps
-```
-
-If a Wails window is still blank after setting env vars: try `LIBGL_ALWAYS_SOFTWARE=1` and verify env inherited via `cat /proc/$(pidof yourapp)/environ | tr '\0' '\n' | grep WEBKIT`.
-
-## Common Traps
-
-- **Don't override `inputs.hyprland.inputs.nixpkgs.follows`** — breaks cachix, forces multi-hour local rebuild.
-- **Don't enable `xdg.portal` without an extraPortal** — portal silently fails. Always add `xdg-desktop-portal-gtk`.
-- **`hardware.opengl` is deprecated** — use `hardware.graphics` on 24.11+.
-- **`wails build` without `-tags webkit2_41`** fails — NixOS has webkitgtk-4.1 only.
-- **Setting `package = null`** in home-manager when system already installs Hyprland avoids double-install.
+See `references/validation.md` for validation commands and common traps.

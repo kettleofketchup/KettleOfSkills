@@ -127,63 +127,9 @@ cephFileSystems:
       allowVolumeExpansion: true
       volumeBindingMode: Immediate
 
-# Object store (S3-compatible)
-cephObjectStores:
-  - name: objectstore
-    spec:
-      metadataPool:
-        failureDomain: host
-        replicated:
-          size: 3
-      dataPool:
-        failureDomain: host
-        replicated:
-          size: 3
-      gateway:
-        port: 80
-        instances: 2
-    storageClass:
-      enabled: true
-      name: ceph-bucket
-      reclaimPolicy: Delete
-
 # Toolbox for debugging
 toolbox:
   enabled: true
 ```
 
-## Alternative: Use All Devices
-
-For clusters where all nodes contribute storage:
-
-```yaml
-cephClusterSpec:
-  mon:
-    count: 3
-    allowMultiplePerNode: false
-  mgr:
-    count: 2
-    allowMultiplePerNode: false
-  placement:
-    all:
-      nodeAffinity:
-        requiredDuringSchedulingIgnoredDuringExecution:
-          nodeSelectorTerms:
-            - matchExpressions:
-                - key: ceph-node
-                  operator: In
-                  values:
-                    - "true"
-  storage:
-    useAllNodes: true
-    useAllDevices: true
-    deviceFilter: "^sd[b-z]"  # Only use sdb, sdc, etc.
-```
-
-## Label Nodes
-
-```bash
-kubectl label node node1 ceph-node=true
-kubectl label node node2 ceph-node=true
-kubectl label node node3 ceph-node=true
-```
+See `references/cluster-values-alternatives.md` for object store (S3), use-all-devices, and node labeling patterns.

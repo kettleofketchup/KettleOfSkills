@@ -8,8 +8,6 @@
 
 ## ArgoCD Application (App-of-Apps)
 
-### Pattern: Helm + Git Overlay
-
 ```yaml
 apiVersion: argoproj.io/v1alpha1
 kind: Application
@@ -24,13 +22,11 @@ spec:
       targetRevision: "72.*"
       helm:
         valuesObject:
-          # --- CRDs ---
           crds:
             enabled: true
-          # --- Grafana ---
           grafana:
             enabled: true
-            adminPassword: "" # set via secret or Authentik SSO
+            adminPassword: ""
             sidecar:
               dashboards:
                 enabled: true
@@ -45,7 +41,6 @@ spec:
               enabled: true
               storageClassName: ceph-block
               size: 5Gi
-          # --- Prometheus ---
           prometheus:
             prometheusSpec:
               retention: 15d
@@ -60,7 +55,6 @@ spec:
               podMonitorSelectorNilUsesHelmValues: false
               ruleSelectorNilUsesHelmValues: false
               probeSelectorNilUsesHelmValues: false
-          # --- Alertmanager ---
           alertmanager:
             alertmanagerSpec:
               storage:
@@ -106,24 +100,6 @@ prometheus:
 
 Without this, only resources in the `monitoring` namespace with matching labels are scraped.
 
-### Grafana Sidecar
-
-Automatic dashboard/datasource discovery via sidecar:
-
-```yaml
-grafana:
-  sidecar:
-    dashboards:
-      enabled: true
-      searchNamespace: ALL      # scan all namespaces
-      folderAnnotation: grafana_folder  # organize by annotation
-      provider:
-        foldersFromFilesStructure: true
-    datasources:
-      enabled: true
-      searchNamespace: ALL
-```
-
 ### Resource Limits (Production)
 
 ```yaml
@@ -143,54 +119,4 @@ alertmanager:
       limits: { memory: 128Mi }
 ```
 
-## Git Overlay (apps/monitoring/)
-
-Kustomize overlay for IngressRoute, additional dashboards, datasources:
-
-```yaml
-# apps/monitoring/kustomization.yaml
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-resources:
-  - ingressroute.yaml
-  - dashboards/          # ConfigMap-based dashboards
-  - datasources/         # Additional datasource ConfigMaps
-components:
-  - ../_components/domain
-replacements:
-  - source:
-      kind: ConfigMap
-      name: cluster-config
-      fieldPath: data.grafana_host
-    targets:
-      - select:
-          kind: IngressRoute
-          name: grafana
-        fieldPaths:
-          - spec.routes.0.match
-        options:
-          delimiter: "`"
-          index: 1
-```
-
-### IngressRoute
-
-```yaml
-# apps/monitoring/ingressroute.yaml
-apiVersion: traefik.io/v1alpha1
-kind: IngressRoute
-metadata:
-  name: grafana
-  namespace: monitoring
-spec:
-  entryPoints:
-    - websecure
-  routes:
-    - match: Host(`DOMAIN`)
-      kind: Rule
-      services:
-        - name: kube-prometheus-stack-grafana
-          port: 80
-  tls:
-    secretName: wildcard-tls
-```
+For Git overlay (apps/monitoring/) and IngressRoute setup, see [kube-prometheus-stack-overlay.md](kube-prometheus-stack-overlay.md).

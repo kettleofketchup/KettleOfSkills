@@ -103,7 +103,9 @@ gossfile:
 | `references/matchers.md` | Pattern matching, regex, numeric/array/logical matchers, gjson |
 | `references/templating.md` | Go templates, Sprig functions, variables, conditionals |
 | `references/containers.md` | dgoss (Docker), kgoss (Kubernetes), dcgoss (docker-compose) |
+| `references/containers-ci.md` | CI/CD integration - GitLab CI, GitHub Actions, Dockerfile HEALTHCHECK |
 | `references/patterns.md` | Modular gossfiles, retry/wait patterns, health endpoints, gotchas |
+| `references/patterns-examples.md` | Web server, security baseline, container smoke test examples |
 
 ## Cross-References
 

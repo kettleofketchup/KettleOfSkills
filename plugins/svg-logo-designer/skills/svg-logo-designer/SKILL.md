@@ -1,6 +1,6 @@
 ---
 name: svg-logo-designer
-description: "Create professional SVG logos from descriptions and design specifications. Generates multiple logo variations with different layouts, styles, and concepts. Produces scalable vector graphics that can be used directly or exported to PNG. This skill should be used when users ask to create logos, brand identities, icons, visual marks, wordmarks, lettermarks, abstract marks, combination marks, or emblems for their designs."
+description: Create professional SVG logos from design specs. Use for brand identities, wordmarks, lettermarks, abstract/combination marks, icons, or emblems. Generates multi-layout variations exportable to PNG.
 ---
 
 # SVG Logo Designer
@@ -130,4 +130,5 @@ Present concepts, then:
 | `references/svg-best-practices.md` | Optimization, anti-patterns, typography in SVG |
 | `references/geometric-principles.md` | Golden ratio, Fibonacci circles, grid-based construction |
 | `references/design-patterns.md` | SVG code templates for each logo type |
+| `references/monochrome-variations.md` | Monochrome CSS overrides and file naming |
 | `references/usage-guidelines.md` | Logo usage documentation template, export and web implementation |

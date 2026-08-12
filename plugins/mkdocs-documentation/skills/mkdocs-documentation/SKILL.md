@@ -1,6 +1,6 @@
 ---
 name: mkdocs-documentation
-description: MkDocs Material documentation management. This skill should be used when writing, formatting, or validating documentation in docs/. Covers admonitions, Mermaid diagrams, code blocks with annotations, content tabs, navigation setup, include-markdown for reusable content, _includes pattern for shared diagrams, and mkdocs testing. Always check project-specific docs at docs/dev/ai/skills/ and docs/dev/ai/agents/ for project-specific Claude skill and Claude agent documentation when available.
+description: MkDocs Material documentation. Use when writing or validating docs/ content: admonitions, Mermaid, code annotations, include-markdown, navigation, and Claude skill/agent docs in docs/dev/ai/.
 ---
 
 # MkDocs Material Documentation

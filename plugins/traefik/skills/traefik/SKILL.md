@@ -1,6 +1,6 @@
 ---
 name: traefik
-description: Traefik v3 reverse proxy and load balancer for Kubernetes and Docker. Use when configuring Traefik entrypoints, HTTP/TCP/UDP routing, IngressRoute CRDs, middlewares (auth, rate limiting, headers, redirects), load balancing, TLS/ACME certificates, or Kubernetes Ingress annotations.
+description: Traefik v3 reverse proxy and load balancer for Kubernetes and Docker. Covers entrypoints, IngressRoute CRDs, middlewares, load balancing, TLS/ACME, and HTTP/TCP/UDP routing.
 ---
 
 # Traefik v3
@@ -33,28 +33,28 @@ kubectl apply -f https://raw.githubusercontent.com/traefik/traefik/v3.6/docs/con
 ## Task Reference
 
 ### Routing Configuration
-- HTTP routing rules, matchers, priority → [references/routing.md](references/routing.md)
-- Rule syntax (Host, Path, Headers, Query) → [references/routing.md](references/routing.md)
+- HTTP rules, matchers, priority → [references/routing.md](references/routing.md)
+- TCP/UDP routing, IngressRouteTCP/UDP → [references/routing-tcp-udp.md](references/routing-tcp-udp.md)
 
 ### Kubernetes CRDs
-- IngressRoute, Middleware, TraefikService → [references/kubernetes-crd.md](references/kubernetes-crd.md)
-- Full IngressRoute examples → [references/kubernetes-crd.md](references/kubernetes-crd.md)
+- IngressRoute, Middleware CRDs → [references/kubernetes-crd.md](references/kubernetes-crd.md)
+- TraefikService, TLSOption, provider config → [references/kubernetes-crd-advanced.md](references/kubernetes-crd-advanced.md)
 
 ### Middlewares
-- All available middlewares → [references/middlewares.md](references/middlewares.md)
-- Auth, rate limiting, headers, redirects → [references/middlewares.md](references/middlewares.md)
+- Auth: BasicAuth, ForwardAuth, IPAllowList, Chain → [references/middlewares-auth.md](references/middlewares-auth.md)
+- Traffic: RateLimit, Headers, Redirects, CircuitBreaker → [references/middlewares-traffic.md](references/middlewares-traffic.md)
 
 ### Load Balancing & Services
-- Strategies, health checks, sticky sessions → [references/services.md](references/services.md)
-- Mirroring, failover, weighted routing → [references/services.md](references/services.md)
+- Strategies, health checks, sticky sessions → [references/services-load-balancing.md](references/services-load-balancing.md)
+- Weighted, mirroring, failover, TCP/UDP → [references/services-advanced.md](references/services-advanced.md)
 
 ### TLS & Certificates
-- ACME/Let's Encrypt, TLS options → [references/tls.md](references/tls.md)
-- Certificate resolvers, challenges → [references/tls.md](references/tls.md)
+- ACME/Let's Encrypt, challenges, manual certs → [references/tls-acme.md](references/tls-acme.md)
+- TLS options, mTLS, router TLS, passthrough → [references/tls-options.md](references/tls-options.md)
 
 ### EntryPoints
-- Configuration, HTTP/HTTPS setup → [references/entrypoints.md](references/entrypoints.md)
-- Redirections, proxy protocol → [references/entrypoints.md](references/entrypoints.md)
+- Configuration, redirects, proxy protocol → [references/entrypoints.md](references/entrypoints.md)
+- Complete example, Helm values → [references/entrypoints-helm.md](references/entrypoints-helm.md)
 
 ## Minimal IngressRoute Example
 

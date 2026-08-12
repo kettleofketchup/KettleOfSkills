@@ -118,20 +118,13 @@ grep -i "pull\|registry\|auth" /var/lib/rancher/k3s/agent/containerd/containerd.
 ### Networking / CNI Issues
 
 ```bash
-# Check CNI config
 ls /etc/cni/net.d/
 cat /etc/cni/net.d/10-calico.conflist  # If Calico
-
-# Check pod networking
 kubectl run test --image=busybox --rm -it -- wget -qO- http://kubernetes.default.svc
-
-# Check flannel/calico pods
 kubectl get pods -n kube-system -l k8s-app=calico-node
 kubectl get pods -n kube-system -l app=flannel
-
-# VXLAN interface
-ip link show flannel.1   # Flannel
-ip link show vxlan.calico  # Calico VXLAN
+ip link show flannel.1    # Flannel VXLAN
+ip link show vxlan.calico # Calico VXLAN
 ```
 
 ## Diagnostic Commands
@@ -152,32 +145,4 @@ kubectl get pods -A -o wide
 kubectl get events -A --sort-by='.lastTimestamp' | tail -20
 ```
 
-## Reset / Uninstall
-
-```bash
-# Full uninstall (server)
-/usr/local/bin/k3s-uninstall.sh
-
-# Full uninstall (agent)
-/usr/local/bin/k3s-agent-uninstall.sh
-
-# These scripts:
-# - Stop service
-# - Remove binary, scripts, data
-# - Clean iptables/ipvs rules
-# - Remove CNI config
-```
-
-## NixOS-Specific
-
-On NixOS, K3s is managed via systemd + Nix config. Common patterns:
-```bash
-# Restart K3s (NixOS)
-systemctl restart k3s
-
-# Rebuild with changes
-nixos-rebuild switch
-
-# Check NixOS-generated K3s service
-systemctl cat k3s
-```
+See `references/troubleshooting-nixos.md` for reset/uninstall and NixOS-specific patterns.

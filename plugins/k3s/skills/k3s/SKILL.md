@@ -1,6 +1,6 @@
 ---
 name: k3s
-description: "Self-hosted K3s lightweight Kubernetes distribution. This skill should be used when installing or configuring K3s clusters, setting up server/agent nodes, configuring HA with embedded etcd, disabling default components (traefik, servicelb, flannel), replacing Flannel with custom CNI (Calico/tigera-operator, Cilium), configuring private registries (registries.yaml), deploying in airgapped/air-gapped environments (image pre-loading, INSTALL_K3S_SKIP_DOWNLOAD), managing K3s server flags (--cluster-cidr, --service-cidr, --flannel-backend=none, --disable-network-policy), writing /etc/rancher/k3s/config.yaml, troubleshooting containerd/kubelet issues, or integrating K3s with NixOS modules. Covers single-node and multi-node topologies."
+description: "Self-hosted K3s Kubernetes. Use for install/config, HA etcd, disabling traefik/flannel, custom CNI (Calico/Cilium), registries.yaml, airgap/INSTALL_K3S_SKIP_DOWNLOAD, server flags, NixOS modules."
 ---
 
 # K3s - Lightweight Kubernetes
@@ -73,11 +73,14 @@ Then deploy Calico via tigera-operator Helm chart. See `references/networking.md
 | File | Content |
 |------|---------|
 | `references/installation.md` | Install methods, config file format, server/agent flags, environment variables |
-| `references/airgap.md` | Airgap deployment patterns, image pre-loading, offline install, upgrades |
+| `references/airgap.md` | Airgap methods A/B/C, image pre-loading, custom CNI airgap |
+| `references/airgap-advanced.md` | Airgap upgrades, Kustomize imagePullPolicy, NixOS airgap integration |
 | `references/networking.md` | Flannel backends, custom CNI enablement, Calico/tigera setup, dual-stack |
-| `references/registries.md` | Private registry mirrors, TLS, auth, registries.yaml format |
+| `references/registries.md` | registries.yaml format, mirror/auth/TLS examples |
+| `references/registries-advanced.md` | Combined registry examples, troubleshooting pulls, NixOS integration |
 | `references/ha-etcd.md` | HA embedded etcd, cluster init, node joining, backup/restore |
-| `references/troubleshooting.md` | Diagnostics, common issues, containerd/kubelet debugging |
+| `references/troubleshooting.md` | Diagnostics, common issues, containerd/kubelet, reset/uninstall |
+| `references/troubleshooting-nixos.md` | NixOS-specific K3s troubleshooting patterns |
 
 ## Cross-References
 

@@ -139,14 +139,9 @@ return ret
 ```zsh
 _git_branches() {
     local -a branches
-    local line
-
     while IFS= read -r line; do
-        local name="${line%% *}"
-        local info="${line#* }"
-        branches+=("${name}:${info}")
+        branches+=("${line%% *}:${line#* }")
     done < <(git branch -vv 2>/dev/null | sed 's/^[* ] //')
-
     _describe 'branch' branches
 }
 ```

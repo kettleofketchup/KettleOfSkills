@@ -1,6 +1,6 @@
 ---
 name: go-dota2-steam
-description: Go libraries for Steam and Dota 2 Game Coordinator development. This skill should be used when working with paralin/go-steam or paralin/go-dota2 libraries, building Steam bots, creating Dota 2 lobby managers, implementing GC communication, handling SOCache events, managing parties/lobbies, or automating Steam account operations.
+description: Go libraries for Steam and Dota 2 GC development. Use for paralin/go-steam, paralin/go-dota2, Steam bots, Dota 2 lobby managers, GC communication, SOCache events, parties/lobbies, or Steam account automation.
 ---
 
 # go-dota2 and go-steam Development
@@ -106,8 +106,10 @@ case *steam.MachineAuthUpdateEvent:
 ## References
 
 Detailed API documentation in references/:
-- `references/go-steam.md` - Steam client, auth, social, trading, web sessions
-- `references/go-dota2.md` - Dota 2 client, lobbies, parties, SOCache, generated methods
+- `references/go-steam-client.md` - Steam client, auth, social, trading, web sessions, SteamID
+- `references/go-steam-events.md` - Steam events reference, TF2 module, inventory access
+- `references/go-dota2-client.md` - Dota 2 client, lobbies, parties, state, protocol types
+- `references/go-dota2-api.md` - SOCache, events, generated API methods, MakeRequest
 
 ## External Resources
 

@@ -50,8 +50,6 @@ _mycli_build() {
         '--target[Build target]:target:(dev prod)' \
         '--clean[Clean before build]'
 }
-
-# etc.
 ```
 
 ### Three-level (kubectl/docker style)
@@ -108,9 +106,6 @@ _mycommand_recent() {
 
 ```zsh
 _git_checkout() {
-    # After -b, complete nothing (new branch name)
-    # Otherwise, complete branches and files
-
     if (( CURRENT > 2 )) && [[ $words[2] == -b ]]; then
         _message 'new branch name'
         return
@@ -120,24 +115,6 @@ _git_checkout() {
         'branches:branch:_git_branches' \
         'files:file:_files'
 }
-```
-
-## Repeatable Options
-
-```zsh
-# Can specify -I multiple times
-'*-I[Include directory]:directory:_directories'
-
-# Or with long form
-'*'{-I,--include}'[Include directory]:directory:_directories'
-```
-
-## Optional Arguments
-
-```zsh
-# --format with optional argument
-'--format=-[Output format]::format:(json yaml text)'
-#        ^^ double colon = optional
 ```
 
 ## Mutually Exclusive Groups
@@ -153,40 +130,6 @@ _git_checkout() {
 '(-q --quiet -v --verbose)'{-v,--verbose}'[Verbose mode]'
 ```
 
-## Completing After =
-
-```zsh
-# --config=FILE style
-'--config=[Config file]:file:_files'
-
-# Multiple values after =
-'--features=[Enable features]:feature:_values -s , feature debug trace log'
-```
-
-## File Type Filtering
-
-```zsh
-'*:python file:_files -g "*.py"'           # Python files
-'*:config:_files -g "*.{json,yaml,toml}"'  # Config files
-'1:directory:_files -/'                     # Directories only
-'*:script:_files -g "*.(sh|bash|zsh)"'     # Shell scripts
-```
-
-## Current Word Analysis
-
-```zsh
-_mycommand() {
-    local curword=$words[CURRENT]
-
-    # Special handling if current word contains =
-    if [[ $curword == *=* ]]; then
-        local key=${curword%%=*}
-        local val=${curword#*=}
-        # complete value based on key
-    fi
-}
-```
-
 ## Error Handling
 
 ```zsh
@@ -197,3 +140,5 @@ _safe_complete() {
     _describe 'item' items
 }
 ```
+
+See `references/patterns-advanced.md` for current word analysis and advanced patterns.

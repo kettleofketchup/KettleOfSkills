@@ -76,7 +76,7 @@ Features:
 - Frontend hot-reload via Vite dev server
 - Go backend rebuilds on .go file changes
 - Auto-regenerates TypeScript bindings when Go methods change
-- Frontend served at `http://localhost:34115` (also accessible in browser for debugging)
+- Frontend served at `http://localhost:34115`
 - `-tags webkit2_41` required on Ubuntu 24.04+
 
 Flags:
@@ -86,88 +86,13 @@ Flags:
 - `-noreload` disable auto-reload
 - `-nogen` disable auto-generation of bindings
 
-## Building
-
-```bash
-# Default build for current platform
-wails build
-
-# Production optimized (strips debug, compresses)
-wails build -clean -upx
-
-# Platform-specific
-wails build -platform windows/amd64
-wails build -platform darwin/universal    # macOS universal (amd64+arm64)
-wails build -platform linux/amd64
-
-# NSIS installer (Windows)
-wails build -nsis
-
-# With webkit2_41 tag (Ubuntu 24.04+)
-wails build -tags webkit2_41
-
-# Skip frontend build (if already built)
-wails build -s
-```
-
-Build flags:
-| Flag | Purpose |
-|------|---------|
-| `-clean` | Clean build directory first |
-| `-upx` | Compress binary with UPX (must be installed) |
-| `-nsis` | Generate NSIS installer (Windows) |
-| `-platform OS/ARCH` | Cross-compile target |
-| `-tags TAG` | Go build tags (e.g., `webkit2_41`) |
-| `-trimpath` | Remove file system paths from binary |
-| `-race` | Build with Go race detector |
-| `-s` | Skip frontend build |
-| `-ldflags FLAGS` | Pass additional ldflags to Go compiler |
-| `-o FILENAME` | Output filename |
-| `-webview2 embed/browser/download` | WebView2 install strategy (Windows) |
-
-Output: `build/bin/` directory.
-
-## wails.json Configuration
-
-```json
-{
-  "$schema": "https://wails.io/schemas/config.v2.json",
-  "name": "myapp",
-  "outputfilename": "myapp",
-  "frontend:install": "npm install",
-  "frontend:build": "npm run build",
-  "frontend:dev:watcher": "npm run dev",
-  "frontend:dev:serverUrl": "auto",
-  "frontend:dev:build": "npm run dev",
-  "wailsjsdir": "./frontend",
-  "author": {
-    "name": "Developer",
-    "email": "dev@example.com"
-  },
-  "info": {
-    "companyName": "My Company",
-    "productVersion": "1.0.0",
-    "copyright": "Copyright 2026",
-    "comments": "Built with Wails"
-  }
-}
-```
-
-Key fields:
-- `frontend:install` - command to install frontend deps (`npm install`)
-- `frontend:build` - command to build frontend for production
-- `frontend:dev:watcher` - command to run frontend dev server
-- `frontend:dev:serverUrl` - `auto` detects Vite URL; set manually if custom port
-- `wailsjsdir` - where to generate wailsjs bindings (default: `./frontend`)
-- `outputfilename` - binary name (no extension, `.exe` added automatically on Windows)
-
 ## Regenerate Bindings
 
 ```bash
 wails generate module
 ```
 
-Regenerates `frontend/wailsjs/go/` from current Go bound methods. Run manually if auto-generation misses changes. Bindings auto-generated during `wails dev` and `wails build`.
+Regenerates `frontend/wailsjs/go/` from current Go bound methods. Run manually if auto-generation misses changes.
 
 ## Adding Bound Methods
 
@@ -178,12 +103,12 @@ func (a *App) MyMethod(name string) (string, error) {
 }
 ```
 
-2. Bindings auto-generated on next `wails dev` or `wails generate module`
-
-3. Call from frontend:
+2. Call from frontend:
 ```typescript
 import { MyMethod } from '../wailsjs/go/main/App';
 const result = await MyMethod("world");
 ```
 
-Supported param/return types: primitives, strings, structs (→ TS classes), slices, maps, errors. Struct types generate TS model classes with `createFrom()` factory methods.
+Supported param/return types: primitives, strings, structs (→ TS classes), slices, maps, errors.
+
+See [Building & wails.json Config](project-setup-building.md) for build flags and config fields.

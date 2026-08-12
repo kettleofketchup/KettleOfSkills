@@ -19,7 +19,7 @@ helm upgrade --install kube-prometheus-stack prometheus-community/kube-prometheu
   -f values.yaml -n monitoring --create-namespace
 ```
 
-For ArgoCD app-of-apps pattern, Helm values structure, CRD management, and namespace configuration, see [kube-prometheus-stack.md](references/kube-prometheus-stack.md).
+For ArgoCD app-of-apps pattern, Helm values structure, and CRD management, see [kube-prometheus-stack.md](references/kube-prometheus-stack.md). For Git overlay and IngressRoute, see [kube-prometheus-stack-overlay.md](references/kube-prometheus-stack-overlay.md).
 
 ### Additional Stack Components
 
@@ -41,40 +41,28 @@ proxy with a bearer token; covers `gcx` session reuse and when to pick
 ### Dashboard Creation
 Build Grafana dashboards: JSON model structure, panel types (timeseries, stat, gauge, table, logs, heatmap), template variables, PromQL/LogQL query patterns.
 
-**Prefer the Grafana Foundation SDK over hand-written JSON for new
-dashboards.** It's Grafana's official Python (also Go, Java, TypeScript,
-PHP) library that emits dashboard JSON typed against the same CUE
-schemas Grafana itself uses internally — so the output validates
-against Grafana Cloud's schema by construction instead of relying on
-hand-curated validators that drift behind Grafana releases. See
-[dashboard-foundation-sdk.md](references/dashboard-foundation-sdk.md)
-for install, build patterns (DashboardBuilder + RowBuilder + panel
-builders), V1-vs-V2 (Scenes) model selection, and the export-to-JSON
-flow used by the reference impl in
-`docs/dev/telemetry/dashboards/gen_dashboard.py`.
+**Prefer the Grafana Foundation SDK over hand-written JSON for new dashboards.** It's Grafana's official Python library that emits dashboard JSON typed against the same CUE schemas Grafana uses internally. See [dashboard-foundation-sdk.md](references/dashboard-foundation-sdk.md) for install, V1-vs-V2 model selection, and build patterns. See [dashboard-foundation-sdk-patterns.md](references/dashboard-foundation-sdk-patterns.md) for gotchas and the reference impl.
 
 - Provisioning via ConfigMap sidecar (label: `grafana_dashboard: "1"`)
 - Git-based provisioning via ArgoCD kustomize overlay
-- See [dashboard-creation.md](references/dashboard-creation.md)
+- See [dashboard-creation.md](references/dashboard-creation.md) and [dashboard-provisioning.md](references/dashboard-provisioning.md)
 
 ### Datasource Configuration
 Configure Prometheus, Loki, Tempo, and PostgreSQL datasources.
 - Provisioned via Helm values (`additionalDataSources`) or ConfigMap sidecar
-- Tempo-to-Prometheus exemplar linking, Loki derived fields for trace correlation
-- See [datasources.md](references/datasources.md)
+- See [datasources.md](references/datasources.md) for Loki/Tempo; [datasources-postgresql-correlation.md](references/datasources-postgresql-correlation.md) for PostgreSQL and cross-signal correlation
 
 ### ServiceMonitors & PodMonitors
 Expose application metrics for Prometheus scraping.
 - ServiceMonitor for Service-backed endpoints (Traefik, ArgoCD, CNPG, Rook-Ceph)
-- PodMonitor for direct pod scraping
-- PrometheusRule for custom alerting/recording rules
-- See [servicemonitors.md](references/servicemonitors.md)
+- PodMonitor for direct pod scraping; PrometheusRule for custom alerting/recording rules
+- See [servicemonitors.md](references/servicemonitors.md) and [servicemonitors-apps.md](references/servicemonitors-apps.md)
 
 ### Authentik OIDC Integration
 SSO login via Authentik OAuth2/OIDC provider.
 - Grafana `auth.generic_oauth` configuration via Helm values
 - Role mapping: Authentik groups to Grafana roles (Admin/Editor/Viewer)
-- See [authentik-oidc.md](references/authentik-oidc.md)
+- See [authentik-oidc.md](references/authentik-oidc.md) and [authentik-oidc-roles.md](references/authentik-oidc-roles.md)
 
 ## Domain-Specific Dashboards
 
@@ -85,9 +73,11 @@ Detailed panel layouts, PromQL/LogQL queries, and metric references per domain:
 | Kubernetes cluster health | [dashboards/cluster-health.md](references/dashboards/cluster-health.md) |
 | Ceph storage monitoring | [dashboards/ceph-storage.md](references/dashboards/ceph-storage.md) |
 | Traefik ingress/networking | [dashboards/traefik-networking.md](references/dashboards/traefik-networking.md) |
-| CNPG, ArgoCD, Authentik | [dashboards/applications.md](references/dashboards/applications.md) |
+| CNPG, ArgoCD | [dashboards/applications.md](references/dashboards/applications.md) |
+| Authentik | [dashboards/applications-authentik.md](references/dashboards/applications-authentik.md) |
 | LogQL syntax reference | [dashboards/logs-logql.md](references/dashboards/logs-logql.md) |
-| Log dashboards, alerting, app queries | [dashboards/logs-dashboards.md](references/dashboards/logs-dashboards.md) |
+| Log dashboards, app queries | [dashboards/logs-dashboards.md](references/dashboards/logs-dashboards.md) |
+| Log alerting, trace correlation | [dashboards/logs-alerting.md](references/dashboards/logs-alerting.md) |
 
 ## Key Patterns
 

@@ -1,6 +1,6 @@
 ---
 name: zinit-zsh
-description: Zinit zsh plugin manager configuration and binary installs. This skill should be used when adding zsh plugins, installing CLI tools via gh-r releases, configuring completions, managing turbo/wait loading, using ice modifiers (sbin, atclone, atpull, as, from), troubleshooting plugin load order, working with OMZ snippets, or modifying .zshrc and ~/.config/zsh/ files in this stow-managed dotfiles repo.
+description: Zinit zsh plugin manager for this dotfiles repo. Use for plugins, gh-r binary installs, completions, turbo/wait, ice modifiers (sbin, atclone, atpull, as, from), OMZ snippets, or zshrc edits.
 version: 1.0.0
 last_updated: 2026-01-23
 zinit_version: "zdharma-continuum"
@@ -77,5 +77,6 @@ zinit for \
 
 For comprehensive patterns and troubleshooting, see:
 - `references/ice-modifiers.md` - all ice options with examples
-- `references/patterns.md` - common install patterns
+- `references/patterns.md` - common install patterns (gh-r, OMZ, turbo)
+- `references/patterns-advanced.md` - external tools, prompts, syntax highlighting
 - `references/troubleshooting.md` - load order, debugging

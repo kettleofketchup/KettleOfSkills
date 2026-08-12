@@ -1,6 +1,6 @@
 ---
 name: dicebear
-description: DiceBear avatar generation and Gravatar API integration. Use when generating procedural avatars from seeds/emails, self-hosting DiceBear HTTP API on Docker/Kubernetes, replacing Gravatar with DiceBear, fetching Gravatar profiles by email hash (SHA256), uploading avatars via Gravatar OAuth2, configuring DiceBear styles (avataaars, pixel-art, identicon, initials, bottts, lorelei, etc.), or building avatar URL patterns with fallback defaults.
+description: DiceBear avatar generation and Gravatar API integration. Use for procedural avatars, self-hosting DiceBear on Docker/Kubernetes, Gravatar profiles (SHA256), OAuth2 uploads, or DiceBear styles.
 ---
 
 # DiceBear & Gravatar Avatars

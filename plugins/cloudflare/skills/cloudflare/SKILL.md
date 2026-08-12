@@ -1,108 +1,248 @@
 ---
 name: cloudflare
-description: Cloudflare Tunnel (cloudflared) deployment on Kubernetes, Cloudflare Access Service Tokens for machine-to-machine auth, DNS management, and integration with Traefik IngressRoutes and Authentik forwardAuth. Use when deploying cloudflared tunnels, creating Access applications and service tokens, configuring dual-route IngressRoutes for human vs machine access, managing Cloudflare DNS records via API, or troubleshooting tunnel connectivity and Access policy issues.
+description: Comprehensive Cloudflare platform skill covering Workers, Pages, storage (KV, D1, R2), AI (Workers AI, Vectorize, Agents SDK), feature flags (Flagship), networking (Tunnel, Spectrum), security (WAF, DDoS), and infrastructure-as-code (Terraform, Pulumi). Use for any Cloudflare development task. Biases towards retrieval from Cloudflare docs over pre-trained knowledge.
+references:
+  - workers
+  - pages
+  - d1
+  - durable-objects
+  - workers-ai
 ---
 
-# Cloudflare Tunnel + Access + Traefik Integration
+# Cloudflare Platform Skill
 
-Expose Kubernetes services through Cloudflare Tunnel with opt-in per-service access, Authentik forwardAuth for humans, and Service Tokens for machine-to-machine auth.
+Consolidated skill for building on the Cloudflare platform. Use decision trees below to find the right product, then load detailed references.
 
-## Architecture
+Your knowledge of Cloudflare APIs, types, limits, and pricing may be outdated. **Prefer retrieval over pre-training** — the references in this skill are starting points, not source of truth.
+
+## Retrieval Sources
+
+Fetch the **latest** information before citing specific numbers, API signatures, or configuration options. Do not rely on baked-in knowledge or these reference files alone.
+
+| Source | How to retrieve | Use for |
+|--------|----------------|---------|
+| Cloudflare docs | `cloudflare-docs` search tool or `https://developers.cloudflare.com/` | Limits, pricing, API reference, compatibility dates/flags |
+| Workers types | `npm pack @cloudflare/workers-types` or check `node_modules` | Type signatures, binding shapes, handler types |
+| Wrangler config schema | `node_modules/wrangler/config-schema.json` | Config fields, binding shapes, allowed values |
+| Product changelogs | `https://developers.cloudflare.com/changelog/` | Recent changes to limits, features, deprecations |
+
+When a reference file and the docs disagree, **trust the docs**. This is especially important for: numeric limits, pricing tiers, type signatures, and configuration options.
+
+## Quick Decision Trees
+
+### "I need feature flags"
 
 ```
-Human (browser):
-  → Cloudflare DNS (proxied) → CF Access (IdP) → Tunnel → cloudflared → Traefik
-    → forwardAuth (Authentik) → app
-
-Machine (service token):
-  → Cloudflare DNS (proxied) → CF Access (Service Token) → Tunnel → cloudflared → Traefik
-    → HeadersRegexp match → app (skips forwardAuth)
+Need feature flags?
+└─ Feature toggles, targeting rules, percentage rollouts → flagship/
+   ├─ Evaluate in Workers → Flagship binding (env.FLAGS)
+   ├─ Evaluate in Node.js / browser → OpenFeature SDK (@cloudflare/flagship)
+   └─ Manage flags via API → Flagship REST API
 ```
 
-Cloudflare Access = outer gate (validates before traffic reaches cluster).
-Traefik = inner gate (routes by header presence, applies forwardAuth for humans).
+### "I need to run code"
 
-## Quick Reference
-
-| Task | Reference |
-|------|-----------|
-| Tunnel deployment on K8s | [references/tunnel-kubernetes.md](references/tunnel-kubernetes.md) |
-| Access Service Tokens API | [references/access-service-tokens.md](references/access-service-tokens.md) |
-| Traefik dual-route pattern | [references/traefik-integration.md](references/traefik-integration.md) |
-| DNS management | [references/dns-management.md](references/dns-management.md) |
-
-## Dual-Route IngressRoute Pattern
-
-Per exposed service, two routes on the same IngressRoute:
-
-```yaml
-routes:
-  # Route 1: Machine access (CF Service Token — skips forwardAuth)
-  - match: Host(`app.home.kettle.sh`) && HeadersRegexp(`Cf-Access-Jwt-Assertion`, `.+`)
-    kind: Rule
-    priority: 100
-    services:
-      - name: app-svc
-        port: 80
-
-  # Route 2: Human access (forwardAuth)
-  - match: Host(`app.home.kettle.sh`)
-    kind: Rule
-    priority: 10
-    middlewares:
-      - name: authentik-forwardauth
-        namespace: authentik
-    services:
-      - name: app-svc
-        port: 80
+```
+Need to run code?
+├─ Serverless functions at the edge → workers/
+├─ Full-stack web app with Git deploys → pages/
+├─ Stateful coordination/real-time → durable-objects/
+├─ Long-running multi-step jobs → workflows/
+├─ Run containers → containers/
+├─ Multi-tenant (customers deploy code) → workers-for-platforms/
+├─ Scheduled tasks (cron) → cron-triggers/
+├─ Lightweight edge logic (modify HTTP) → snippets/
+├─ Process Worker execution events (logs/observability) → tail-workers/
+└─ Optimize latency to backend infrastructure → smart-placement/
 ```
 
-Route 1 matches first (higher priority) when `Cf-Access-Jwt-Assertion` header is present (Cloudflare validated the service token). Route 2 catches all other requests and applies Authentik forwardAuth.
+### "I need to store data"
 
-**IMPORTANT:** Check `Cf-Access-Jwt-Assertion` (the JWT), not `CF-Access-Client-Id` (the raw token). Cloudflare strips the raw token and replaces it with a signed JWT after validation. If the JWT header is present, Cloudflare already validated the request.
-
-## Opt-In Service Exposure
-
-Only services with a Cloudflare DNS record pointing to the tunnel get exposed. The tunnel config maps hostnames to Traefik:
-
-```yaml
-# cloudflared config.yaml
-ingress:
-  - hostname: "*.home.kettle.sh"
-    service: http://traefik.traefik.svc.cluster.local:80
-  - service: http_status:404
+```
+Need storage?
+├─ Key-value (config, sessions, cache) → kv/
+├─ Relational SQL → d1/ (SQLite) or hyperdrive/ (existing Postgres/MySQL)
+├─ Object/file storage (S3-compatible) → r2/
+├─ Versioned file trees (repos, build outputs, checkpoints) → artifacts/
+├─ Message queue (async processing) → queues/
+├─ Vector embeddings (AI/semantic search) → vectorize/
+├─ Strongly-consistent per-entity state → durable-objects/ (DO storage)
+├─ Secrets management → secrets-store/
+├─ Streaming ETL to R2 → pipelines/
+├─ Managed Apache Iceberg catalog on R2 → r2-data-catalog/
+├─ Serverless SQL analytics over Iceberg tables → r2-sql/
+└─ Persistent cache (long-term retention) → cache-reserve/
 ```
 
-Traefik IngressRoutes handle per-host routing. No IngressRoute = Traefik returns 404.
+### "I need AI/ML"
 
-## Cloudflare Access Policy Model
+```
+Need AI?
+├─ Run inference (LLMs, embeddings, images) → workers-ai/
+├─ Vector database for RAG/search → vectorize/
+├─ Build stateful AI agents → agents-sdk/
+├─ Gateway for any AI provider (caching, routing) → ai-gateway/
+└─ AI-powered search widget → ai-search/
+```
 
-Per-application in Cloudflare Access:
+### "I need networking/connectivity"
 
-| App | Human Policy | Machine Policy |
-|-----|-------------|----------------|
-| grafana.home.kettle.sh | Allow: IdP (Authentik) | Service Auth: "dota-production" token |
-| foundry.home.kettle.sh | Allow: IdP (Authentik) | None (human-only) |
-| argocd.home.kettle.sh | Allow: IdP (Authentik) | None (human-only) |
-| celery.home.kettle.sh | None | Service Auth: "dota-production" token |
+```
+Need networking?
+├─ Expose local service to internet → tunnel/
+├─ TCP/UDP proxy (non-HTTP) → spectrum/
+├─ WebRTC TURN server → turn/
+├─ Private network connectivity → network-interconnect/
+├─ Optimize routing → argo-smart-routing/
+├─ Optimize latency to backend (not user) → smart-placement/
+└─ Real-time video/audio → realtimekit/ or realtime-sfu/
+```
 
-**Policy `decision` must be `non_identity`** for Service Token policies. Using `allow` redirects to IdP login.
+### "I need security"
 
-## Defense in Depth
+```
+Need security?
+├─ Web Application Firewall → waf/
+├─ DDoS protection → ddos/
+├─ Bot detection/management → bot-management/
+├─ API protection → api-shield/
+├─ CAPTCHA alternative → turnstile/
+└─ Credential leak detection → waf/ (managed ruleset)
+```
 
-1. **Cloudflare Access** — validates service token before traffic enters tunnel
-2. **Tunnel** — outbound-only, no inbound ports on cluster
-3. **Traefik HeadersRegexp** — routes by JWT presence
-4. **Traefik IPAllowList** — restrict machine routes to cluster pod CIDR
-5. **JWT validation** — application-level verification of `Cf-Access-Jwt-Assertion` for high-security services
+### "I need media/content"
 
-## Common Mistakes
+```
+Need media?
+├─ Image optimization/transformation → images/
+├─ Video streaming/encoding → stream/
+├─ Browser automation/screenshots → browser-rendering/
+└─ Third-party script management → zaraz/
+```
 
-| Mistake | Fix |
-|---------|-----|
-| Policy `decision: allow` for service tokens | Use `decision: non_identity` (Service Auth) |
-| Checking `CF-Access-Client-Id` header at Traefik | Check `Cf-Access-Jwt-Assertion` — Cloudflare strips raw token |
-| `allowCrossNamespace` not enabled in Traefik | Set `providers.kubernetesCRD.allowCrossNamespace: true` |
-| cloudflared connecting to Traefik HTTPS without `noTLSVerify` | Use HTTP backend or set `originRequest.noTLSVerify: true` |
-| ForwardAuth address using wrong port | Authentik embedded outpost: `http://authentik-server.authentik.svc.cluster.local/outpost.goauthentik.io/auth/traefik` |
-| DNS record still proxied through Cloudflare after removing tunnel | Delete the CNAME record entirely; DNS-only mode still resolves to Cloudflare |
+### "I need analytics/metrics data"
+
+```
+Need analytics?
+├─ Query across all Cloudflare products (HTTP, Workers, DNS, etc.) → graphql-api/
+├─ Custom high-cardinality metrics from Workers → analytics-engine/
+├─ Client-side (RUM) performance data → web-analytics/
+├─ Workers Logs and real-time debugging → observability/
+├─ SQL over Iceberg data lake (logs, events) → r2-sql/ (+ pipelines/, r2-data-catalog/)
+└─ Raw logs (Logpush to external tools) → Cloudflare docs
+```
+
+### "I need infrastructure-as-code"
+
+```
+Need IaC? → pulumi/ (Pulumi), terraform/ (Terraform), or api/ (REST API)
+```
+
+## Product Index
+
+### Feature Flags
+| Product | Reference |
+|---------|-----------|
+| Flagship | `references/flagship/` |
+
+### Compute & Runtime
+| Product | Reference |
+|---------|-----------|
+| Workers | `references/workers/` |
+| Pages | `references/pages/` |
+| Pages Functions | `references/pages-functions/` |
+| Durable Objects | `references/durable-objects/` |
+| Workflows | `references/workflows/` |
+| Containers | `references/containers/` |
+| Workers for Platforms | `references/workers-for-platforms/` |
+| Cron Triggers | `references/cron-triggers/` |
+| Tail Workers | `references/tail-workers/` |
+| Snippets | `references/snippets/` |
+| Smart Placement | `references/smart-placement/` |
+
+### Storage & Data
+| Product | Reference |
+|---------|-----------|
+| KV | `references/kv/` |
+| D1 | `references/d1/` |
+| R2 | `references/r2/` |
+| Artifacts | `references/artifacts/` |
+| Queues | `references/queues/` |
+| Hyperdrive | `references/hyperdrive/` |
+| DO Storage | `references/do-storage/` |
+| Secrets Store | `references/secrets-store/` |
+| Pipelines | `references/pipelines/` |
+| R2 Data Catalog | `references/r2-data-catalog/` |
+| R2 SQL | `references/r2-sql/` |
+
+### AI & Machine Learning
+| Product | Reference |
+|---------|-----------|
+| Workers AI | `references/workers-ai/` |
+| Vectorize | `references/vectorize/` |
+| Agents SDK | `references/agents-sdk/` |
+| AI Gateway | `references/ai-gateway/` |
+| AI Search | `references/ai-search/` |
+
+### Networking & Connectivity
+| Product | Reference |
+|---------|-----------|
+| Tunnel | `references/tunnel/` |
+| Spectrum | `references/spectrum/` |
+| TURN | `references/turn/` |
+| Network Interconnect | `references/network-interconnect/` |
+| Argo Smart Routing | `references/argo-smart-routing/` |
+| Workers VPC | `references/workers-vpc/` |
+
+### Security
+| Product | Reference |
+|---------|-----------|
+| WAF | `references/waf/` |
+| DDoS Protection | `references/ddos/` |
+| Bot Management | `references/bot-management/` |
+| API Shield | `references/api-shield/` |
+| Turnstile | `references/turnstile/` |
+
+### Media & Content
+| Product | Reference |
+|---------|-----------|
+| Images | `references/images/` |
+| Stream | `references/stream/` |
+| Browser Rendering | `references/browser-rendering/` |
+| Zaraz | `references/zaraz/` |
+
+### Real-Time Communication
+| Product | Reference |
+|---------|-----------|
+| RealtimeKit | `references/realtimekit/` |
+| Realtime SFU | `references/realtime-sfu/` |
+
+### Developer Tools
+| Product | Reference |
+|---------|-----------|
+| Wrangler | `references/wrangler/` |
+| Miniflare | `references/miniflare/` |
+| C3 | `references/c3/` |
+| Observability | `references/observability/` |
+| GraphQL Analytics API | `references/graphql-api/` |
+| Analytics Engine | `references/analytics-engine/` |
+| Web Analytics | `references/web-analytics/` |
+| Sandbox | `references/sandbox/` |
+| Workerd | `references/workerd/` |
+| Workers Playground | `references/workers-playground/` |
+
+### Infrastructure as Code
+| Product | Reference |
+|---------|-----------|
+| Pulumi | `references/pulumi/` |
+| Terraform | `references/terraform/` |
+| API | `references/api/` |
+
+### Other Services
+| Product | Reference |
+|---------|-----------|
+| Email Routing | `references/email-routing/` |
+| Email Workers | `references/email-workers/` |
+| Static Assets | `references/static-assets/` |
+| Bindings | `references/bindings/` |
+| Cache Reserve | `references/cache-reserve/` |

@@ -6,9 +6,6 @@
 
 **Cause:** Field differences between desired and live state.
 
-**Solutions:**
-1. Check diff: `argocd app diff myapp`
-2. Add to ignoreDifferences:
 ```yaml
 spec:
   ignoreDifferences:
@@ -21,17 +18,9 @@ spec:
 
 ### StatefulSet volumeClaimTemplates Perpetual OutOfSync
 
-**Cause:** Kubernetes API server strips `apiVersion` and `kind` from `volumeClaimTemplates` entries (they're implicit from the parent field type). The source manifest has `apiVersion: v1` and `kind: PersistentVolumeClaim`, but the live object doesn't — ArgoCD sees a diff.
+**Cause:** Kubernetes strips `apiVersion`/`kind` from `volumeClaimTemplates` entries.
 
-**Diff looks like:**
-```
--  - apiVersion: v1
--    kind: PersistentVolumeClaim
--    metadata:
-+  - metadata:
-```
-
-**Solution — Global ignore via Helm values (recommended):**
+**Solution — Global (recommended):**
 ```yaml
 configs:
   cm:
@@ -52,16 +41,10 @@ spec:
         - .spec.volumeClaimTemplates[]?.kind
 ```
 
-**Note:** Using `jqPathExpressions` (not `jsonPointers`) because the VCT array index varies and jq handles the wildcard naturally with `[]?`.
-
 ### Stuck in Progressing
 
-**Common causes:**
-- Ingress controller not updating status
-- StatefulSet waiting for PVCs
-- Pods failing to start
+Common causes: Ingress controller not updating status, StatefulSet waiting for PVCs, pods failing to start.
 
-**Debug:**
 ```bash
 argocd app get myapp
 kubectl describe deployment -n myapp myapp
@@ -70,7 +53,6 @@ kubectl get events -n myapp
 
 ### Sync Failed
 
-**Check logs:**
 ```bash
 argocd app sync myapp --dry-run
 kubectl logs -n argocd deployment/argocd-repo-server
@@ -81,17 +63,11 @@ kubectl logs -n argocd deployment/argocd-application-controller
 
 ### Forgot Admin Password
 
-**ArgoCD 1.9+:**
 ```bash
 kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
-```
 
-**Reset password:**
-```bash
-# Generate bcrypt hash
+# Reset password
 argocd account bcrypt --password 'newpassword'
-
-# Update secret
 kubectl -n argocd patch secret argocd-secret \
   -p '{"stringData": {"admin.password": "$2a$10$...", "admin.passwordMtime": "'$(date +%FT%T%Z)'"}}'
 ```
@@ -104,31 +80,18 @@ data:
   admin.enabled: "false"
 ```
 
-### OIDC/SSO Issues
-
-Check argocd-server logs:
-```bash
-kubectl logs -n argocd deployment/argocd-server | grep -i oidc
-```
-
-## Repository Connection Issues
+## Repository Issues
 
 ### Permission Denied (SSH)
 
-1. Verify SSH key: `ssh -T git@github.com`
-2. Check key permissions: `chmod 600 ~/.ssh/id_rsa`
-3. Add known hosts: `ssh-keyscan github.com | argocd cert add-ssh --batch`
+1. Verify: `ssh -T git@github.com`
+2. Permissions: `chmod 600 ~/.ssh/id_rsa`
+3. Known hosts: `ssh-keyscan github.com | argocd cert add-ssh --batch`
 
 ### Certificate Errors (HTTPS)
 
-1. Add CA certificate: `argocd cert add-tls git.example.com --from ca.pem`
-2. Or skip verification (testing only): `--insecure-skip-server-verification`
-
-### GitLab 301 Redirect
-
-Add `.git` suffix to URL:
 ```bash
-argocd repo add https://gitlab.example.com/org/repo.git
+argocd cert add-tls git.example.com --from ca.pem
 ```
 
 ## CLI Issues
@@ -137,108 +100,36 @@ argocd repo add https://gitlab.example.com/org/repo.git
 
 **Cause:** Proxy incompatible with HTTP/2
 
-**Solution:** Use gRPC-web:
 ```bash
 argocd app list --grpc-web
-# Or set default
 export ARGOCD_OPTS='--grpc-web'
 ```
-
-### Certificate Validation Error
-
-```bash
-argocd login myargocd.example.com --insecure
-```
-
-## Cluster Connectivity
-
-### Test from ArgoCD Pod
-
-```bash
-kubectl exec -n argocd deployment/argocd-application-controller -- \
-  argocd admin cluster kubeconfig https://kubernetes.default.svc
-
-# Then test kubectl
-kubectl exec -n argocd deployment/argocd-application-controller -- \
-  kubectl --kubeconfig=/tmp/kubeconfig get nodes
-```
-
-### Network Policy Issues
-
-Ensure argocd-application-controller can reach target cluster API servers.
 
 ## Resource Issues
 
 ### "Field not declared in schema"
 
-**Cause:** Using fields not in ArgoCD's bundled schemas.
-
-**Solutions:**
-1. Use server-side apply: `ServerSideApply=true`
-2. Skip validation: `Validate=false`
+Use server-side apply: `ServerSideApply=true` or skip validation: `Validate=false`
 
 ### Cached Manifest Error
 
-**Clear cache:**
 ```bash
-# Restart repo-server
 kubectl rollout restart -n argocd deployment/argocd-repo-server
 ```
-
-### Out of Memory
-
-Increase limits:
-```yaml
-# argocd-repo-server deployment
-resources:
-  limits:
-    memory: 2Gi
-```
-
-## Redis Issues
-
-### Rotate Redis Secret
-
-```bash
-kubectl delete secret -n argocd argocd-redis
-kubectl rollout restart -n argocd deployment/argocd-redis
-kubectl rollout restart -n argocd deployment/argocd-server
-kubectl rollout restart -n argocd deployment/argocd-repo-server
-kubectl rollout restart -n argocd deployment/argocd-application-controller
-```
-
-## Performance Issues
-
-### Slow Sync
-
-1. Enable selective sync: `ApplyOutOfSyncOnly=true`
-2. Increase parallelism in argocd-cm:
-```yaml
-data:
-  controller.resource.parallelism.limit: "50"
-```
-
-### Too Many Applications
-
-Use ApplicationSets instead of individual Applications for large deployments.
 
 ## Debugging Commands
 
 ```bash
-# Application status
 argocd app get myapp
 argocd app diff myapp
 argocd app manifests myapp
 
-# Logs
 kubectl logs -n argocd deployment/argocd-server
 kubectl logs -n argocd deployment/argocd-repo-server
 kubectl logs -n argocd deployment/argocd-application-controller
-kubectl logs -n argocd deployment/argocd-applicationset-controller
-
-# Events
 kubectl get events -n argocd --sort-by='.lastTimestamp'
 
-# RBAC testing
 argocd admin settings rbac can myuser get applications 'default/*'
 ```
+
+See [troubleshooting/advanced.md](troubleshooting/advanced.md) for cluster connectivity, Redis issues, and performance.

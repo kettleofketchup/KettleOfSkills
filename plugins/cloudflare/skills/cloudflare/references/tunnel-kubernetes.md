@@ -1,7 +1,5 @@
 # Cloudflare Tunnel Kubernetes Deployment Reference
 
-*Last updated: 2026-03-23*
-
 ## Image
 
 `cloudflare/cloudflared:2026.3.0` (latest stable as of March 2026)
@@ -89,7 +87,6 @@ ingress:
     service: http://traefik.traefik.svc.cluster.local:80
   - service: http_status:404
 ```
-
 ### Ingress Rule Options
 
 ```yaml
@@ -133,18 +130,7 @@ sops --encrypt --age <AGE-PUBLIC-KEY> \
   secret-credentials.yaml > secret-credentials.enc.yaml
 ```
 
-Use ksops generator in kustomization:
-
-```yaml
-# secret-generator.yaml
-apiVersion: viaduct.ai/v1
-kind: ksops
-metadata:
-  name: cloudflared-secrets
-files:
-  - secret-cloudflared-credentials.enc.yaml
-  - secret-cloudflared-config.enc.yaml
-```
+Use ksops generator in kustomization to reference encrypted secrets (`apiVersion: viaduct.ai/v1`, `kind: ksops`, list files under `files:`).
 
 ## Tunnel CLI Commands
 
@@ -160,30 +146,4 @@ cloudflared tunnel list
 
 # Delete tunnel
 cloudflared tunnel delete my-tunnel
-```
-
-## Connecting to Traefik
-
-**Recommended: HTTP to Traefik port 80** (TLS terminated at Cloudflare edge):
-
-```yaml
-ingress:
-  - hostname: "*.home.kettle.sh"
-    service: http://traefik.traefik.svc.cluster.local:80
-  - service: http_status:404
-```
-
-Configure Traefik to trust forwarded headers from cloudflared pod CIDR:
-
-```yaml
-# Traefik Helm values
-entryPoints:
-  web:
-    forwardedHeaders:
-      trustedIPs:
-        - 10.244.0.0/16    # Cluster pod CIDR
-  websecure:
-    forwardedHeaders:
-      trustedIPs:
-        - 10.244.0.0/16
 ```

@@ -24,7 +24,7 @@ Install Quench module in Foundry. Declare optional dependency in module.json:
 ```javascript
 Hooks.on("quenchReady", (quench) => {
   quench.registerBatch(
-    "my-module.core.actors",                    // unique key
+    "my-module.core.actors",
     (context) => {
       const { describe, it, assert, expect } = context;
 
@@ -32,9 +32,7 @@ Hooks.on("quenchReady", (quench) => {
         let testActor;
 
         before(async function() {
-          testActor = await Actor.create({
-            name: "Test Hero", type: "hero"
-          });
+          testActor = await Actor.create({ name: "Test Hero", type: "hero" });
         });
 
         after(async function() {
@@ -48,20 +46,14 @@ Hooks.on("quenchReady", (quench) => {
         it("should have default health", function() {
           expect(testActor.system.resources.health.value).to.equal(10);
         });
-
-        it("should derive ability modifiers", function() {
-          expect(testActor.system.abilities.str.mod).to.be.a("number");
-        });
       });
     },
-    { displayName: "MYMOD: Actor Tests" }       // shown in Quench UI
+    { displayName: "MYMOD: Actor Tests" }
   );
 });
 ```
 
 ## Context Object
-
-The `context` parameter provides:
 
 | Property | Source | Description |
 |----------|--------|-------------|
@@ -70,7 +62,6 @@ The `context` parameter provides:
 | `expect` | Chai | Expect-style assertions |
 | `should` | Chai | Should-style assertions |
 | `fc` | fast-check | Property-based testing |
-| `utils` | Mocha | Mocha utilities |
 
 ## Test Patterns
 
@@ -84,7 +75,6 @@ describe("Item Management", function() {
       { name: "Sword", type: "weapon", "system.damage": "2d6" }
     ]);
     expect(actor.items.size).to.equal(1);
-    expect(item.name).to.equal("Sword");
     await actor.delete();
   });
 });
@@ -100,18 +90,6 @@ describe("Custom Hooks", function() {
     await Actor.create({ name: "Hook Test", type: "hero" });
     expect(hookFired).to.be.true;
     Hooks.off("preCreateActor", hookId);
-  });
-});
-```
-
-### Roll Testing
-
-```javascript
-describe("Dice Rolls", function() {
-  it("should evaluate 2d6 roll", async function() {
-    const roll = new Roll("2d6 + 3");
-    await roll.evaluate();
-    expect(roll.total).to.be.at.least(5).and.at.most(15);
   });
 });
 ```
@@ -133,55 +111,6 @@ describe("Data Validation", function() {
 });
 ```
 
-## Snapshot Testing
+## Running Tests & Advanced Features
 
-```javascript
-it("should match actor data snapshot", function() {
-  const data = { name: testActor.name, type: testActor.type };
-  assert.matchSnapshot(data);
-  // or: expect(data).to.matchSnapshot();
-});
-```
-
-Snapshots stored in `Data/__snapshots__/<package>/`. Update via Quench UI button on failure.
-
-## Running Tests
-
-### Via Quench UI
-Open Quench application in Foundry. Select batches, click Run.
-
-### Via API (headless/CI)
-```javascript
-// Run all batches
-await quench.runBatches("**");
-
-// Run specific batches with JSON report
-const report = await quench.runBatches(
-  ["my-module.core.actors"],
-  { json: true }
-);
-```
-
-### Report Hook
-```javascript
-Hooks.on("quenchReports", (reports) => {
-  console.log("Test results:", reports.json);
-});
-```
-
-## Batch Key Conventions
-
-- Format: `<package-id>.<category>.<description>`
-- Examples: `my-module.core.actors`, `my-module.sheets.rendering`, `my-module.integration.combat`
-- Display name: `MYMOD: Actor Tests`, `MYMOD: Sheet Rendering`
-
-## TypeScript Support
-
-```bash
-npm install --save-dev @ethaks/fvtt-quench
-```
-
-```json
-// tsconfig.json
-{ "compilerOptions": { "types": ["@ethaks/fvtt-quench"] } }
-```
+See `references/testing/quench-patterns.md` for snapshot testing, running via API/UI, batch conventions, and TypeScript types.

@@ -88,14 +88,21 @@ Hooks.once("ready", () => {
 |------|---------|
 | `references/modules/manifest.md` | module.json and system.json manifest fields, package structure |
 | `references/modules/documents-hooks.md` | Document model, hooks system, lifecycle events |
-| `references/modules/sheets-templates.md` | ActorSheet/ItemSheet, ApplicationV2, Handlebars templates |
-| `references/modules/data-models.md` | TypeDataModel schemas, field types, migration |
-| `references/modules/libraries.md` | libWrapper, socketlib, Vite setup, Svelte/TS integration |
-| `references/deployment/k3s.md` | K3s/Kubernetes deployment, Helm charts, PVC, ingress |
+| `references/modules/sheets-templates.md` | ApplicationV2, HandlebarsApplicationMixin, sheet registration |
+| `references/modules/sheets-templates-handlebars.md` | Legacy App v1, Handlebars syntax, helpers, partials |
+| `references/modules/data-models.md` | TypeDataModel schemas, field types, data preparation, migration |
+| `references/modules/data-models-settings.md` | Game Settings API, module sub-types, flags, localization |
+| `references/modules/libraries.md` | libWrapper, socketlib, Vite setup, TypeScript, Svelte/TRL |
+| `references/modules/libraries-tools.md` | Foundry DevMode debug flags, notifications, dialogs, dice, canvas |
+| `references/deployment/k3s.md` | K3s/Kubernetes deployment, Helm charts, Traefik ingress, resources |
+| `references/deployment/k3s-manifests.md` | Raw K8s manifests: Namespace, Secret, PVC, Deployment, Service |
 | `references/deployment/docker.md` | felddy/foundryvtt-docker env vars, compose, configuration |
-| `references/testing/quench.md` | Quench test framework, test batches, Mocha/Chai patterns |
-| `references/testing/ci-testing.md` | CI/CD, Jest/Vitest outside Foundry, test scenarios |
-| `references/systems/wfrp4e.md` | WFRP4e system: game.wfrp4e API, actor/item types, effects triggers, custom species, world scripts |
+| `references/testing/quench.md` | Quench test framework, test batches, Mocha/Chai/fast-check |
+| `references/testing/quench-patterns.md` | Quench snapshots, running via API, batch conventions, TypeScript |
+| `references/testing/ci-testing.md` | Vitest unit testing, Foundry API mocks, test fixtures |
+| `references/testing/ci-testing-pipeline.md` | GitHub Actions CI pipeline, ZIP packaging, release workflow |
+| `references/systems/wfrp4e.md` | WFRP4e: game.wfrp4e API, actor/item types, custom species |
+| `references/systems/wfrp4e-effects.md` | WFRP4e effects triggers, world scripts, dev setup, community modules |
 
 ## Cross-References
 

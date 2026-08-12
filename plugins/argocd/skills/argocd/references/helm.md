@@ -115,49 +115,6 @@ spec:
     targetRevision: 1.0.0
 ```
 
-## Helm Options
-
-```yaml
-spec:
-  source:
-    helm:
-      releaseName: myapp
-      version: v3  # Helm version
-      passCredentials: true  # Pass repo creds to subcharts
-      skipCrds: false
-
-      # Validation
-      skipSchemaValidation: false
-
-      # API versions for template rendering
-      apiVersions:
-        - monitoring.coreos.com/v1
-      kubeVersion: "1.28.0"
-```
-
-## Handling Random Values
-
-Helm functions like `randAlphaNum` cause perpetual drift. Override with explicit values:
-
-```yaml
-spec:
-  source:
-    helm:
-      valuesObject:
-        secretKey: "my-fixed-secret-value"
-```
-
-## Helm Hooks Mapping
-
-ArgoCD auto-maps Helm hooks to ArgoCD hooks:
-
-| Helm Hook | ArgoCD Hook |
-|-----------|-------------|
-| pre-install, pre-upgrade | PreSync |
-| post-install, post-upgrade | PostSync |
-| pre-delete | PreSync (with delete policy) |
-| post-delete | PostSync (with delete policy) |
-
 ## CLI Commands
 
 ```bash
@@ -175,7 +132,7 @@ argocd app set myapp --helm-set-string image.tag=1.25
 argocd app set myapp --helm-set-file config=config.json
 argocd app set myapp --values values-prod.yaml
 
-# Show Helm values
+# Show rendered manifests
 argocd app manifests myapp
 ```
 
@@ -183,10 +140,7 @@ argocd app manifests myapp
 
 ```bash
 argocd repo add https://charts.bitnami.com/bitnami --type helm --name bitnami
-
-# With auth
 argocd repo add https://charts.example.com \
-  --type helm \
-  --username admin \
-  --password secret
+  --type helm --username admin --password secret
 ```
+See [helm/options.md](helm/options.md) for Helm options, random values handling, and hook mapping.

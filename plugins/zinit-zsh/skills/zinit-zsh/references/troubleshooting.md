@@ -135,16 +135,7 @@ atclone"ln -sfn {dir} ~/.config/app/plugins"
 
 ## Stow Considerations
 
-This repo uses GNU Stow. After modifying zsh config:
-
-```bash
-# In dotfiles repo root
-stow .
-# Or re-stow
-stow -R .
-```
-
-Files in repo symlink to $HOME, so edits in either location work.
+This repo uses GNU Stow — run `stow .` (or `stow -R .`) from the dotfiles root after edits. Files symlink to $HOME.
 
 ## Common Mistakes
 

@@ -1,6 +1,6 @@
 ---
 name: kubectx
-description: "kubectx and kubens CLI tools for switching Kubernetes contexts and namespaces. This skill should be used when switching kubectl contexts, switching Kubernetes namespaces, listing available contexts or namespaces, renaming or deleting contexts, setting up kubectx/kubens with fzf interactive selection, configuring shell completions for kubectx/kubens, integrating kube-ps1 shell prompts, managing multiple kubeconfig files via KUBECONFIG env var, or troubleshooting context/namespace switching issues."
+description: kubectx and kubens for Kubernetes context/namespace switching. Use for switching contexts/namespaces, fzf selection, shell completions, kube-ps1 prompts, KUBECONFIG management, or troubleshooting.
 last_updated: 2026-03-18
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: nextcloud
-description: Use when deploying Nextcloud on Kubernetes with Helm, configuring Rook-Ceph storage, Traefik ingress, Authentik SAML SSO, Collabora CODE office suite, PostgreSQL/Redis subcharts, ArgoCD GitOps, or troubleshooting Nextcloud day-2 operations (upgrades, backups, occ commands, cron jobs, trusted domains/proxies).
+description: Deploy Nextcloud on Kubernetes via Helm with PostgreSQL/Redis, Rook-Ceph storage, Traefik IngressRoute, Authentik SAML SSO, Collabora CODE, ArgoCD GitOps, or day-2 ops (upgrades, backups, occ, cron).
 ---
 
 # Nextcloud on Kubernetes
@@ -41,7 +41,8 @@ helm repo add nextcloud https://nextcloud.github.io/helm/
 
 | Task | Reference |
 |------|-----------|
-| Full Helm values template | references/deployment.md |
+| Helm values template, secrets, Traefik IngressRoute | references/deployment.md |
+| ArgoCD Application, app-of-apps, storage classes | references/argocd-storage.md |
 | Authentik SAML SSO setup | references/authentik-saml.md |
 | App configuration (Calendar, Contacts, Talk, Collabora) | references/apps-config.md |
 | Upgrades, backups, occ commands, troubleshooting | references/day2-operations.md |

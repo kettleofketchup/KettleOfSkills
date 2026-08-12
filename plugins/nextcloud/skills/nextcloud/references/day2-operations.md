@@ -115,43 +115,25 @@ spec:
 ## Troubleshooting
 
 ### "Access through untrusted domain"
-
+Add pod/node CIDRs to `trusted_proxies` in Helm values and set trusted domains via occ:
 ```bash
-# Check current trusted domains
-$OCC "php occ config:system:get trusted_domains"
-
-# Add missing domain
 $OCC "php occ config:system:set trusted_domains 2 --value=cloud.example.com"
 ```
 
-Also verify `trusted_proxies` includes pod CIDR and node network in Helm values.
-
 ### Pod CrashLoopBackOff After Upgrade
-
-- Check logs: `kubectl logs -n nextcloud $NEXTCLOUD_POD`
-- Likely skipped a major version; restore backup and upgrade sequentially
-- Check if maintenance mode is stuck: mount PVC and check `config/config.php`
+Likely skipped a major version. Restore backup, upgrade sequentially. Check for stuck maintenance mode in `config/config.php`.
 
 ### Redis Connection Errors
-
 ```bash
-# Test Redis connectivity from Nextcloud pod
 kubectl exec -n nextcloud $NEXTCLOUD_POD -- redis-cli -h nextcloud-redis-master -a <password> ping
 ```
 
 ### Cron Not Running
-
 ```bash
-# Check if cron sidecar is running
 kubectl get pod -n nextcloud -o jsonpath='{.items[0].spec.containers[*].name}'
-
-# Check last cron execution in Nextcloud admin panel
-# or via occ:
 $OCC "php occ config:app:get core lastcron"
 ```
 
 ### Collabora "WOPI Host Not Allowed"
-
-- Verify `collabora.collabora.aliasgroups[0].host` matches Nextcloud external URL exactly
-- Check Collabora logs: `kubectl logs -n nextcloud -l app.kubernetes.io/name=collabora`
-- Ensure Nextcloud can reach Collabora service internally
+Verify `collabora.collabora.aliasgroups[0].host` matches Nextcloud external URL exactly.
+Check logs: `kubectl logs -n nextcloud -l app.kubernetes.io/name=collabora`

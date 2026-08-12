@@ -1,252 +1,112 @@
 # Getting Started with Claude Code
 
-Installation, authentication, and setup guide for Claude Code.
+Installation, authentication, and first run.
 
 ## What is Claude Code?
 
-Claude Code is Anthropic's agentic coding tool that lives in the terminal and helps turn ideas into code faster. Key features:
-
-- **Agentic Capabilities**: Autonomous planning, execution, and validation
-- **Terminal Integration**: Works directly in command line
-- **IDE Support**: Extensions for VS Code and JetBrains IDEs
-- **Extensibility**: Plugins, skills, slash commands, and MCP servers
-- **Enterprise Ready**: SSO, sandboxing, monitoring, and compliance features
+Anthropic's agentic coding tool that lives in the terminal. Features: autonomous planning/execution, terminal integration, VS Code/JetBrains IDE extensions, plugins, skills, slash commands, MCP servers, and enterprise SSO/sandboxing.
 
 ## Prerequisites
 
-### System Requirements
-- **Operating Systems**: macOS, Linux, or Windows (WSL2)
+- **OS**: macOS, Linux, or Windows (WSL2)
 - **Runtime**: Node.js 18+ or Python 3.10+
-- **API Key**: From Anthropic Console (console.anthropic.com)
-
-### Getting API Key
-1. Go to console.anthropic.com
-2. Sign in or create account
-3. Navigate to API Keys section
-4. Generate new API key
-5. Save key securely (cannot be viewed again)
+- **API Key**: from console.anthropic.com
 
 ## Installation
 
-### Install via npm (Recommended)
 ```bash
+# npm (recommended)
 npm install -g @anthropic-ai/claude-code
-```
 
-### Install via pip
-```bash
+# pip
 pip install claude-code
-```
 
-### Verify Installation
-```bash
+# Verify
 claude --version
 ```
 
 ## Authentication
 
-### Method 1: Interactive Login
 ```bash
+# Method 1: Interactive
 claude login
-# Follow prompts to enter API key
-```
 
-### Method 2: Environment Variable
-```bash
-# Add to ~/.bashrc or ~/.zshrc
+# Method 2: Environment variable (add to ~/.bashrc or ~/.zshrc)
 export ANTHROPIC_API_KEY=your_api_key_here
 
-# Or set for single session
-export ANTHROPIC_API_KEY=your_api_key_here
-claude
-```
+# Method 3: Config file (~/.claude/config.json)
+# { "apiKey": "your_api_key_here" }
 
-### Method 3: Configuration File
-Create `~/.claude/config.json`:
-```json
-{
-  "apiKey": "your_api_key_here"
-}
-```
-
-### Verify Authentication
-```bash
+# Verify
 claude "hello"
-# Should respond without authentication errors
-```
-
-## First Run
-
-### Start Interactive Session
-```bash
-# In any directory
-claude
-
-# In specific project
-cd /path/to/project
-claude
-```
-
-### Run with Specific Task
-```bash
-claude "implement user authentication"
-```
-
-### Run with File Context
-```bash
-claude "explain this code" --file app.js
 ```
 
 ## Basic Usage
 
-### Interactive Mode
 ```bash
-$ claude
-Claude Code> help me create a React component
-# Claude will plan and execute
-```
+# Interactive session
+claude
 
-### One-Shot Mode
-```bash
-claude "add error handling to main.py"
-```
+# One-shot
+claude "implement user authentication"
 
-### With Additional Context
-```bash
+# With file context
+claude "explain this code" --file app.js
 claude "refactor this function" --file utils.js --context "make it async"
-```
-
-## Understanding the Interface
-
-### Session Start
-```
-Claude Code v1.x.x
-Working directory: /path/to/project
-Model: claude-sonnet-4-5-20250929
-
-Claude Code>
-```
-
-### Tool Execution
-Claude will show:
-- Tool being used (Read, Write, Bash, etc.)
-- Tool parameters
-- Results or outputs
-- Thinking/planning process (if enabled)
-
-### Session End
-```bash
-# Type Ctrl+C or Ctrl+D
-# Or type 'exit' or 'quit'
 ```
 
 ## Common First Commands
 
-### Explore Codebase
 ```bash
 claude "explain the project structure"
-```
-
-### Run Tests
-```bash
 claude "run the test suite"
-```
-
-### Fix Issues
-```bash
 claude "fix all TypeScript errors"
-```
-
-### Add Feature
-```bash
 claude "add input validation to the login form"
 ```
 
 ## Directory Structure
 
 Claude Code creates `.claude/` in your project:
-
 ```
 project/
 ├── .claude/
-│   ├── settings.json      # Project-specific settings
-│   ├── commands/          # Custom slash commands
-│   ├── skills/            # Custom skills
-│   ├── hooks.json         # Hook configurations
-│   └── mcp.json           # MCP server configurations
-└── ...
+│   ├── settings.json   # Project settings
+│   ├── commands/       # Custom slash commands
+│   ├── skills/         # Custom skills
+│   ├── hooks.json      # Hook configurations
+│   └── mcp.json        # MCP server configurations
+```
+
+## Quick Troubleshooting
+
+```bash
+# Authentication issues
+claude logout && claude login
+echo $ANTHROPIC_API_KEY
+
+# Permission errors
+sudo chown -R $USER ~/.claude
+
+# Installation issues
+npm cache clean --force
+npm uninstall -g @anthropic-ai/claude-code
+npm install -g @anthropic-ai/claude-code
+
+# WSL2 (Windows)
+wsl --update && node --version  # should be 18+
 ```
 
 ## Next Steps
 
-### Learn Slash Commands
-```bash
-# See available commands
-/help
-
-# Try common workflows
-/cook implement feature X
-/fix:fast bug in Y
-/test
-```
-
-### Create Custom Skills
-See `references/agent-skills.md` for creating project-specific skills.
-
-### Configure MCP Servers
-See `references/mcp-integration.md` for connecting external tools.
-
-### Set Up Hooks
-See `references/hooks-and-plugins.md` for automation.
-
-### Configure Settings
-See `references/configuration.md` for customization options.
-
-## Quick Troubleshooting
-
-### Authentication Issues
-```bash
-# Re-login
-claude logout
-claude login
-
-# Verify API key is set
-echo $ANTHROPIC_API_KEY
-```
-
-### Permission Errors
-```bash
-# Check file permissions
-ls -la ~/.claude
-
-# Fix ownership
-sudo chown -R $USER ~/.claude
-```
-
-### Installation Issues
-```bash
-# Clear npm cache
-npm cache clean --force
-
-# Reinstall
-npm uninstall -g @anthropic-ai/claude-code
-npm install -g @anthropic-ai/claude-code
-```
-
-### WSL2 Issues (Windows)
-```bash
-# Ensure WSL2 is updated
-wsl --update
-
-# Check Node.js version in WSL
-node --version  # Should be 18+
-```
+- **Slash Commands**: `/help` to see available, or `references/slash-commands-dev.md`
+- **Agent Skills**: `references/agent-skills-creating.md`
+- **MCP Servers**: `references/mcp-configuration.md`
+- **Hooks**: `references/hooks.md`
+- **Settings**: `references/configuration-core.md`
 
 ## Getting Help
 
-- **Documentation**: https://docs.claude.com/claude-code
-- **GitHub Issues**: https://github.com/anthropics/claude-code/issues
-- **Support**: support.claude.com
-- **Community**: discord.gg/anthropic
-
-For detailed troubleshooting, see `references/troubleshooting.md`.
+- Documentation: https://docs.claude.com/claude-code
+- GitHub Issues: https://github.com/anthropics/claude-code/issues
+- Support: support.claude.com
+- Community: discord.gg/anthropic

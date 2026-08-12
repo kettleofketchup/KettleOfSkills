@@ -131,16 +131,10 @@ curl -sk -X POST "https://$VC/api/vcenter/vm-template/library-items/<template-id
 ### Tags
 
 ```bash
-# List tag categories
 curl -sk "https://$VC/api/cis/tagging/category" -H "vmware-api-session-id: $SID"
-
-# List tags
 curl -sk "https://$VC/api/cis/tagging/tag" -H "vmware-api-session-id: $SID"
-
-# Attach tag to object
 curl -sk -X POST "https://$VC/api/cis/tagging/tag-association/{tag_id}?action=attach" \
-  -H "vmware-api-session-id: $SID" \
-  -H "Content-Type: application/json" \
+  -H "vmware-api-session-id: $SID" -H "Content-Type: application/json" \
   -d '{"object_id":{"id":"vm-42","type":"VirtualMachine"}}'
 ```
 
@@ -149,37 +143,7 @@ curl -sk -X POST "https://$VC/api/cis/tagging/tag-association/{tag_id}?action=at
 ```bash
 curl -sk "https://$VC/api/appliance/health/system" -H "vmware-api-session-id: $SID"
 curl -sk "https://$VC/api/appliance/system/version" -H "vmware-api-session-id: $SID"
-curl -sk "https://$VC/api/appliance/networking" -H "vmware-api-session-id: $SID"
 curl -sk "https://$VC/api/appliance/recovery/backup/schedules" -H "vmware-api-session-id: $SID"
 ```
 
-## Filtering
-
-List endpoints support query parameter filters. No pagination on most endpoints (hard limit ~4000 results). Use filters to narrow results in large environments.
-
-VM filters: `power_states`, `names`, `folders`, `datacenters`, `hosts`, `clusters`, `resource_pools`
-
-```bash
-curl -sk "https://$VC/api/vcenter/vm?power_states=POWERED_ON&clusters=domain-c8" \
-  -H "vmware-api-session-id: $SID"
-```
-
-## VI/JSON API (vSphere 8.0 U1+)
-
-Full SOAP API parity via JSON. URL pattern: `POST /sdk/vim25/{version}/{Type}/{moid}/{Operation}`
-
-```bash
-# Power on VM via VI/JSON
-curl -sk -X POST "https://$VC/sdk/vim25/8.0.1.0/VirtualMachine/vm-42/PowerOnVM_Task" \
-  -H "vmware-api-session-id: $SID" \
-  -H "Content-Type: application/json"
-```
-
-Use for operations not in the REST API: snapshots, advanced settings, custom attributes, DRS rules, performance counters.
-
-## Web Interfaces
-
-- **API Explorer**: `https://<vcenter>/apiexplorer` -- interactive Swagger UI
-- **MOB**: `https://<vcenter-or-esxi>/mob` -- browse live object model
-- **vSphere Client**: `https://<vcenter>/ui`
-- **ESXi Host Client**: `https://<esxi>/ui`
+See `references/vsphere-api-advanced.md` for filtering patterns, VI/JSON API (vSphere 8.0+), and web interface URLs.

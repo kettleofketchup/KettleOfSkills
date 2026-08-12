@@ -66,18 +66,7 @@ Related pages and external resources.
 
 ### File Organization
 
-```
-docs/
-├── index.md              # Landing page
-├── getting-started/      # Onboarding
-│   ├── installation.md
-│   └── quick-start.md
-├── features/             # User-facing functionality
-├── architecture/         # Technical deep-dives
-├── development/          # Contributor guides
-├── api/                  # API reference
-└── plans/                # Design documents (optional)
-```
+Standard layout: `docs/index.md` (landing), `getting-started/`, `features/`, `architecture/`, `development/`, `api/`, `plans/` (optional).
 
 ## Code Examples
 

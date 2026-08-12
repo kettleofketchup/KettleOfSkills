@@ -69,51 +69,31 @@ Type aliases: `a`=VirtualApp, `c`=Cluster, `d`=Datacenter, `f`=Folder, `g`=DVPor
 ## VM Operations
 
 ```bash
-# Create
 govc vm.create -m 4096 -c 2 -disk 40GB -net "VM Network" -on=false my-vm
 govc vm.create -m 8192 -c 4 -disk 100GB -ds datastore1 -net "VM Network" \
   -net.adapter vmxnet3 -pool /DC1/host/Cluster1/Resources -g ubuntu64Guest -on=false my-vm
-
-# Info
 govc vm.info my-vm
 govc vm.info -json my-vm | jq
-govc vm.ip my-vm
-govc vm.ip -wait 5m my-vm            # Wait for IP
-
-# Power
+govc vm.ip -wait 5m my-vm
 govc vm.power -on my-vm
-govc vm.power -off my-vm              # Hard power off
+govc vm.power -off my-vm
 govc vm.power -s my-vm                # Graceful shutdown (VMware Tools)
-govc vm.power -r my-vm                # Reset
+govc vm.power -r my-vm
 govc vm.power -suspend my-vm
-
-# Clone
 govc vm.clone -vm template-vm -on=false new-vm
-govc vm.clone -vm template-vm -link new-vm          # Linked clone
+govc vm.clone -vm template-vm -link new-vm
 govc vm.clone -vm template-vm -snapshot snap-name new-vm
-
-# Modify
-govc vm.change -vm my-vm -m 16384                    # Memory
-govc vm.change -vm my-vm -c 8                        # CPU
+govc vm.change -vm my-vm -m 16384
+govc vm.change -vm my-vm -c 8
 govc vm.change -vm my-vm -e "guestinfo.userdata=$(cat ud.yaml)"
-govc vm.upgrade -vm my-vm                            # HW version
-
-# Disk
+govc vm.upgrade -vm my-vm
 govc vm.disk.create -vm my-vm -size 50G -name my-vm/disk2
 govc vm.disk.change -vm my-vm -disk.name "disk-1000-0" -size 100G
-
-# Network
 govc vm.network.add -vm my-vm -net "VLAN100" -net.adapter vmxnet3
 govc vm.network.change -vm my-vm -net "VLAN200" ethernet-0
-
-# Template conversion
 govc vm.markastemplate my-vm
 govc vm.markasvm -host esxi1 my-template
-
-# Destroy
 govc vm.power -off my-vm && govc vm.destroy my-vm
-
-# Console URL
 govc vm.console my-vm
 ```
 
@@ -145,12 +125,8 @@ govc datastore.disk.create -size 10G my-vm/disk1.vmdk   # Create VMDK
 ## OVA/OVF Deployment
 
 ```bash
-# Generate spec, edit, deploy
 govc import.spec app.ova > spec.json
-# Edit spec.json (DiskProvisioning, NetworkMapping, PropertyMapping)
 govc import.ova -options=spec.json -name my-app app.ova
-
-# Content Library (alternative)
 govc library.create my-library
 govc library.import my-library ./my.ova
 govc library.deploy /my-library/my.ova deployed-vm
@@ -163,54 +139,7 @@ govc datastore.upload ./installer.iso isos/installer.iso
 govc device.cdrom.add -vm my-vm
 govc device.cdrom.insert -vm my-vm -device cdrom-3000 isos/installer.iso
 govc device.cdrom.eject -vm my-vm -device cdrom-3000
-
-# Or create VM with ISO mounted
 govc vm.create -iso isos/installer.iso -iso-datastore ds1 -on=false my-vm
 ```
 
-## Host Operations
-
-```bash
-govc host.info
-govc host.maintenance.enter -host esxi1
-govc host.maintenance.exit -host esxi1
-govc host.service -host esxi1                          # List services
-govc host.esxcli -host esxi1 system version get        # Remote esxcli
-govc host.vswitch.add -host esxi1 vSwitch1
-govc host.portgroup.add -host esxi1 -vswitch vSwitch0 -vlan 100 "VLAN100"
-```
-
-## Guest Operations
-
-Require VMware Tools running. Set `GOVC_GUEST_LOGIN="user:pass"`.
-
-```bash
-govc guest.upload -vm my-vm -f -perm 0755 script.sh /tmp/script.sh
-govc guest.download -vm my-vm /var/log/syslog ./syslog.log
-govc guest.run -vm my-vm /tmp/script.sh
-govc guest.run -vm my-vm bash -c "echo hello"
-tar -cf- mydir/ | govc guest.run -vm my-vm -d - tar -C /tmp -xf-
-govc guest.ps -vm my-vm
-govc guest.ls -vm my-vm /tmp/
-govc guest.df -vm my-vm
-```
-
-## Scripting Patterns
-
-```bash
-# Batch power off VMs in folder
-govc find /DC1/vm/Testing -type m | while read -r vm; do
-  govc vm.power -off "$vm"
-done
-
-# Wait for IP then SSH
-govc vm.power -on my-vm
-IP=$(govc vm.ip -wait 5m my-vm)
-ssh user@"$IP"
-
-# JSON processing
-govc vm.info -json my-vm | jq -r '.virtualMachines[0].guest.ipAddress'
-govc datastore.info -json | jq '.datastores[] | {name, freeGB: (.freeSpace / 1073741824 | floor)}'
-```
-
-Other command groups: `dvs.*` (distributed switches), `pool.*` (resource pools), `folder.*` (folders), `cluster.*` (clusters), `object.*` (generic ops), `tags.*` (tagging), `metric.*` (performance)
+See `references/govc-advanced.md` for host operations, guest operations, scripting patterns, and command group index.

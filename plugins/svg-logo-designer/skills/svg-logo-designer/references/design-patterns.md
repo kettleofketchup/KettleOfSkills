@@ -12,11 +12,10 @@ Ready-to-use templates for each logo type. Customize colors, proportions, and el
     .wordmark { font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
                 font-size: 48px; font-weight: 700; fill: #1F2937; }
   </style></defs>
+  <!-- Use letter-spacing for tracking, font-weight: 300 for light/elegant -->
   <text x="150" y="55" text-anchor="middle" class="wordmark">BRAND</text>
 </svg>
 ```
-
-Wordmark tips: use `letter-spacing` for tracking, `font-weight: 300` for light/elegant.
 
 ## Lettermark
 
@@ -149,14 +148,4 @@ Wordmark tips: use `letter-spacing` for tracking, `font-weight: 300` for light/e
 </svg>
 ```
 
-## Monochrome Variations
-
-For any logo, create monochrome versions by replacing all fills:
-
-```xml
-<!-- Monochrome Dark (for light backgrounds) -->
-<style>.primary, .secondary, .accent { fill: #1F2937; }</style>
-
-<!-- Monochrome Light (for dark backgrounds) -->
-<style>.primary, .secondary, .accent { fill: #FFFFFF; }</style>
-```
+See `references/monochrome-variations.md` for monochrome CSS overrides.

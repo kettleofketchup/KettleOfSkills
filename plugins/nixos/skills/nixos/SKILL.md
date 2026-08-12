@@ -149,11 +149,17 @@ For comprehensive documentation on specific topics:
 | Private repos & SSH | `references/private-repos.md` |
 | ISO building & closure consistency | `references/iso-building.md` |
 | Charmbracelet gum prompts & YAML config | `references/gum-prompts.md` |
+| Channel pinning & nixpkgs upgrades | `references/channel-pinning.md` |
+| NixOS 26.05 migration notes | `references/nixos-2605.md` |
 
 ## Common Patterns
 
 ### Pin nixpkgs across repos
-Use `inputs.X.inputs.nixpkgs.follows = "nixpkgs"` to ensure consistent package versions.
+Use `inputs.X.inputs.nixpkgs.follows = "nixpkgs"` so every flake shares one
+nixpkgs. For reproducibility, pin the ROOT `nixpkgs.url` to an immutable **commit
+sha**, not a bare branch like `nixos-unstable` (a branch rolls the kernel on every
+`nix flake update`). Read the lock with `jq -r '.nodes.nixpkgs.locked.rev'`, never
+`grep`. See `references/channel-pinning.md` (+ `references/nixos-2605.md`).
 
 ### Conditional module loading
 ```nix

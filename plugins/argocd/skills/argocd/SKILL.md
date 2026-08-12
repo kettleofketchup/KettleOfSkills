@@ -1,6 +1,6 @@
 ---
 name: argocd
-description: GitOps continuous delivery for Kubernetes with ArgoCD. Use when creating/managing ArgoCD Applications, ApplicationSets, App of Apps patterns, Helm/Kustomize deployments, ArgoCD kustomize overrides (images/patches/labels), multi-source Helm+kustomize sidecar apps, sync configurations, RBAC/projects setup, notifications, health checks, or private repository configuration.
+description: GitOps CD for Kubernetes with ArgoCD. Use for Applications, ApplicationSets, App of Apps, Helm/Kustomize, kustomize overrides, multi-source apps, sync, RBAC/projects, health checks, or private repos.
 ---
 
 # ArgoCD
@@ -41,32 +41,33 @@ argocd login localhost:8080 --insecure
 
 ### Application Management
 - Create, sync, delete Applications → [references/applications.md](references/applications.md)
-- App of Apps pattern (directory-based, ApplicationSet) → [references/applications.md](references/applications.md)
-- Multi-source apps (Helm + kustomize sidecar) → [references/applications.md](references/applications.md)
+- App of Apps pattern, multi-source sidecar → [references/applications/app-of-apps.md](references/applications/app-of-apps.md)
 
 ### Multi-Cluster & Templating
-- ApplicationSets with generators → [references/applicationsets.md](references/applicationsets.md)
 - List, Cluster, Git, Matrix generators → [references/applicationsets.md](references/applicationsets.md)
+- Merge, Pull Request, Go templates, Progressive Syncs → [references/applicationsets/advanced.md](references/applicationsets/advanced.md)
 
 ### Manifest Tools
 - Helm charts, values, OCI registries → [references/helm.md](references/helm.md)
+- Helm options, random values, hook mapping → [references/helm/options.md](references/helm/options.md)
 - General kustomize (bases, overlays, components, replacements) → **kustomize** skill
 - ArgoCD kustomize overrides, multi-source Helm+kustomize → [references/kustomize.md](references/kustomize.md)
 
 ### Sync Configuration
-- Sync waves, hooks, phases → [references/sync-options.md](references/sync-options.md)
-- Prune, replace, server-side apply → [references/sync-options.md](references/sync-options.md)
+- Sync waves, hooks, phases, retry → [references/sync-options.md](references/sync-options.md)
+- Selective sync, skip reconciliation, namespace metadata → [references/sync-options/advanced.md](references/sync-options/advanced.md)
 
 ### Operations & Admin
-- RBAC policies, roles → [references/operations.md](references/operations.md)
-- Projects, health checks, notifications → [references/operations.md](references/operations.md)
+- AppProjects, RBAC policies, roles → [references/operations.md](references/operations.md)
+- Health checks, notifications, cluster management → [references/operations/health-notifications.md](references/operations/health-notifications.md)
 
 ### Repository Setup
-- Private repos, SSH, HTTPS, GitHub App → [references/repositories.md](references/repositories.md)
-- Credential templates, certificates → [references/repositories.md](references/repositories.md)
+- Private repos, SSH, HTTPS, GitHub App, credential templates → [references/repositories.md](references/repositories.md)
+- Helm repos, OCI registries, declarative ConfigMaps → [references/repositories/helm-repos.md](references/repositories/helm-repos.md)
 
 ### Troubleshooting
-- Common issues, FAQ → [references/troubleshooting.md](references/troubleshooting.md)
+- Sync issues, auth, CLI, resource errors → [references/troubleshooting.md](references/troubleshooting.md)
+- Cluster connectivity, Redis, performance → [references/troubleshooting/advanced.md](references/troubleshooting/advanced.md)
 
 ## Common CLI Commands
 

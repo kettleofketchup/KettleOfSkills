@@ -69,24 +69,14 @@ Idempotent: `state=on` does nothing if host already powered on (checks `leds.pow
 ## pikvm_hid Module
 
 ```yaml
-# Type text
 - pikvm_hid:
     pikvm_host: "{{ pikvm_ip }}"
     pikvm_user: admin
     pikvm_passwd: "{{ vault_pikvm_passwd }}"
     action: type            # type/shortcut/key
-    text: "Hello World"     # for action=type
+    text: "Hello World"     # for action=type; use keys: [...] for action=shortcut
     keymap: en-us
-    slow: false
     delay: 0.02
-
-# Send shortcut
-- pikvm_hid:
-    pikvm_host: "{{ pikvm_ip }}"
-    pikvm_user: admin
-    pikvm_passwd: "{{ vault_pikvm_passwd }}"
-    action: shortcut
-    keys: ["ControlLeft", "AltLeft", "Delete"]
 ```
 
 ## pikvm_info Module
@@ -141,26 +131,16 @@ class PiKVMModuleClient:
     def post(self, path, **kw): return self.request("POST", path, **kw)
 ```
 
-## Idempotency Pattern
+## Idempotency and Logging
+
+Check current state before acting; skip with `changed=False` when already desired:
 
 ```python
-def run_msd(module, client):
-    current = client.get("/api/msd")
-    desired_state = module.params["state"]
-
-    if desired_state == "present":
-        image = module.params["image"]
-        existing = current["storage"]["images"].get(image)
-        if existing and existing["complete"]:
-            module.exit_json(changed=False, msg=f"{image} already present")
-        # Upload needed
-        ...
-        module.exit_json(changed=True, msg=f"Uploaded {image}")
+current = client.get("/api/msd")
+existing = current["storage"]["images"].get(image)
+if existing and existing["complete"]:
+    module.exit_json(changed=False, msg=f"{image} already present")
+# else upload and exit_json(changed=True, ...)
 ```
 
-## Logging
-
-Ansible modules use `module.log()` and `module.warn()`. Map PiKVM operations:
-- `module.log(f"Uploading {image} to {host}")` at start
-- `module.warn(f"MSD busy on {host}, waiting...")` on 409
-- Return `msg` in exit_json for task output
+Logging: use `module.log()` for operations, `module.warn()` for retries (e.g. 409), return `msg` in `exit_json`.

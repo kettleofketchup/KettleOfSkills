@@ -90,24 +90,16 @@ def example():
 
 ## Tables
 
-**Standard markdown:**
 ```markdown
-| Header 1 | Header 2 | Header 3 |
-|----------|----------|----------|
-| Cell 1   | Cell 2   | Cell 3   |
-| Cell 4   | Cell 5   | Cell 6   |
+| Header 1 | Header 2 |    Right |
+|----------|:--------:|---------:|
+| Cell 1   |  Cell 2  |   Cell 3 |
 ```
 
-**Alignment:**
-```markdown
-| Left | Center | Right |
-|:-----|:------:|------:|
-| L    |   C    |     R |
-```
+Column alignment: `|:-----|` left, `|:---:|` center, `|---:|` right.
 
 ## Mermaid Diagrams
 
-**Flowchart:**
 ````markdown
 ```mermaid
 flowchart TD
@@ -117,64 +109,33 @@ flowchart TD
 ```
 ````
 
-**Sequence diagram:**
-````markdown
-```mermaid
-sequenceDiagram
-    Client->>Server: Request
-    Server-->>Client: Response
-```
-````
+Sequence: replace `flowchart TD` block with `sequenceDiagram` and `Client->>Server: Request` / `Server-->>Client: Response`.
 
 ## Links and References
 
-**Internal links:**
 ```markdown
 [Link text](relative/path/to/page.md)
-[Section link](page.md#section-anchor)
-```
-
-**Reference-style:**
-```markdown
-[Link text][ref-id]
+[Section link](page.md#heading-anchor)
+[ref-style][ref-id]
 
 [ref-id]: path/to/page.md "Optional title"
 ```
 
-## Images
+## Images, Lists, and Other Features
 
-**Basic:**
-```markdown
-![Alt text](path/to/image.png)
-```
+**Images:** `![Alt text](path/to/image.png)` or with attributes: `![Alt](img.png){ width="300" align="left" }`
 
-**With attributes:**
-```markdown
-![Alt text](image.png){ width="300" align="left" }
-```
-
-## Lists
-
-**Task lists:**
-```markdown
-- [x] Completed task
-- [ ] Incomplete task
-```
+**Task lists:** `- [x] Done` / `- [ ] Todo`
 
 **Definition lists:**
 ```markdown
 Term
-:   Definition of the term.
-    Can have multiple paragraphs.
+:   Definition. Can have multiple paragraphs.
 ```
 
-## Other Features
-
-```markdown
-++ctrl+alt+del++              # Keyboard keys
-==highlighted text==          # Highlighting
-~~deleted text~~              # Strikethrough
-H~2~O  E=mc^2^               # Sub/superscript
-:material-account-circle:     # Icons
-*[HTML]: Hyper Text Markup   # Abbreviations
-```
+**Other syntax:**
+- `++ctrl+alt+del++` — keyboard keys
+- `==text==` — highlighting, `~~text~~` — strikethrough
+- `H~2~O` / `E=mc^2^` — sub/superscript
+- `:material-account-circle:` — icons
+- `*[HTML]: Hyper Text Markup` — abbreviations

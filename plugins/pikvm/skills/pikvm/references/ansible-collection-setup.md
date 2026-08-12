@@ -22,45 +22,20 @@ Supported resource types: `devcontainer`, `devfile`, `execution-environment`, `p
 
 ```
 mynamespace/pikvm/
-├── galaxy.yml                       # Collection metadata (required)
-├── README.md                        # Collection readme (required, .md only)
-├── meta/
-│   └── runtime.yml                  # Version requirements, plugin routing
+├── galaxy.yml            # Collection metadata
+├── meta/runtime.yml      # Ansible version requirements
 ├── plugins/
-│   ├── modules/                     # Module plugins (flat, no subdirs)
-│   │   ├── pikvm_msd.py
-│   │   ├── pikvm_atx.py
-│   │   ├── pikvm_hid.py
-│   │   └── pikvm_info.py
-│   ├── module_utils/                # Shared Python code
-│   │   ├── __init__.py
-│   │   ├── pikvm_client.py          # HTTP client (uses open_url)
-│   │   └── pikvm_common.py          # Shared argument_spec, doc fragment ref
-│   └── doc_fragments/               # Shared documentation fragments
-│       └── pikvm_auth.py
+│   ├── modules/          # Flat dir: pikvm_msd.py, pikvm_atx.py, pikvm_hid.py, pikvm_info.py
+│   ├── module_utils/     # pikvm_client.py (open_url), pikvm_common.py
+│   └── doc_fragments/    # pikvm_auth.py
 ├── tests/
-│   ├── unit/
-│   │   └── plugins/
-│   │       ├── modules/
-│   │       │   └── test_pikvm_msd.py
-│   │       └── module_utils/
-│   │           └── test_pikvm_client.py
-│   ├── integration/
-│   │   ├── integration_config.yml   # Test vars (pikvm_host, credentials)
-│   │   └── targets/
-│   │       ├── pikvm_msd/
-│   │       │   ├── tasks/main.yml
-│   │       │   └── aliases          # e.g. "destructive\nneeds/target/setup_pikvm"
-│   │       └── pikvm_info/
-│   │           ├── tasks/main.yml
-│   │           └── aliases
-│   └── sanity/
-│       └── ignore-2.17.txt          # Sanity test exceptions
-├── changelogs/
+│   ├── unit/             # tests/unit/plugins/modules/test_pikvm_msd.py
+│   ├── integration/      # targets/{pikvm_msd,pikvm_info}/{tasks/main.yml,aliases}
+│   └── sanity/ignore-2.17.txt
 └── .ansible-lint
 ```
 
-Constraints: roles cannot contain plugins. Filter/test plugin dirs use singular names (`filter/`, `test/`).
+Constraints: roles cannot contain plugins. Filter/test dirs use singular names (`filter/`, `test/`).
 
 ## galaxy.yml
 
@@ -148,31 +123,16 @@ Profiles (least to most strict): min → basic → moderate → safety → share
 
 ## CI/CD: GitHub Actions
 
-```yaml
-name: Collection Tests
-on: [push, pull_request]
-jobs:
-  sanity:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          path: ansible_collections/mynamespace/pikvm
-      - uses: actions/setup-python@v5
-        with: { python-version: "3.11" }
-      - run: pip install ansible-core
-      - run: ansible-test sanity --local --python 3.11
-        working-directory: ansible_collections/mynamespace/pikvm
+Checkout to `ansible_collections/mynamespace/pikvm`, install `ansible-core`, run ansible-test from that directory:
 
-  units:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          path: ansible_collections/mynamespace/pikvm
-      - uses: actions/setup-python@v5
-        with: { python-version: "3.11" }
-      - run: pip install ansible-core pytest
-      - run: ansible-test units --local --python 3.11
-        working-directory: ansible_collections/mynamespace/pikvm
+```yaml
+- uses: actions/checkout@v4
+  with: { path: ansible_collections/mynamespace/pikvm }
+- uses: actions/setup-python@v5
+  with: { python-version: "3.11" }
+- run: pip install ansible-core
+- run: ansible-test sanity --local --python 3.11
+  working-directory: ansible_collections/mynamespace/pikvm
 ```
+
+Add a second job replacing `sanity` with `units --local --python 3.11` (also install `pytest`).

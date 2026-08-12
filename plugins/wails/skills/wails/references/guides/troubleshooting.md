@@ -26,15 +26,7 @@ Output includes: Go version, Wails version, platform info, WebView2/webkit2gtk s
 - Or auto-download at launch: `wails build -webview2 download` (default)
 - Windows 11 always has WebView2. Problem mostly affects Windows 10 LTSC/Server.
 
-Check installed version:
-
-```powershell
-Get-ItemProperty 'HKLM:\SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}' -Name pv
-```
-
 ## webkit2gtk Not Found (Linux)
-
-**Symptom:** Build fails with `Package webkit2gtk-4.0 was not found` or similar.
 
 **Fix for webkit2gtk-4.0 distros (Ubuntu, Debian):**
 
@@ -47,37 +39,22 @@ sudo apt install libwebkit2gtk-4.0-dev libgtk-3-dev
 ```bash
 # Arch
 sudo pacman -S webkit2gtk-4.1 gtk3
-
 # Fedora
 sudo dnf install webkit2gtk4.1-devel gtk3-devel
 ```
 
-Then build with tag:
-
-```bash
-wails build -tags webkit2_41
-wails dev -tags webkit2_41
-```
-
-Or set permanently in `wails.json`:
-
-```json
-{ "tags": "webkit2_41" }
-```
+Then build with tag: `wails build -tags webkit2_41` or set `{ "tags": "webkit2_41" }` in `wails.json`.
 
 ## Blank Screen
-
-**Symptom:** App window opens but shows white/blank screen.
 
 **Common causes:**
 
 1. **Frontend not built** - run `wails dev` not just `go run .`
 2. **Wrong embed path** - verify `//go:embed all:frontend/dist` matches actual build output dir
 3. **Frontend build error** - check `frontend/` builds independently: `cd frontend && npm run build`
-4. **Asset path mismatch** - ensure `wails.json` `frontend:build` command produces files in embedded dir
-5. **Port conflict in dev mode** - Vite dev server port already in use. Kill other processes or change port
+4. **Port conflict in dev mode** - Vite dev server port already in use
 
-Debug: open DevTools with `wails dev -devtools` or set `Debug` option:
+Debug: `wails dev -devtools` or:
 
 ```go
 Debug: options.Debug{
@@ -85,7 +62,7 @@ Debug: options.Debug{
 },
 ```
 
-6. **GPU issues on Windows** - try disabling GPU acceleration:
+5. **GPU issues on Windows** - try disabling GPU acceleration:
 
 ```go
 Windows: &windows.Options{
@@ -95,137 +72,43 @@ Windows: &windows.Options{
 
 ## Asset Loading Failures
 
-**Symptom:** 404 errors for JS/CSS/images in production build.
-
-**Causes:**
-
 1. **Missing `all:` prefix in embed directive:**
    ```go
    //go:embed all:frontend/dist    // correct - includes dotfiles
-   //go:embed frontend/dist         // wrong - misses hidden files
    ```
 
 2. **Base path mismatch** - Vite/webpack must use relative or `/` base path:
    ```js
-   // vite.config.js
-   export default { base: './' }   // or '/'
+   export default { base: './' }   // vite.config.js
    ```
 
-3. **Custom handler swallowing requests** - ensure handler returns 404 for unmatched paths so Wails serves embedded assets:
-   ```go
-   func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-       if !h.canHandle(r) {
-           w.WriteHeader(http.StatusNotFound) // let Wails handle
-           return
-       }
-       // ...
-   }
-   ```
+3. **Custom handler swallowing requests** - ensure handler returns 404 for unmatched paths.
 
 ## Build Errors
 
 ### CGo Compiler Not Found
 
-```
-# runtime/cgo
-cgo: C compiler "gcc" not found
-```
-
-Install gcc: `sudo apt install build-essential` (Linux), install Xcode CLI tools (macOS), install MinGW-w64 (Windows).
+Install gcc: `sudo apt install build-essential` (Linux), Xcode CLI tools (macOS), MinGW-w64 (Windows).
 
 ### Missing pkg-config
 
-```
-pkg-config: command not found
-```
-
 ```bash
-# Ubuntu/Debian
-sudo apt install pkg-config
-
-# macOS
-brew install pkg-config
-
-# Fedora
-sudo dnf install pkgconf-pkg-config
+sudo apt install pkg-config    # Ubuntu/Debian
+brew install pkg-config        # macOS
+sudo dnf install pkgconf-pkg-config  # Fedora
 ```
 
 ### Go Module Errors
 
 ```bash
-# Reset module cache
-go clean -modcache
-go mod tidy
+go clean -modcache && go mod tidy
 ```
 
 ### Frontend Build Failures
 
 ```bash
-# Clear node_modules and reinstall
 rm -rf frontend/node_modules frontend/package-lock.json
 cd frontend && npm install
 ```
 
-### NSIS Not Found (Windows Installer)
-
-```bash
-# Windows
-choco install nsis
-# or
-winget install NSIS.NSIS
-
-# Verify
-makensis -VERSION
-```
-
-## Transparency & Rendering Issues
-
-**Symptom:** Frontend looks different in Wails than in browser (`bun dev` / mock mode).
-
-**Root cause:** Wails uses webkit2gtk (WebKit engine), not Chromium. Different compositing, font rendering, blur implementations.
-
-**Fixes:**
-
-1. **Match `BackgroundColour` to CSS theme** -- the webview background shows behind CSS transparent areas. Mismatch causes color shifts:
-   ```go
-   BackgroundColour: &options.RGBA{R: 7, G: 0, B: 18, A: 255}, // must match CSS --background
-   ```
-
-2. **Cover the viewport with a solid CSS background** -- don't rely on the webview background. Use `fixed inset-0` with your theme color so the webview background is never visible.
-
-3. **Check GPU policy** -- software rendering (`WebviewGpuPolicyNever`) changes blur filter and animation quality. Ensure `Linux: &linux.Options{}` is set (even empty) to avoid the `Never` default.
-
-4. **Check webkit2gtk version** -- `backdrop-filter` requires >= 2.30.0:
-   ```bash
-   pkg-config --modversion webkit2gtk-4.0  # or webkit2gtk-4.1
-   ```
-
-5. **Check WebKit env vars** -- `WEBKIT_DISABLE_COMPOSITING_MODE=1` disables accelerated compositing, changing backdrop-filter behavior.
-
-See [Background Transparency guide](background-transparency.md) for detailed analysis.
-
-**Symptom:** `WindowIsTranslucent` doesn't work (window is still opaque).
-
-**Fix:** Requires a compositing window manager. On bare X11 without a compositor, the flag is silently ignored. On Wayland compositors (Sway, Hyprland), it should work. Verify with `gdk_screen_is_composited()`.
-
-**Symptom:** Resize causes black/white flashing behind webview.
-
-**Cause:** GTK window background doesn't match webview background. Fixed in Wails by PR #2853 which applies `BackgroundColour` to both the webview and the `#webview-box` GTK container. If still visible, ensure you're on Wails >= v2.6.
-
-## Dev Mode Issues
-
-**Hot reload not working:**
-- Check `frontend:dev:watcher` in `wails.json` runs framework dev server
-- Ensure `frontend:dev:serverUrl` is `"auto"` or correct URL
-- Verify Vite/webpack HMR websocket not blocked
-
-**Go changes not rebuilding:**
-- `wails dev` watches `.go` files. Ensure you're saving files
-- Check `-reloaddirs` flag if Go code is outside root
-
-```bash
-wails dev -reloaddirs "./pkg,./internal"
-```
-
-**Slow dev startup:**
-- Frontend install runs every time. Use `frontend:dev:install` to customize or set to empty string to skip
+See [Troubleshooting: Rendering & Dev Mode](troubleshooting-rendering.md) for transparency issues and hot-reload problems.

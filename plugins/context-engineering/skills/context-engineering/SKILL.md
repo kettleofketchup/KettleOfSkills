@@ -1,12 +1,6 @@
 ---
 name: context-engineering
-description: >-
-  Master context engineering for AI agent systems. Use when designing agent architectures,
-  debugging context failures, optimizing token usage, implementing memory systems,
-  building multi-agent coordination, evaluating agent performance, or developing
-  LLM-powered pipelines. Covers context fundamentals, degradation patterns, optimization
-  techniques (compaction, masking, caching), compression strategies, memory architectures,
-  multi-agent patterns, LLM-as-Judge evaluation, tool design, and project development.
+description: Context engineering for AI agent systems. Use when designing agent architectures, debugging context failures, optimizing tokens, building memory systems, multi-agent coordination, or LLM pipelines.
 version: 1.0.0
 ---
 

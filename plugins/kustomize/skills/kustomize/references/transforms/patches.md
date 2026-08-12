@@ -110,10 +110,8 @@ All fields are optional and ANDed together. Omit `name` to match all resources o
 
 ## Multi-Container Patching
 
-JSON patches target specific array indices (`containers/0`), which only affects one container. For pods with init containers, sidecars, or multiple containers:
+JSON patches target specific array indices (`containers/0`). For multiple containers, prefer strategic merge patches (merge by container `name`):
 
-### Strategic merge patch (preferred for known containers)
-Merges by container `name`, so it works regardless of array position:
 ```yaml
 patches:
   - target:
@@ -136,21 +134,7 @@ patches:
                 imagePullPolicy: Never
 ```
 
-### Multiple JSON patches (for index-based)
-```yaml
-patches:
-  - target:
-      kind: Deployment
-    patch: |-
-      - op: add
-        path: /spec/template/spec/containers/0/imagePullPolicy
-        value: Never
-      - op: add
-        path: /spec/template/spec/initContainers/0/imagePullPolicy
-        value: Never
-```
-
-### Post-processing (universal, for unknown container counts)
+For unknown container counts, post-process after build:
 ```bash
 kustomize build . | \
   yq '(.. | select(has("containers")).containers[].imagePullPolicy) = "Never"' | \

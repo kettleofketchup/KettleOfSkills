@@ -1,6 +1,6 @@
 ---
 name: documentation-reviewer
-description: Review and update MkDocs documentation when code changes. This skill should be used when completing feature implementation, after making code changes that affect user-facing functionality, when reviewing PRs for documentation completeness, or when auditing documentation coverage. Analyzes git diffs to identify documentation gaps and provides MkDocs Material formatting patterns.
+description: Review and update MkDocs docs when code changes. Use when completing features, reviewing PRs for completeness, or auditing coverage. Analyzes git diffs; provides MkDocs Material formatting patterns.
 ---
 
 # Documentation Reviewer

@@ -131,18 +131,7 @@ command:
 
 GJSON path syntax: `field.nested`, `array.#` (length), `array.0` (index), `array.#(name=="db").status` (filter).
 
-### have-key Matcher
-
-```yaml
-# Verify object has specific key (useful with gjson)
-matching:
-  check_config:
-    content:
-      gjson:
-        path: database
-        content:
-          have-key: "host"
-```
+Use `have-key` to verify an object has a specific key: `content: {have-key: "host"}`.
 
 ## Gotchas
 

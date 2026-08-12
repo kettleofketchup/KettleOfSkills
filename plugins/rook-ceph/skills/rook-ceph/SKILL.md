@@ -1,6 +1,6 @@
 ---
 name: rook-ceph
-description: Multi-node Rook Ceph deployment for Kubernetes production clusters. This skill should be used when deploying Ceph storage across multiple nodes with high availability. Covers Helm installation of Rook operator and Ceph cluster with production settings (3 mons, 2 mgrs, replication size 3, failure domains).
+description: Multi-node Rook Ceph on Kubernetes. Use when deploying Ceph storage via Helm (Rook operator, CephCluster) with HA settings: 3 mons, 2 mgrs, replication size 3, host failure domains.
 ---
 
 # Rook Ceph Multi-Node
@@ -94,6 +94,7 @@ kubectl -n rook-ceph exec -it deploy/rook-ceph-tools -- ceph pg stat
 ## References
 
 - `references/cluster-values.md` - Helm values for multi-node cluster
+- `references/cluster-values-alternatives.md` - Use-all-devices config and node labeling
 - `references/storageclass.md` - StorageClass definitions
 - `references/maintenance.md` - Maintenance and operations
 - `scripts/install.sh` - Automated install script

@@ -1,6 +1,6 @@
 ---
 name: zsh-completions
-description: Write zsh completion scripts with descriptions, colors, and dynamic completions. This skill should be used when creating _command completion files, using _arguments/_describe/_values functions, configuring ZLS_COLORS for colored completions, building subcommand trees (like git/kubectl), generating dynamic completions from external commands, understanding compinit/compdef/fpath, configuring fzf-tab previews and grouping, writing fzf.zsh preview scripts, or debugging completion issues. Output completions to ~/.config/zsh/completions/.
+description: Authors zsh _command completion files using _arguments/_describe/_values, ZLS_COLORS, compinit/compdef/fpath, and fzf-tab previews. Use for subcommand trees, dynamic completions, or debugging.
 ---
 
 # ZSH Completion Authoring
@@ -139,8 +139,12 @@ zinit light zdharma-continuum/fast-syntax-highlighting
 ## References
 
 - `references/arguments.md` - _arguments syntax and optspecs
+- `references/arguments-values.md` - _values function and file filtering
 - `references/describe.md` - _describe for dynamic lists
 - `references/colors.md` - ZLS_COLORS and styling
-- `references/compinit.md` - Completion system internals
-- `references/patterns.md` - Subcommand and complex patterns
+- `references/compinit.md` - Completion system internals (fpath, compdef, zinit)
+- `references/compinit-debug.md` - Debugging and troubleshooting
+- `references/patterns.md` - Subcommand trees and common patterns
+- `references/patterns-advanced.md` - Current word analysis and caching
 - `references/fzf-tab.md` - fzf-tab grouping, previews, fzf.zsh script
+- `references/fzf-tab-advanced.md` - Custom previews and context extraction

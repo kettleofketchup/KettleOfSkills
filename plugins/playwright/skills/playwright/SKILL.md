@@ -1,6 +1,6 @@
 ---
 name: playwright
-description: Playwright browser automation for E2E testing and web scraping. This skill should be used when writing Playwright tests, creating browser automation scripts, handling WebSockets, managing multiple browser contexts, parallelizing test execution, optimizing test speed, debugging flaky tests, working with playwright.config.ts configuration, or setting up GitHub Actions CI workflows for Playwright tests with browser caching and sharding.
+description: Playwright E2E testing and web scraping. Use for tests, automation scripts, WebSockets, multiple contexts, parallel execution, flaky test debugging, playwright.config.ts, or GitHub Actions CI.
 version: 1.1.0
 last_updated: 2026-02-01
 playwright_version: "1.50+"
@@ -66,7 +66,8 @@ When adding new UI elements, always add `data-testid` attributes for testability
 - `references/e2e/performance.md` - Speed optimization, resource blocking, wait strategies
 - `references/e2e/parallel.md` - Workers, sharding, test parallelization
 - `references/e2e/debugging.md` - Traces, flaky tests, CI artifacts
-- `references/e2e/websockets.md` - WS testing, mocking, reconnection, multi-user
+- `references/e2e/websockets.md` - WS listener setup, wait for message, collect, debug
+- `references/e2e/websockets-advanced.md` - Multi-user, mock server, reconnection, assert connected
 
 ## Web Scraping References
 

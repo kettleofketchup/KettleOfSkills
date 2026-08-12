@@ -47,7 +47,6 @@ on:
 on:
   release:
     types: [published, created]
-
   workflow_call:              # Reusable workflow
     inputs:
       config:
@@ -59,10 +58,8 @@ on:
     outputs:
       result:
         value: ${{ jobs.build.outputs.result }}
-
   repository_dispatch:        # External trigger
     types: [deploy]
-
   issue_comment:
     types: [created]
 ```
@@ -72,87 +69,48 @@ on:
 ```yaml
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true    # Cancel older runs
-
-# Per-environment concurrency
-concurrency:
-  group: deploy-${{ github.event.inputs.environment }}
-  cancel-in-progress: false   # Queue deploys
+  cancel-in-progress: true          # Cancel older runs
+# Queue deploys per environment:
+# group: deploy-${{ github.event.inputs.environment }}
+# cancel-in-progress: false
 ```
 
 ## Jobs
 
-### Basic Structure
+### Structure & Runners
 
 ```yaml
 jobs:
   build:
-    name: Build Application
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest        # or: macos-latest (10x), windows-latest (2x)
+    # runs-on: [self-hosted, linux]
+    # runs-on: { group: my-group, labels: [linux, x64] }
     timeout-minutes: 15
-
     permissions:
       contents: read
       packages: write
-
     environment:
       name: production
       url: https://example.com
-
     defaults:
       run:
         working-directory: ./app
         shell: bash
-
     env:
       NODE_ENV: production
 ```
 
-### Runners
-
 ```yaml
-runs-on: ubuntu-latest        # GitHub-hosted
-runs-on: ubuntu-22.04         # Specific version
+runs-on: ubuntu-latest        # GitHub-hosted (default)
 runs-on: macos-latest         # macOS (10x cost)
 runs-on: windows-latest       # Windows (2x cost)
 runs-on: [self-hosted, linux] # Self-hosted with labels
 runs-on:
-  group: my-runner-group      # Runner group
+  group: my-runner-group
   labels: [linux, x64]
 ```
 
-### Dependencies
-
-```yaml
-jobs:
-  build:
-    # ...
-  test:
-    needs: build
-  deploy:
-    needs: [build, test]
-    if: success()             # Only if all passed
-```
-
-### Matrix
-
-```yaml
-strategy:
-  fail-fast: false            # Don't cancel on failure
-  max-parallel: 4             # Limit concurrent jobs
-  matrix:
-    os: [ubuntu-latest, macos-latest]
-    node: [18, 20, 22]
-    include:
-      - os: ubuntu-latest
-        node: 22
-        coverage: true        # Add property to specific combo
-    exclude:
-      - os: macos-latest
-        node: 18              # Skip this combination
-```
-
-### Outputs
+### Dependencies & Outputs
 
 ```yaml
 jobs:
@@ -162,49 +120,31 @@ jobs:
     steps:
       - id: version
         run: echo "value=1.0.0" >> $GITHUB_OUTPUT
-
-  deploy:
-    needs: build
-    steps:
-      - run: echo "Deploying ${{ needs.build.outputs.version }}"
-```
-
-### Services (Containers)
-
-```yaml
-jobs:
   test:
-    runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:15
-        env:
-          POSTGRES_PASSWORD: postgres
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
-      redis:
-        image: redis:7
-        ports:
-          - 6379:6379
+    needs: build
+  deploy:
+    needs: [build, test]
+    if: success()
+    steps:
+      - run: echo "${{ needs.build.outputs.version }}"
 ```
 
-### Container Jobs
+### Matrix
 
 ```yaml
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    container:
-      image: node:20
-      env:
-        NODE_ENV: test
-      volumes:
-        - /data:/data
-      options: --cpus 2
+strategy:
+  fail-fast: false
+  max-parallel: 4
+  matrix:
+    os: [ubuntu-latest, macos-latest]
+    node: [18, 20, 22]
+    include:
+      - os: ubuntu-latest
+        node: 22
+        coverage: true  # add property to specific combo
+    exclude:
+      - os: macos-latest
+        node: 18        # skip this combination
 ```
+
+See [actions-jobs-services.md](actions-jobs-services.md) for services and container jobs.

@@ -1,41 +1,15 @@
 ---
 name: claude-code
-description: Claude Code CLI tool expert. This skill should be used when working with Claude Code features, installation, setup, authentication, slash commands, hooks, plugins, MCP server integration, IDE integration, agent skills creation, CI/CD pipeline integration, enterprise features, configuration, API usage, or troubleshooting Claude Code issues.
+description: Claude Code CLI expert for installation, setup, slash commands, hooks, plugins, MCP servers, IDE integration, agent skills, CI/CD pipelines, enterprise SSO/sandboxing, configuration, and API usage.
 ---
 
 # Claude Code Expert
 
-Claude Code is Anthropic's agentic coding tool that lives in the terminal and helps turn ideas into code faster. It combines autonomous planning, execution, and validation with extensibility through skills, plugins, MCP servers, and hooks.
-
-## When to Use This Skill
-
-Use when users need help with:
-- Understanding Claude Code features and capabilities
-- Installation, setup, and authentication
-- Using slash commands for development workflows
-- Creating or managing Agent Skills
-- Configuring MCP servers for external tool integration
-- Setting up hooks and plugins
-- Troubleshooting Claude Code issues
-- Enterprise deployment (SSO, sandboxing, monitoring)
-- IDE integration (VS Code, JetBrains)
-- CI/CD integration (GitHub Actions, GitLab)
-- Advanced features (extended thinking, caching, checkpointing)
-- Cost tracking and optimization
-
-**Activation examples:**
-- "How do I use Claude Code?"
-- "What slash commands are available?"
-- "How to set up MCP servers?"
-- "Create a new skill for X"
-- "Fix Claude Code authentication issues"
-- "Deploy Claude Code in enterprise environment"
+Claude Code is Anthropic's agentic coding tool that lives in the terminal. It combines autonomous planning, execution, and validation with extensibility through skills, plugins, MCP servers, and hooks.
 
 ## Core Architecture
 
-**Subagents**: Specialized AI agents (planner, code-reviewer, tester, debugger, docs-manager, ui-ux-designer, database-admin, etc.)
-
-**Agent Skills**: Modular capabilities with instructions, metadata, and resources that Claude uses automatically
+**Agent Skills**: Modular capabilities with instructions and resources that Claude uses automatically
 
 **Slash Commands**: User-defined operations in `.claude/commands/` that expand to prompts
 
@@ -47,59 +21,42 @@ Use when users need help with:
 
 ## Quick Reference
 
-Load these references when needed for detailed guidance:
-
 ### Getting Started
-- **Installation & Setup**: `references/getting-started.md`
-  - Prerequisites, installation methods, authentication, first run
+- **Installation, auth, first run**: `references/getting-started.md`
 
 ### Development Workflows
-- **Slash Commands**: `references/slash-commands-dev.md` and `references/slash-commands-other.md`
-  - Complete command catalog: /cook, /plan, /debug, /test, /fix:*, /docs:*, /git:*, /design:*, /content:*
-
-- **Agent Skills**: `references/agent-skills-creating.md` and `references/agent-skills-examples.md`
-  - Creating skills, skill.json format, best practices, API usage
+- **Slash Commands**: `references/slash-commands-dev.md`, `references/slash-commands-other.md`
+- **Agent Skills**: `references/agent-skills-creating.md`, `references/agent-skills-examples.md`
 
 ### Integration & Extension
-- **MCP Integration**: `references/mcp-integration.md`
-  - Configuration, common servers, remote servers
-
-- **Hooks & Plugins**: `references/hooks-and-plugins.md`
-  - Hook types, configuration, environment variables, plugin structure, installation
+- **MCP**: `references/mcp-integration.md` → `references/mcp-configuration.md`, `references/mcp-custom-servers.md`
+- **Hooks**: `references/hooks.md`
+- **Plugins**: `references/plugins.md`
 
 ### Configuration & Settings
-- **Configuration**: `references/configuration.md`
-  - Settings hierarchy, key settings, model configuration, output styles
+- **Core config**: `references/configuration-core.md`
+- **Advanced config**: `references/configuration-advanced.md`
 
 ### Enterprise & Production
-- **Enterprise Features**: `references/enterprise-features.md`
-  - IAM, SSO, RBAC, sandboxing, audit logging, deployment options, monitoring
-
-- **IDE Integration**: `references/ide-integration.md`
-  - VS Code extension, JetBrains plugin setup and features
-
-- **CI/CD Integration**: `references/cicd-integration.md`
-  - GitHub Actions, GitLab CI/CD workflow examples
+- **Enterprise IAM/Security**: `references/enterprise-iam-security.md`
+- **Enterprise Deployment/Monitoring**: `references/enterprise-deployment.md`
+- **IDE Integration**: `references/ide-vscode.md`, `references/ide-jetbrains.md`
+- **CI/CD**: `references/cicd-github.md`, `references/cicd-gitlab.md`
 
 ### Advanced Usage
-- **Advanced Features**: `references/advanced-features.md`
-  - Extended thinking, prompt caching, checkpointing, memory management
-
-- **Troubleshooting**: `references/troubleshooting.md`
-  - Common issues, authentication failures, MCP problems, performance, debug mode
-
-- **API Reference**: `references/api-reference.md`
-  - Admin API, Messages API, Files API, Models API, Skills API
-
-- **Best Practices**: `references/best-practices-organization.md` and `references/best-practices-performance.md`
-  - Project organization, security, performance, team collaboration, cost management
+- **Extended Thinking, Caching**: `references/advanced-thinking-caching.md`
+- **Checkpointing, Memory**: `references/advanced-checkpointing-memory.md`
+- **Troubleshooting auth/install**: `references/troubleshooting-auth-install.md`
+- **Troubleshooting tools/hooks**: `references/troubleshooting-tools-hooks.md`
+- **API (Admin/Models/Skills)**: `references/api-admin.md`
+- **API (Messages/Files/SDKs)**: `references/api-messages-files.md`
+- **Best Practices**: `references/best-practices-organization.md`, `references/best-practices-performance.md`
 
 ## Common Workflows
 
 ### Feature Implementation
 ```bash
 /cook implement user authentication with JWT
-# Or plan first
 /plan implement payment integration with Stripe
 ```
 
@@ -107,7 +64,7 @@ Load these references when needed for detailed guidance:
 ```bash
 /fix:fast the login button is not working
 /debug the API returns 500 errors intermittently
-/fix:types  # Fix TypeScript errors
+/fix:types
 ```
 
 ### Code Review & Testing
@@ -117,70 +74,20 @@ claude "review my latest commit"
 /fix:test the user service tests are failing
 ```
 
-### Documentation
-```bash
-/docs:init      # Create initial documentation
-/docs:update    # Update existing docs
-/docs:summarize # Summarize changes
-```
-
 ### Git Operations
 ```bash
-/git:cm                    # Stage and commit
-/git:cp                    # Stage, commit, and push
-/git:pr feature-branch main  # Create pull request
-```
-
-### Design & Content
-```bash
-/design:fast create landing page for SaaS product
-/content:good write product description for new feature
+/git:cm    # Stage and commit
+/git:cp    # Stage, commit, and push
+/git:pr feature-branch main
 ```
 
 ## Instructions for Claude
 
-When responding to Claude Code questions:
-
 1. **Identify the topic** from the user's question
-2. **Load relevant references** from the Quick Reference section above
-3. **Provide specific guidance** using information from loaded references
-4. **Include examples** when helpful
-5. **Reference documentation links** from llms.txt when appropriate
-
-**Loading references:**
-- Read reference files only when needed for the specific question
-- Multiple references can be loaded for complex queries
-- Use grep patterns if searching within references
-
-**For setup/installation questions:** Load `references/getting-started.md`
-
-**For slash command questions:** Load `references/slash-commands-dev.md` and `references/slash-commands-other.md`
-
-**For skill creation:** Load `references/agent-skills-creating.md` and `references/agent-skills-examples.md`
-
-**For MCP questions:** Load `references/mcp-integration.md`
-
-**For hooks/plugins:** Load `references/hooks-and-plugins.md`
-
-**For configuration:** Load `references/configuration.md`
-
-**For enterprise deployment:** Load `references/enterprise-features.md`
-
-**For IDE integration:** Load `references/ide-integration.md`
-
-**For CI/CD:** Load `references/cicd-integration.md`
-
-**For advanced features:** Load `references/advanced-features.md`
-
-**For troubleshooting:** Load `references/troubleshooting.md`
-
-**For API usage:** Load `references/api-reference.md`
-
-**For best practices:** Load `references/best-practices-organization.md` and `references/best-practices-performance.md`
+2. **Load relevant references** — use the Quick Reference above to find the right file
+3. **Provide specific guidance** with examples when helpful
 
 **Documentation links:**
 - Main docs: https://docs.claude.com/claude-code
 - GitHub: https://github.com/anthropics/claude-code
 - Support: support.claude.com
-
-Provide accurate, actionable guidance based on the loaded references and official documentation.

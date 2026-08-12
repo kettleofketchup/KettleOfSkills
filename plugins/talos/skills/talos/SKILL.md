@@ -96,16 +96,25 @@ See `references/troubleshooting.md` for common issues, diagnostic commands, and 
 
 | File | Topics |
 |------|--------|
-| `references/getting-started.md` | Bootstrap, quickstart, production notes, system requirements |
+| `references/getting-started.md` | Bootstrap, quickstart, system requirements, Docker cluster |
+| `references/getting-started-production.md` | HA 3-CP setup, LB options, production bootstrap |
 | `references/machine-config.md` | v1alpha1 schema, patching, apply modes, config generation |
-| `references/networking.md` | Static IP, VLAN, bond, bridge, DNS, proxy, KubeSpan, firewall |
-| `references/upgrades-maintenance.md` | Talos/K8s upgrades, etcd ops, disaster recovery, scaling |
-| `references/troubleshooting.md` | Diagnostics, common issues, talosctl commands, logging |
-| `references/storage.md` | Disk management, encryption, user volumes, Rook-Ceph, CSI |
-| `references/kubernetes-addons.md` | Cilium, Calico, MetalLB, Traefik, metrics-server, KubePrism |
+| `references/networking-interfaces.md` | Static IP, VLAN, bond, bridge, DNS, hostname, host DNS |
+| `references/networking-advanced.md` | Corporate proxy, KubeSpan, ingress firewall, multihoming |
+| `references/upgrades.md` | Talos/K8s upgrades, rollback, manual per-component upgrade |
+| `references/maintenance.md` | etcd ops, disaster recovery, scaling, machine reset |
+| `references/troubleshooting.md` | Diagnostics, common issues, talosctl commands, FAQs |
+| `references/troubleshooting-logging.md` | Service log forwarding, kernel log forwarding |
+| `references/storage-disk.md` | Disk layout, LUKS2 encryption, user volumes, local-path |
+| `references/storage-csi.md` | Rook-Ceph, CSI drivers (Longhorn, Mayastor, NFS, iSCSI) |
+| `references/kubernetes-addons-cni.md` | Cilium, Calico, Traefik Gateway API |
+| `references/kubernetes-addons-services.md` | MetalLB, Metrics Server, KubePrism, node labels/taints |
 | `references/installation-platforms.md` | Bare metal, Proxmox, KVM, VMware, Docker, air-gapped |
-| `references/security.md` | Certificates, CA rotation, SecureBoot, SELinux, image verification |
-| `references/architecture.md` | Components, control plane, controllers/resources, philosophy |
-| `references/extensions-customization.md` | Extensions, kernel modules, containerd, registry mirrors, tuning |
+| `references/security-certs.md` | Certificates, CA rotation, SELinux, image verification |
+| `references/security-secureboot.md` | Secure Boot, TPM disk encryption, PCR binding |
+| `references/architecture-core.md` | Components, control plane, controllers/resources, philosophy |
+| `references/architecture-discovery-talosctl.md` | Cluster discovery, talosctl config, endpoints/nodes |
+| `references/extensions.md` | Extensions, kernel modules, overlays, static pods, tuning |
+| `references/containerd-registry.md` | Containerd config, registry mirrors, auth, TLS, Harbor |
 
 Official docs: https://docs.siderolabs.com/talos/v1.12/

@@ -17,36 +17,26 @@ kind: OIDCClient
 metadata:
   name: grafana
 spec:
-  # Application settings
   slug: grafana
   name: Grafana
-  # OAuth2 provider settings
   clientId: grafana
   redirectUris:
     - https://grafana.{{ .Values.global.baseDomain }}/login/generic_oauth
   launchUrl: https://grafana.{{ .Values.global.baseDomain }}
   scopes: [openid, profile, email]
-  # Output: creates K8s Secret "grafana-oauth" with client_id, client_secret keys
   secretName: grafana-oauth
 ```
 
-The operator handles:
-
-1. Creating the OAuth2 provider in Authentik
-2. Creating the Application in Authentik
-3. Generating and storing credentials in a K8s Secret (`grafana-oauth`)
-4. Rotating credentials if needed
+The operator handles creating the OAuth2 provider/application in Authentik, generating credentials in a K8s Secret (`grafana-oauth`), and rotating them if needed.
 
 ### Grafana Helm Values (Operator)
 
 ```yaml
 grafana:
-  # Admin credentials from separate secret
   admin:
     existingSecret: grafana-admin
     userKey: admin-user
     passwordKey: admin-password
-  # OIDC credentials from operator-managed secret
   envFromSecrets:
     - name: grafana-oauth
       optional: true
@@ -54,7 +44,7 @@ grafana:
     server:
       root_url: https://grafana.example.com  # Edit: your Grafana URL
     auth:
-      signout_redirect_url: "https://auth.example.com/application/o/grafana/end-session/"  # Edit: your Authentik URL
+      signout_redirect_url: "https://auth.example.com/application/o/grafana/end-session/"
       oauth_auto_login: true
     auth.generic_oauth:
       enabled: true
@@ -62,14 +52,12 @@ grafana:
       client_id: "${GF_AUTH_GENERIC_OAUTH_CLIENT_ID}"
       client_secret: "${GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET}"
       scopes: openid profile email
-      auth_url: https://auth.example.com/application/o/authorize/  # Edit: your Authentik URL
+      auth_url: https://auth.example.com/application/o/authorize/
       token_url: https://auth.example.com/application/o/token/
       api_url: https://auth.example.com/application/o/userinfo/
       role_attribute_path: "contains(groups[*], 'Grafana Admins') && 'Admin' || contains(groups[*], 'Grafana Editors') && 'Editor' || 'Viewer'"
       allow_assign_grafana_admin: true
 ```
-
-The `envFromSecrets` injects the operator-managed secret as env vars. Grafana reads `${GF_AUTH_GENERIC_OAUTH_CLIENT_ID}` and `${GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET}` from the secret.
 
 ## Approach 2: Manual Blueprint
 
@@ -125,35 +113,7 @@ metadata:
 type: Opaque
 stringData:
   GF_AUTH_GENERIC_OAUTH_CLIENT_ID: "grafana"
-  GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET: "<client-secret-from-authentik>"
+  GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET: "client-secret-from-authentik"
 ```
 
-## Role Mapping Expression
-
-The `role_attribute_path` uses JMESPath:
-
-```
-contains(groups[*], 'Grafana Admins') && 'Admin' || contains(groups[*], 'Grafana Editors') && 'Editor' || 'Viewer'
-```
-
-Evaluation order: Admin first, then Editor, fallback Viewer.
-
-To also grant Grafana Server Admin to the Admins group:
-```
-contains(groups[*], 'Grafana Admins') && 'GrafanaAdmin' || contains(groups[*], 'Grafana Editors') && 'Editor' || 'Viewer'
-```
-
-Requires `allow_assign_grafana_admin: true` in `auth.generic_oauth`.
-
-## Disable Default Admin
-
-Once OIDC works, optionally disable built-in login:
-
-```yaml
-grafana:
-  grafana.ini:
-    auth:
-      disable_login_form: true
-    auth.generic_oauth:
-      oauth_auto_login: true
-```
+For role mapping expressions and disabling default admin, see [authentik-oidc-roles.md](authentik-oidc-roles.md).

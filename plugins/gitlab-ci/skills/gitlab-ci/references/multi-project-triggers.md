@@ -20,12 +20,10 @@ trigger_downstream:
   stage: deploy
   trigger:
     project: group/subgroup/project  # Full project path
-    branch: main                      # Target branch (optional, defaults to default branch)
+    branch: main                      # Target branch (optional)
 ```
 
 ### With strategy: depend
-
-Block until downstream completes. Parent job status mirrors downstream result.
 
 ```yaml
 trigger_and_wait:
@@ -34,7 +32,6 @@ trigger_and_wait:
     project: group/project
     branch: main
     strategy: depend
-  # If downstream fails, this job fails → upstream pipeline fails
 ```
 
 ### With rules
@@ -74,8 +71,6 @@ trigger_with_vars:
 
 ### Dotenv artifact variables
 
-Variables from dotenv artifacts automatically pass to downstream triggers.
-
 ```yaml
 generate_vars:
   stage: build
@@ -109,15 +104,14 @@ trigger_clean:
 Requires: GitLab 15.9+, downstream project in job token scope allowlist.
 
 ```yaml
-# In downstream .gitlab-ci.yml
 use_upstream_artifacts:
   stage: test
   script:
     - ls upstream-artifacts/
   needs:
     - project: group/upstream-project
-      job: build_job          # Job name in upstream
-      ref: main               # Branch/tag in upstream
+      job: build_job
+      ref: main
       artifacts: true
 ```
 
@@ -138,17 +132,9 @@ aggregate_job:
 
 ## Pipeline Subscriptions
 
-Auto-trigger pipeline when upstream project's tag pipeline finishes.
+Auto-trigger on upstream tag pipeline completion. Setup: Settings → CI/CD → Pipeline subscriptions.
 
-**Setup**: Settings → CI/CD → Pipeline subscriptions → Add `namespace/project`
-
-**Behavior**:
-- Triggers on tag pipeline completion (success, failure, or cancel)
-- Runs subscribing project's default branch pipeline
-- Upstream must be public (or accessible)
-- Max 2 subscriptions per project (self-managed: configurable)
-
-**Detect subscription trigger** in downstream:
+- Max 2 per project; runs subscribing project's default branch pipeline
 
 ```yaml
 from_subscription:
@@ -157,43 +143,6 @@ from_subscription:
   script: echo "Triggered by upstream subscription"
 ```
 
-## API Trigger
+## More: API Triggers and Pipeline Source Values
 
-Create trigger token: Settings → CI/CD → Pipeline trigger tokens.
-
-```yaml
-# From a CI job in another project
-trigger_via_api:
-  script:
-    - >
-      curl --request POST
-      --form "token=$TRIGGER_TOKEN"
-      --form "ref=main"
-      --form "variables[UPSTREAM_TAG]=$CI_COMMIT_TAG"
-      "https://gitlab.example.com/api/v4/projects/${PROJECT_ID}/trigger/pipeline"
-```
-
-Using `CI_JOB_TOKEN` (no trigger token needed, same GitLab instance):
-
-```yaml
-trigger_via_job_token:
-  script:
-    - >
-      curl --request POST
-      --form "token=$CI_JOB_TOKEN"
-      --form "ref=main"
-      "${CI_API_V4_URL}/projects/${DOWNSTREAM_ID}/trigger/pipeline"
-```
-
-## Detecting Pipeline Source
-
-Use `$CI_PIPELINE_SOURCE` to conditionally run jobs:
-
-| Value | Meaning |
-|-------|---------|
-| `pipeline` | Triggered by multi-project trigger or subscription |
-| `parent_pipeline` | Triggered by parent (child pipeline) |
-| `trigger` | Triggered by API trigger token |
-| `schedule` | Triggered by scheduled pipeline |
-| `web` | Triggered by "Run pipeline" button |
-| `merge_request_event` | Triggered by MR |
+See [multi-project-triggers-api.md](multi-project-triggers-api.md).

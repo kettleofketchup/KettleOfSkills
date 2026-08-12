@@ -1,6 +1,9 @@
 ---
 name: calico
-description: Calico CNI and network policy engine via Tigera Operator for Kubernetes. Use when deploying Calico with Tigera Operator Helm chart, configuring IPPools (VXLAN/IPIP/BGP encapsulation), writing Calico NetworkPolicy or GlobalNetworkPolicy resources, setting up BGP peering (BGPPeer, BGPConfiguration, route reflectors), tuning FelixConfiguration (BPF dataplane, iptables, logging, flow logs), upgrading Calico versions, enabling or disabling Calico on K3s/RKE2/Rancher clusters, configuring airgapped Calico deployments, or troubleshooting pod networking issues (node NotReady, DNS failures, cross-node connectivity, VXLAN/IPIP tunnel problems).
+description: >-
+  Calico CNI via Tigera Operator for Kubernetes. Use for IPPools,
+  NetworkPolicy/GlobalNetworkPolicy, BGP peering, FelixConfiguration/BPF,
+  K3s/RKE2/Rancher, airgap, or pod networking troubleshooting.
 last_updated: 2026-03-11
 ---
 

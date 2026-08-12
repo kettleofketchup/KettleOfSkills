@@ -75,27 +75,6 @@ gitGraph
   merge develop tag: "v1.1.0"
 ```
 
-## User Experience
-
-**Customer Onboarding:**
-```mermaid
-journey
-  title New Customer Onboarding
-  section Discovery
-    Visit website: 3: Customer
-    Browse products: 4: Customer
-  section Signup
-    Create account: 2: Customer
-    Email verification: 3: Customer, System
-  section First Purchase
-    Add to cart: 5: Customer
-    Checkout: 4: Customer
-    Payment: 3: Customer, Payment Gateway
-  section Post-purchase
-    Order confirmation: 5: Customer, System
-    First delivery: 5: Customer, Delivery
-```
-
 ## Cloud Infrastructure
 
 **AWS Architecture:**
@@ -128,15 +107,6 @@ pie showData
   "Social Media" : 15.8
   "Referral" : 8.4
   "Paid Ads" : 5.0
-```
-
-**Team Skills Assessment:**
-```mermaid
-radar-beta
-  axis Frontend, Backend, DevOps, Testing, Design
-  curve Alice{5, 3, 2, 4, 2}
-  curve Bob{3, 5, 4, 3, 1}
-  curve Carol{4, 4, 5, 5, 3}
 ```
 
 ## Best Practices

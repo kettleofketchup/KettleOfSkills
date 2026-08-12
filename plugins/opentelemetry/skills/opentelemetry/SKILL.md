@@ -1,6 +1,6 @@
 ---
 name: opentelemetry
-description: OpenTelemetry (OTEL) distributed tracing, metrics, and log correlation. Use when instrumenting Go, Python (Django, FastAPI), or Node.js (Express, NestJS) applications with tracing/spans, instrumenting HTTP handlers or database queries, deploying OTEL Collector on Kubernetes, configuring Jaeger or Tempo/Grafana backends, identifying performance slowdowns via span analysis, correlating logs with trace context, setting up metrics with exemplars, or adding OTEL to Gin/Echo/Chi/Fiber frameworks.
+description: Instruments Go, Python (Django, FastAPI), and Node.js (Express, NestJS) with OTEL tracing, metrics, and log correlation. Covers OTEL Collector, Jaeger, Tempo/Grafana, and Gin/Echo/Chi/Fiber.
 last_updated: 2026-03-08
 ---
 
@@ -21,28 +21,36 @@ App (SDK) → OTEL Collector → Backend (Jaeger / Tempo+Grafana)
 ## Task Reference
 
 ### Go Instrumentation
-- SDK setup, TracerProvider, SpanProcessor → [references/languages/go.md](references/languages/go.md)
-- Creating spans, attributes, events, status → [references/languages/go.md](references/languages/go.md)
-- HTTP/gRPC middleware, database tracing → [references/languages/go.md](references/languages/go.md)
+- SDK setup, TracerProvider, HTTP/gRPC middleware → [references/languages/go.md](references/languages/go.md)
+- Database tracing, context rules, semconv → [references/languages/go-advanced.md](references/languages/go-advanced.md)
 
 ### Trace Backends
 - Jaeger deployment, UI, query patterns → [references/backends/jaeger.md](references/backends/jaeger.md)
+- Jaeger storage backends, v2 config → [references/backends/jaeger-storage.md](references/backends/jaeger-storage.md)
 - Tempo + Grafana + TraceQL queries → [references/backends/tempo-grafana.md](references/backends/tempo-grafana.md)
+- Grafana panels, trace-to-logs, troubleshooting → [references/backends/tempo-panels.md](references/backends/tempo-panels.md)
 
 ### Observability Pillars
-- Spans, context propagation, sampling, perf analysis → [references/observability/tracing.md](references/observability/tracing.md)
-- Metrics SDK, custom metrics, exemplars → [references/observability/metrics.md](references/observability/metrics.md)
+- Spans, context propagation, sampling → [references/observability/tracing.md](references/observability/tracing.md)
+- Performance patterns, span best practices → [references/observability/tracing-patterns.md](references/observability/tracing-patterns.md)
+- Metrics SDK, custom metrics, exemplars, RED → [references/observability/metrics.md](references/observability/metrics.md)
+- Metrics views, Prometheus compatibility → [references/observability/metrics-advanced.md](references/observability/metrics-advanced.md)
 - Structured logging with trace/span IDs → [references/observability/log-correlation.md](references/observability/log-correlation.md)
+- Grafana Loki config, OTEL log pipeline → [references/observability/log-pipeline.md](references/observability/log-pipeline.md)
 
 ### Framework Instrumentation
-- Django auto/manual instrumentation, ORM tracing → [references/frameworks/django.md](references/frameworks/django.md)
-- FastAPI instrumentation, SQLAlchemy, async patterns → [references/frameworks/fastapi.md](references/frameworks/fastapi.md)
-- Go frameworks: Gin, Echo, Chi, Fiber middleware → [references/frameworks/gin.md](references/frameworks/gin.md)
-- Node.js: Express, NestJS, Fastify, Prisma → [references/frameworks/express.md](references/frameworks/express.md)
+- Django auto/manual instrumentation, ORM → [references/frameworks/django.md](references/frameworks/django.md)
+- Django Celery, DRF, common mistakes → [references/frameworks/django-advanced.md](references/frameworks/django-advanced.md)
+- FastAPI instrumentation, SQLAlchemy, async → [references/frameworks/fastapi.md](references/frameworks/fastapi.md)
+- FastAPI background tasks, common mistakes → [references/frameworks/fastapi-advanced.md](references/frameworks/fastapi-advanced.md)
+- Go frameworks: Gin middleware → [references/frameworks/gin.md](references/frameworks/gin.md)
+- Echo, Chi, Fiber, common Go patterns → [references/frameworks/gin-advanced.md](references/frameworks/gin-advanced.md)
+- Node.js: Express bootstrap, manual spans → [references/frameworks/express.md](references/frameworks/express.md)
+- NestJS, Fastify, DB tracing, common mistakes → [references/frameworks/express-advanced.md](references/frameworks/express-advanced.md)
 
 ### Collector Infrastructure
 - OTEL Collector on Kubernetes (DaemonSet/Sidecar) → [references/collector/setup.md](references/collector/setup.md)
-- Pipeline config (receivers, processors, exporters) → [references/collector/setup.md](references/collector/setup.md)
+- Processors, app config, health, troubleshooting → [references/collector/collector-advanced.md](references/collector/collector-advanced.md)
 
 ## Quick Start (Go)
 

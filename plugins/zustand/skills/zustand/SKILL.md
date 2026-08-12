@@ -1,6 +1,6 @@
 ---
 name: zustand
-description: Zustand state management for React applications. This skill should be used when creating Zustand stores, implementing TypeScript store patterns, using middleware (persist, devtools, immer, subscribeWithSelector), building slice patterns for large stores, optimizing React component re-renders with selectors, implementing async actions and data fetching, or testing Zustand stores.
+description: Zustand state management for React. Use when creating stores, TypeScript patterns, middleware (persist, devtools, immer, subscribeWithSelector), slice patterns, selector optimization, async actions, or testing Zustand stores.
 ---
 
 # Zustand State Management
@@ -50,7 +50,8 @@ For detailed patterns and advanced usage, load the appropriate reference:
 | Store patterns | `references/store-patterns.md` | Creating stores, TypeScript setup, slice pattern, combining stores |
 | Middleware | `references/middleware.md` | persist, devtools, immer, subscribeWithSelector, custom middleware |
 | React integration | `references/react-integration.md` | Selectors, avoiding re-renders, subscriptions, context usage |
-| Async & testing | `references/async-testing.md` | Async actions, data fetching, loading states, testing patterns |
+| Async actions | `references/async-actions.md` | Async actions, data fetching, loading states, optimistic updates |
+| Testing | `references/testing.md` | Store reset, action testing, RTL, mocked fetch, subscriptions |
 
 ## Quick Patterns
 
@@ -91,5 +92,5 @@ const useStore = create<Store>()(
 - **Creating a new store**: Load `store-patterns.md` for TypeScript setup and organization
 - **Adding persistence/devtools**: Load `middleware.md` for middleware configuration
 - **Performance issues**: Load `react-integration.md` for selector optimization
-- **Async data fetching**: Load `async-testing.md` for async patterns and loading states
-- **Writing tests**: Load `async-testing.md` for testing patterns
+- **Async data fetching**: Load `async-actions.md` for async patterns and loading states
+- **Writing tests**: Load `testing.md` for testing patterns

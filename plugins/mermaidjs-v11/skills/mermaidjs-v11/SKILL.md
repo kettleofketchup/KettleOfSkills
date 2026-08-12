@@ -1,6 +1,6 @@
 ---
 name: mermaidjs-v11
-description: Create diagrams and visualizations using Mermaid.js v11 syntax. Use when generating flowcharts, sequence diagrams, class diagrams, state diagrams, ER diagrams, Gantt charts, user journeys, timelines, architecture diagrams, or any of 24+ diagram types. Supports JavaScript API integration, CLI rendering to SVG/PNG/PDF, theming, configuration, and accessibility features. Essential for documentation, technical diagrams, project planning, system architecture, and visual communication.
+description: Generates Mermaid.js v11 diagrams — flowcharts, sequence, class, state, ER, Gantt, timelines, and 24+ types. Covers CLI rendering to SVG/PNG/PDF, JS API integration, theming, and accessibility.
 ---
 
 # Mermaid.js v11
@@ -26,7 +26,7 @@ Create text-based diagrams using Mermaid.js v11 declarative syntax. Convert code
 - `gantt` - Project timelines
 - `journey` - User experience flows
 
-See `references/diagram-types-core.md` and `references/diagram-types-extended.md` for all 24+ types with syntax.
+See `references/diagram-types-core.md` and `references/diagram-types-planning.md` / `references/diagram-types-technical.md` for all 24+ types.
 
 ## Creating Diagrams
 
@@ -70,7 +70,8 @@ mmdc -i input.mmd -o output.png -t dark -b transparent
 mmdc -i diagram.mmd --cssFile style.css -o output.svg
 ```
 
-See `references/cli-usage.md` for Docker, batch processing, and advanced workflows.
+See `references/cli-commands.md` for Docker, flags, and troubleshooting.
+See `references/cli-workflows.md` for config files, Node.js API, and CI/CD patterns.
 
 ## JavaScript Integration
 
@@ -84,7 +85,8 @@ See `references/cli-usage.md` for Docker, batch processing, and advanced workflo
 <script>mermaid.initialize({ startOnLoad: true });</script>
 ```
 
-See `references/integration.md` for Node.js API and advanced integration patterns.
+See `references/integration-browser.md` for React, Vue, and Markdown integration.
+See `references/integration-api.md` for API methods and advanced rendering patterns.
 
 ## Configuration & Theming
 
@@ -94,24 +96,24 @@ See `references/integration.md` for Node.js API and advanced integration pattern
 - `fontFamily`: Custom font specification
 - `securityLevel`: "strict", "loose", "antiscript"
 
-See `references/configuration.md` for complete config options, theming, and customization.
+See `references/configuration-options.md` for core options, layout, security.
+See `references/configuration-theming.md` for theme variables, icons, math, accessibility.
 
 ## Practical Patterns
 
-Load `references/examples-core.md` and `references/examples-advanced.md` for:
-- Architecture diagrams
-- API documentation flows
-- Database schemas
-- Project timelines
-- State machines
-- User journey maps
+Load `references/examples-core.md`, `references/examples-data.md`, and `references/examples-advanced.md` for real-world diagram patterns.
 
 ## Resources
 
 - `references/diagram-types-core.md` - Flowchart, sequence, class, state, ER, Gantt syntax
-- `references/diagram-types-extended.md` - Journey, kanban, C4, architecture, pie, git graph, mindmap, etc.
-- `references/configuration.md` - Config, theming, accessibility
-- `references/cli-usage.md` - CLI commands and workflows
-- `references/integration.md` - JavaScript API and embedding
-- `references/examples-core.md` - Architecture, API docs, database, state machines, OOP, CI/CD examples
-- `references/examples-advanced.md` - Planning, C4, git branching, user experience, cloud infra, data viz
+- `references/diagram-types-planning.md` - Journey, kanban, C4, architecture, pie, data viz
+- `references/diagram-types-technical.md` - Git graph, timeline, mindmap, packet, ZenUML
+- `references/configuration-options.md` - Config options, layout, security, validation
+- `references/configuration-theming.md` - Themes, theme variables, icons, math, accessibility
+- `references/cli-commands.md` - CLI install, commands, flags, Docker, troubleshooting
+- `references/cli-workflows.md` - Config files, Node.js API, CI/CD workflows
+- `references/integration-browser.md` - HTML, React, Vue, Markdown embedding
+- `references/integration-api.md` - JS API methods, events, advanced patterns
+- `references/examples-core.md` - Architecture, API docs, state machines, CI/CD
+- `references/examples-data.md` - Database schemas, OOP class diagrams, REST maps
+- `references/examples-advanced.md` - Planning, C4, git branching, infra, data viz

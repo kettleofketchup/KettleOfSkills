@@ -1,6 +1,6 @@
 ---
 name: gitlab-ci
-description: "GitLab CI/CD multi-project pipeline orchestration and cross-pipeline dependencies. This skill should be used when configuring trigger jobs to start downstream pipelines in other GitLab projects, implementing cross-pipeline gating (Repo B waits for Repo A's build), setting up tag cascade pipelines across multiple repos, creating pipeline subscriptions, passing variables between pipelines, using strategy depend for synchronous triggers, building scheduled cross-project rebuilds, MR cross-validation against dependent repos, manual orchestration buttons, or writing .gitlab-ci.yml files with multi-project trigger patterns. Covers both generic GitLab CI patterns and edge infrastructure-specific templates for multi-repo Nix flake architectures."
+description: "GitLab CI/CD multi-project orchestration and Catalog publishing. Use for trigger jobs, cross-pipeline gating, tag cascades, strategy:depend, multi-repo .gitlab-ci.yml, or Catalog components."
 ---
 
 # GitLab CI Multi-Project Pipelines
@@ -88,6 +88,26 @@ trigger_with_vars:
     project: my-group/downstream-project
 ```
 
+## Pipeline Auto-Cancel and Interruptible Jobs
+
+Cancel redundant pipelines on new commits. Set `workflow.auto_cancel.on_new_commit` (GitLab 16.10+):
+- `conservative` (default) — cancel if no `interruptible: false` jobs started
+- `interruptible` — cancel only jobs with `interruptible: true`
+- `none` — never auto-cancel
+
+```yaml
+workflow:
+  auto_cancel:
+    on_new_commit: interruptible
+
+default:
+  interruptible: true
+
+publish-binary:
+  stage: publish
+  interruptible: false  # Never cancel mid-upload
+```
+
 ## Key Constraints
 
 - Max 1000 downstream pipelines per hierarchy
@@ -98,16 +118,24 @@ trigger_with_vars:
 - Pipeline subscriptions: max 2 per project (self-managed configurable)
 - Pipeline subscriptions only trigger on tag pipeline completion
 
+## CI/CD Catalog Component Publishing
+
+See [CI/CD Catalog Publishing](references/cicd-catalog-publishing.md) for full
+patterns. Key invariants:
+
+- Publish job needs `image: registry.gitlab.com/gitlab-org/release-cli:latest`
+- Org CA trust: use temp bundle + `export SSL_CERT_FILE` (not `/etc/ssl/certs`)
+- CA variable must be Type: File; Protect OFF unless tag is protected
+- Catalog browse API may 404 on some tiers; use CI lint API to verify instead
+
 ## References
 
 Detailed patterns, templates, and architecture-specific configurations:
 
-- [Multi-Project Trigger Reference](references/multi-project-triggers.md) — all trigger
-  mechanisms, variable passing, artifact sharing, pipeline subscriptions
-- [Cross-Pipeline Gating Patterns](references/cross-pipeline-gating.md) — orchestrator
-  pattern, sequential stage triggers, tag cascade, scheduled rebuilds
-- [Edge Infrastructure Templates](references/edge-infra-patterns.md) — ready-to-use
-  templates for multi-repo Nix flake architecture with builder/os/k3s-core/services
+- [Multi-Project Trigger Reference](references/multi-project-triggers.md) — trigger mechanisms, variable passing, artifact sharing, pipeline subscriptions; [API triggers + pipeline source values](references/multi-project-triggers-api.md)
+- [Cross-Pipeline Gating Patterns](references/cross-pipeline-gating.md) — orchestrator pattern, tag cascade, API polling; [MR validation + scheduled/manual triggers](references/cross-pipeline-gating-mr.md)
+- [Edge Infrastructure Templates](references/edge-infra-patterns.md) — multi-repo Nix flake (builder/os/k3s-core/services); [MR cross-validation + scheduled rebuilds](references/edge-infra-patterns-advanced.md)
+- [CI/CD Catalog Publishing](references/cicd-catalog-publishing.md) — building + publishing reusable components, runner-fleet quirks, CA trust for release-cli, recovery
 
 ## External Docs
 

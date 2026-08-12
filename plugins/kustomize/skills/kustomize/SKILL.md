@@ -79,6 +79,7 @@ kustomize build --enable-helm .       # Enable Helm chart inflation
 
 ### Composition
 - Components, single source of truth pattern -> [references/composition/components.md](references/composition/components.md)
+- Common component patterns (airgap, labels, RBAC) -> [references/composition/components-patterns.md](references/composition/components-patterns.md)
 - ConfigMapGenerator, SecretGenerator, hash suffixes -> [references/composition/generators.md](references/composition/generators.md)
 - Helm chart inflation via helmCharts/helmGlobals -> [references/composition/helm-charts.md](references/composition/helm-charts.md)
 

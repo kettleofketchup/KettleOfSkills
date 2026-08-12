@@ -1,6 +1,6 @@
 ---
 name: docs-seeker
-description: "Searching internet for technical documentation using llms.txt standard, GitHub repositories via Repomix, and parallel exploration. Use when user needs: (1) Latest documentation for libraries/frameworks, (2) Documentation in llms.txt format, (3) GitHub repository analysis, (4) Documentation without direct llms.txt support, (5) Multiple documentation sources in parallel"
+description: "Searches technical docs via llms.txt standard, GitHub repositories via Repomix, and parallel Explorer agents. Use for library docs, llms.txt format, GitHub repo analysis, or multi-source research."
 version: 1.0.0
 ---
 
@@ -19,87 +19,40 @@ Intelligent discovery and analysis of technical documentation through multiple s
 
 ### Phase 1: Initial Discovery
 
-1. **Identify target**
-   - Extract library/framework name from user request
-   - Note version requirements (default: latest)
-   - Clarify scope if ambiguous
-   - Identify if target is GitHub repository or website
-
-2. **Search for llms.txt**
-
+1. Extract library/framework name from user request
+2. Note version requirements (default: latest)
+3. Identify if target is GitHub repository or website
+4. Search for llms.txt:
    ```
    WebSearch: "[library name] llms.txt site:[docs domain]"
    ```
-   Common patterns:
-   - `https://docs.[library].com/llms.txt`
-   - `https://[library].dev/llms.txt`
-   - `https://[library].io/llms.txt`
-
-   → Found? Proceed to Phase 2
-   → Not found? Proceed to Phase 3
+   Common patterns: `https://docs.[library].com/llms.txt`, `https://[library].dev/llms.txt`
 
 ### Phase 2: llms.txt Processing
 
-**Single URL:**
-- WebFetch to retrieve content
-- Extract and present information
-
-**Multiple URLs (3+):**
-- **CRITICAL**: Launch multiple Explorer agents in parallel
-- One agent per major documentation section (max 5 in first batch)
-- Each agent reads assigned URLs
-- Aggregate findings into consolidated report
-
-Example:
-```
-Launch 3 Explorer agents simultaneously:
-- Agent 1: getting-started.md, installation.md
-- Agent 2: api-reference.md, core-concepts.md
-- Agent 3: examples.md, best-practices.md
-```
+- **Single URL**: WebFetch to retrieve content
+- **Multiple URLs (3+)**: Launch multiple Explorer agents in parallel (max 5 per batch)
 
 ### Phase 3: Repository Analysis
 
-**When llms.txt not found:**
-
+When llms.txt not found:
 1. Find GitHub repository via WebSearch
-2. Use Repomix to pack repository:
+2. Clone and run Repomix:
    ```bash
-   npm install -g repomix  # if needed
    git clone [repo-url] /tmp/docs-analysis
-   cd /tmp/docs-analysis
-   repomix --output repomix-output.xml
+   cd /tmp/docs-analysis && repomix --output repomix-output.xml
    ```
 3. Read repomix-output.xml and extract documentation
 
-**Repomix benefits:**
-- Entire repository in single AI-friendly file
-- Preserves directory structure
-- Optimized for AI consumption
-
 ### Phase 4: Fallback Research
 
-**When no GitHub repository exists:**
-- Launch multiple Researcher agents in parallel
-- Focus areas: official docs, tutorials, API references, community guides
-- Aggregate findings into consolidated report
+When no GitHub repository: Launch multiple Researcher agents in parallel, aggregate findings.
 
 ## Agent Distribution Guidelines
 
 - **1-3 URLs**: Single Explorer agent
 - **4-10 URLs**: 3-5 Explorer agents (2-3 URLs each)
 - **11+ URLs**: 5-7 Explorer agents (prioritize most relevant)
-
-## Version Handling
-
-**Latest (default):**
-- Search without version specifier
-- Use current documentation paths
-
-**Specific version:**
-- Include version in search: `[library] v[version] llms.txt`
-- Check versioned paths: `/v[version]/llms.txt`
-- For repositories: checkout specific tag/branch
 
 ## Output Format
 
@@ -135,14 +88,6 @@ Launch 3 Explorer agents simultaneously:
 - Next.js: https://nextjs.org/llms.txt
 - Remix: https://remix.run/llms.txt
 - SvelteKit: https://kit.svelte.dev/llms.txt
-- shadcn/ui: https://ui.shadcn.com/llms.txt
-
-## Error Handling
-
-- **llms.txt not accessible** → Try alternative domains → Repository analysis
-- **Repository not found** → Search official website → Use Researcher agents
-- **Repomix fails** → Try /docs directory only → Manual exploration
-- **Multiple conflicting sources** → Prioritize official → Note versions
 
 ## Key Principles
 
@@ -152,17 +97,33 @@ Launch 3 Explorer agents simultaneously:
 4. **Report methodology** — Tell user which approach was used
 5. **Handle versions explicitly** — Don't assume latest
 
-## Detailed Documentation
-
-For comprehensive guides, examples, and best practices:
+## Reference Guides
 
 **Workflows:**
 - [WORKFLOWS.md](./WORKFLOWS.md) — Detailed workflow examples and strategies
 
-**Reference guides:**
-- [Tool Selection](./references/tool-selection.md) — Complete guide to choosing and using tools
-- [Documentation Sources](./references/documentation-sources.md) — Common sources and patterns across ecosystems
-- [Error Handling](./references/error-handling.md) — Troubleshooting and resolution strategies
-- [Best Practices](./references/best-practices.md) — 8 essential principles for effective discovery
-- [Performance](./references/performance.md) — Optimization techniques and benchmarks
-- [Limitations](./references/limitations.md) — Boundaries and success criteria
+**Tool usage:**
+- [Tool Selection](./references/tool-selection/tools-reference.md) — Tools and when to use them
+- [Decision Trees](./references/tool-selection/decision-tree.md) — Tool and agent count selection
+
+**Sources:**
+- [llms.txt & Registries](./references/documentation-sources/llms-txt-and-registries.md) — Known llms.txt URLs and package registries
+- [Hosting & Search Patterns](./references/documentation-sources/hosting-and-search-patterns.md) — Hosting platforms and search strategies
+
+**Error handling:**
+- [llms.txt & Repository Errors](./references/error-handling/llms-txt-and-repository.md) — Resolution for common failures
+- [Conflicts & Rate Limits](./references/error-handling/conflicts-and-rate-limits.md) — Conflict resolution and rate limiting
+
+**Best practices:**
+- [Discovery & Sources](./references/best-practices/discovery-and-sources.md) — llms.txt priority, version handling, source verification
+- [Parallel Agents](./references/best-practices/parallel-agents.md) — Agent parallelism and aggregation
+- [Methodology & Caching](./references/best-practices/methodology-and-caching.md) — Reporting, time management, caching
+
+**Performance:**
+- [Core Principles](./references/performance/core-principles.md) — Parallelism, batching, early termination patterns
+- [Optimization & Benchmarks](./references/performance/optimization-and-benchmarks.md) — Techniques, benchmarks, common issues
+
+**Limitations:**
+- [Access Constraints](./references/limitations/access-constraints.md) — Auth, rate limits, real-time, interactive, video
+- [Difficult Scenarios](./references/limitations/difficult-scenarios.md) — Large repos, PDFs, non-English, scattered, legacy
+- [Success Criteria](./references/limitations/success-criteria.md) — Quality metrics and performance targets

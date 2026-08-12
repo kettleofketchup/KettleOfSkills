@@ -1,6 +1,6 @@
 ---
 name: vsphere
-description: VMware vSphere infrastructure management with govc CLI and Ansible. This skill should be used when running govc commands (VM lifecycle, snapshots, datastore operations, OVA/ISO deployment, inventory navigation), writing Ansible playbooks with community.vmware or vmware.vmware collections, managing ESXi hosts via esxcli/SSH, working with vSphere REST API via curl, configuring vCenter authentication, understanding vSphere inventory hierarchy (Datacenter/Cluster/Host/VM), or automating VM provisioning and infrastructure operations.
+description: "VMware vSphere with govc and Ansible. Use for govc VM lifecycle/snapshots/datastore/OVA, community.vmware or vmware.vmware playbooks, esxcli/SSH, REST API, vCenter auth, or inventory hierarchy."
 ---
 
 # vSphere Infrastructure Management
@@ -11,10 +11,10 @@ Manage VMware vSphere and ESXi infrastructure using govc CLI for ad-hoc operatio
 
 | Task | Tool | Reference |
 |------|------|-----------|
-| Ad-hoc VM ops, scripting, CI/CD | govc | [references/govc.md](references/govc.md) |
-| Declarative provisioning, IaC | Ansible | [references/ansible-vmware.md](references/ansible-vmware.md) |
+| Ad-hoc VM ops, scripting, CI/CD | govc | [references/govc.md](references/govc.md) / [govc-advanced.md](references/govc-advanced.md) |
+| Declarative provisioning, IaC | Ansible | [references/ansible-vmware.md](references/ansible-vmware.md) / [ansible-vmware-certified.md](references/ansible-vmware-certified.md) |
 | On-host troubleshooting, patching | esxcli | [references/esxcli.md](references/esxcli.md) |
-| REST API scripting (curl) | vSphere REST API | [references/vsphere-api.md](references/vsphere-api.md) |
+| REST API scripting (curl) | vSphere REST API | [references/vsphere-api.md](references/vsphere-api.md) / [vsphere-api-advanced.md](references/vsphere-api-advanced.md) |
 
 ## vSphere Hierarchy
 

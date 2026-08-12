@@ -13,7 +13,7 @@
     },
     {
       "name": "argocd",
-      "description": "GitOps continuous delivery for Kubernetes with ArgoCD. Use when creating/managing ArgoCD Applications, ApplicationSet...",
+      "description": "GitOps CD for Kubernetes with ArgoCD. Use for Applications, ApplicationSets, App of Apps, Helm/Kustomize, kustomize o...",
       "source": "./plugins/argocd"
     },
     {
@@ -23,12 +23,12 @@
     },
     {
       "name": "calico",
-      "description": "Calico CNI and network policy engine via Tigera Operator for Kubernetes. Use when deploying Calico with Tigera Operat...",
+      "description": "Calico CNI via Tigera Operator for Kubernetes. Use for IPPools, NetworkPolicy/GlobalNetworkPolicy, BGP peering, Felix...",
       "source": "./plugins/calico"
     },
     {
       "name": "cert-manager",
-      "description": "Kubernetes certificate management debugging and configuration. This skill should be used when troubleshooting cert-ma...",
+      "description": "Kubernetes cert-manager for private CA issuers (SelfSigned, CA, Vault), Traefik IngressRoute TLS, Certificate/Certifi...",
       "source": "./plugins/cert-manager"
     },
     {
@@ -38,17 +38,17 @@
     },
     {
       "name": "claude-code",
-      "description": "Claude Code CLI tool expert. This skill should be used when working with Claude Code features, installation, setup, a...",
+      "description": "Claude Code CLI expert for installation, setup, slash commands, hooks, plugins, MCP servers, IDE integration, agent s...",
       "source": "./plugins/claude-code"
     },
     {
       "name": "cloudflare",
-      "description": "Cloudflare Tunnel (cloudflared) deployment on Kubernetes, Cloudflare Access Service Tokens for machine-to-machine aut...",
+      "description": "Comprehensive Cloudflare platform skill covering Workers, Pages, storage (KV, D1, R2), AI (Workers AI, Vectorize, Age...",
       "source": "./plugins/cloudflare"
     },
     {
       "name": "cloudnative-pg",
-      "description": "CloudNativePG (CNPG) Kubernetes operator for PostgreSQL. Use when deploying PostgreSQL clusters on Kubernetes, creati...",
+      "description": "CloudNativePG (CNPG) operator for PostgreSQL on Kubernetes. Use when deploying clusters, PgBouncer, S3/MinIO backups,...",
       "source": "./plugins/cloudnative-pg"
     },
     {
@@ -63,7 +63,7 @@
     },
     {
       "name": "context-engineering",
-      "description": "Master context engineering for AI agent systems. Use when designing agent architectures, debugging context failures, ...",
+      "description": "Context engineering for AI agent systems. Use when designing agent architectures, debugging context failures, optimiz...",
       "source": "./plugins/context-engineering"
     },
     {
@@ -78,7 +78,7 @@
     },
     {
       "name": "dicebear",
-      "description": "DiceBear avatar generation and Gravatar API integration. Use when generating procedural avatars from seeds/emails, se...",
+      "description": "DiceBear avatar generation and Gravatar API integration. Use for procedural avatars, self-hosting DiceBear on Docker/...",
       "source": "./plugins/dicebear"
     },
     {
@@ -93,12 +93,12 @@
     },
     {
       "name": "docs-seeker",
-      "description": "Searching internet for technical documentation using llms.txt standard, GitHub repositories via Repomix, and parallel...",
+      "description": "Searches technical docs via llms.txt standard, GitHub repositories via Repomix, and parallel Explorer agents. Use for...",
       "source": "./plugins/docs-seeker"
     },
     {
       "name": "documentation-reviewer",
-      "description": "Review and update MkDocs documentation when code changes. This skill should be used when completing feature implement...",
+      "description": "Review and update MkDocs docs when code changes. Use when completing features, reviewing PRs for completeness, or aud...",
       "source": "./plugins/documentation-reviewer"
     },
     {
@@ -108,17 +108,17 @@
     },
     {
       "name": "github",
-      "description": "GitHub CLI (gh) and GitHub Actions workflow development. This skill should be used when working with gh commands (PRs...",
+      "description": "GitHub CLI (gh) and Actions workflow development. Use for gh PRs, issues, releases, API, Actions triggers/jobs/steps,...",
       "source": "./plugins/github"
     },
     {
       "name": "gitlab-ci",
-      "description": "GitLab CI/CD multi-project pipeline orchestration and cross-pipeline dependencies. This skill should be used when con...",
+      "description": "GitLab CI/CD multi-project orchestration and Catalog publishing. Use for trigger jobs, cross-pipeline gating, tag cas...",
       "source": "./plugins/gitlab-ci"
     },
     {
       "name": "gitlab-tickets",
-      "description": "Create GitLab issues through conversational brainstorming. Use when user wants to capture ideas, features, bugs, or w...",
+      "description": "Create GitLab issues via conversational brainstorming. Use when capturing ideas, features, bugs, or work items as Git...",
       "source": "./plugins/gitlab-tickets"
     },
     {
@@ -128,12 +128,12 @@
     },
     {
       "name": "go-dota2-steam",
-      "description": "Go libraries for Steam and Dota 2 Game Coordinator development. This skill should be used when working with paralin/g...",
+      "description": "Go libraries for Steam and Dota 2 GC development. Use for paralin/go-steam, paralin/go-dota2, Steam bots, Dota 2 lobb...",
       "source": "./plugins/go-dota2-steam"
     },
     {
       "name": "golang-viper",
-      "description": "Go Viper configuration library (github.com/spf13/viper). Use when working with config file reading (SetConfigName, Ad...",
+      "description": "Go Viper config library (spf13/viper). Use for config files (SetConfigName, AddConfigPath), defaults, env binding (Se...",
       "source": "./plugins/golang-viper"
     },
     {
@@ -158,12 +158,12 @@
     },
     {
       "name": "just",
-      "description": "Bootstrap repos with just command runner. Use when setting up new projects, creating justfiles, adding task automatio...",
+      "description": "Bootstrap repos with just command runner. Use when writing justfiles, automating tasks, or organizing recipes into gr...",
       "source": "./plugins/just"
     },
     {
       "name": "k3s",
-      "description": "Self-hosted K3s lightweight Kubernetes distribution. This skill should be used when installing or configuring K3s clu...",
+      "description": "Self-hosted K3s Kubernetes. Use for install/config, HA etcd, disabling traefik/flannel, custom CNI (Calico/Cilium), r...",
       "source": "./plugins/k3s"
     },
     {
@@ -173,7 +173,7 @@
     },
     {
       "name": "kubectx",
-      "description": "kubectx and kubens CLI tools for switching Kubernetes contexts and namespaces. This skill should be used when switchi...",
+      "description": "kubectx and kubens for Kubernetes context/namespace switching. Use for switching contexts/namespaces, fzf selection, ...",
       "source": "./plugins/kubectx"
     },
     {
@@ -183,12 +183,12 @@
     },
     {
       "name": "litellm",
-      "description": "LiteLLM AI gateway proxy for unified LLM API access. Use when deploying LiteLLM proxy with Docker/Helm/Kubernetes, wr...",
+      "description": "LiteLLM AI gateway proxy for unified LLM API access. Use when deploying via Docker/Helm/Kubernetes, config.yaml, virt...",
       "source": "./plugins/litellm"
     },
     {
       "name": "mcp-management",
-      "description": "Manage Model Context Protocol (MCP) servers - discover, analyze, and execute tools/prompts/resources from configured ...",
+      "description": "Manage MCP servers: discover and execute tools/prompts/resources, filter by task, multi-server orchestration. Use for...",
       "source": "./plugins/mcp-management"
     },
     {
@@ -198,17 +198,17 @@
     },
     {
       "name": "mermaidjs-v11",
-      "description": "Create diagrams and visualizations using Mermaid.js v11 syntax. Use when generating flowcharts, sequence diagrams, cl...",
+      "description": "Generates Mermaid.js v11 diagrams — flowcharts, sequence, class, state, ER, Gantt, timelines, and 24+ types. Covers C...",
       "source": "./plugins/mermaidjs-v11"
     },
     {
       "name": "mkdocs-documentation",
-      "description": "MkDocs Material documentation management. This skill should be used when writing, formatting, or validating documenta...",
+      "description": "MkDocs Material documentation. Use when writing or validating docs/ content: admonitions, Mermaid, code annotations, ...",
       "source": "./plugins/mkdocs-documentation"
     },
     {
       "name": "nextcloud",
-      "description": "Use when deploying Nextcloud on Kubernetes with Helm, configuring Rook-Ceph storage, Traefik ingress, Authentik SAML ...",
+      "description": "Deploy Nextcloud on Kubernetes via Helm with PostgreSQL/Redis, Rook-Ceph storage, Traefik IngressRoute, Authentik SAM...",
       "source": "./plugins/nextcloud"
     },
     {
@@ -223,7 +223,7 @@
     },
     {
       "name": "opentelemetry",
-      "description": "OpenTelemetry (OTEL) distributed tracing, metrics, and log correlation. Use when instrumenting Go, Python (Django, Fa...",
+      "description": "Instruments Go, Python (Django, FastAPI), and Node.js (Express, NestJS) with OTEL tracing, metrics, and log correlati...",
       "source": "./plugins/opentelemetry"
     },
     {
@@ -238,7 +238,7 @@
     },
     {
       "name": "playwright",
-      "description": "Playwright browser automation for E2E testing and web scraping. This skill should be used when writing Playwright tes...",
+      "description": "Playwright E2E testing and web scraping. Use for tests, automation scripts, WebSockets, multiple contexts, parallel e...",
       "source": "./plugins/playwright"
     },
     {
@@ -248,7 +248,7 @@
     },
     {
       "name": "rook-ceph",
-      "description": "Multi-node Rook Ceph deployment for Kubernetes production clusters. This skill should be used when deploying Ceph sto...",
+      "description": "Multi-node Rook Ceph on Kubernetes. Use when deploying Ceph storage via Helm (Rook operator, CephCluster) with HA set...",
       "source": "./plugins/rook-ceph"
     },
     {
@@ -268,7 +268,7 @@
     },
     {
       "name": "svg-logo-designer",
-      "description": "Create professional SVG logos from descriptions and design specifications. Generates multiple logo variations with di...",
+      "description": "Create professional SVG logos from design specs. Use for brand identities, wordmarks, lettermarks, abstract/combinati...",
       "source": "./plugins/svg-logo-designer"
     },
     {
@@ -293,7 +293,7 @@
     },
     {
       "name": "traefik",
-      "description": "Traefik v3 reverse proxy and load balancer for Kubernetes and Docker. Use when configuring Traefik entrypoints, HTTP/...",
+      "description": "Traefik v3 reverse proxy and load balancer for Kubernetes and Docker. Covers entrypoints, IngressRoute CRDs, middlewa...",
       "source": "./plugins/traefik"
     },
     {
@@ -303,7 +303,7 @@
     },
     {
       "name": "vsphere",
-      "description": "VMware vSphere infrastructure management with govc CLI and Ansible. This skill should be used when running govc comma...",
+      "description": "VMware vSphere with govc and Ansible. Use for govc VM lifecycle/snapshots/datastore/OVA, community.vmware or vmware.v...",
       "source": "./plugins/vsphere"
     },
     {
@@ -318,7 +318,7 @@
     },
     {
       "name": "zinit-zsh",
-      "description": "Zinit zsh plugin manager configuration and binary installs. This skill should be used when adding zsh plugins, instal...",
+      "description": "Zinit zsh plugin manager for this dotfiles repo. Use for plugins, gh-r binary installs, completions, turbo/wait, ice ...",
       "source": "./plugins/zinit-zsh"
     },
     {
@@ -328,12 +328,12 @@
     },
     {
       "name": "zsh-completions",
-      "description": "Write zsh completion scripts with descriptions, colors, and dynamic completions. This skill should be used when creat...",
+      "description": "Authors zsh _command completion files using _arguments/_describe/_values, ZLS_COLORS, compinit/compdef/fpath, and fzf...",
       "source": "./plugins/zsh-completions"
     },
     {
       "name": "zustand",
-      "description": "Zustand state management for React applications. This skill should be used when creating Zustand stores, implementing...",
+      "description": "Zustand state management for React. Use when creating stores, TypeScript patterns, middleware (persist, devtools, imm...",
       "source": "./plugins/zustand"
     },
     {

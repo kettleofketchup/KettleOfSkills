@@ -1,5 +1,5 @@
 ---
-name: zod-form-validation
+name: zod
 description: Zod schema validation and React Hook Form integration for TypeScript frontends. This skill should be used when creating forms, defining API schemas, validating form data, implementing type-safe validation, using ZodResolver with React Hook Form, or migrating legacy forms to the Zod + React Hook Form pattern.
 ---
 

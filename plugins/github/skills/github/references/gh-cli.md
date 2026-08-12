@@ -79,28 +79,20 @@ gh issue close 123 --reason "not planned"
 gh issue reopen 123
 gh issue transfer 123 owner/other-repo
 gh issue pin 123
-gh issue unpin 123
 ```
 
 ## Releases
 
 ```bash
-# Create
 gh release create v1.0.0                    # Tag only
 gh release create v1.0.0 ./dist/*           # With assets
 gh release create v1.0.0 --generate-notes   # Auto release notes
-gh release create v1.0.0 --draft            # Draft release
+gh release create v1.0.0 --draft
 gh release create v1.0.0 --prerelease
-gh release create v1.0.0 --target branch-name
 gh release create v1.0.0 -t "Title" -n "Notes"
-
-# List/View
 gh release list
 gh release view v1.0.0
-gh release download v1.0.0          # Download all assets
 gh release download v1.0.0 -p "*.tar.gz"
-
-# Update
 gh release upload v1.0.0 ./new-asset.zip
 gh release edit v1.0.0 --draft=false
 gh release delete v1.0.0
@@ -124,104 +116,18 @@ gh repo delete owner/repo --yes
 ## Workflows (Actions)
 
 ```bash
-# List/View
 gh run list                       # Recent runs
 gh run list --workflow=ci.yml
-gh run list --branch main
-gh run view 123456                # Run details
 gh run view 123456 --log          # Full logs
 gh run view 123456 --log-failed   # Only failed logs
-
-# Control
 gh run watch 123456               # Watch in real-time
-gh run rerun 123456               # Rerun workflow
 gh run rerun 123456 --failed      # Rerun failed jobs only
 gh run cancel 123456
 gh run download 123456            # Download artifacts
-
-# Workflows
 gh workflow list
-gh workflow view ci.yml
-gh workflow run ci.yml            # Trigger workflow_dispatch
 gh workflow run ci.yml -f input=value
 gh workflow enable ci.yml
 gh workflow disable ci.yml
 ```
 
-## API (Advanced)
-
-```bash
-# REST API
-gh api repos/{owner}/{repo}
-gh api repos/{owner}/{repo}/issues
-gh api -X POST repos/{owner}/{repo}/issues -f title="Bug"
-gh api repos/{owner}/{repo}/actions/runs --jq '.workflow_runs[].status'
-
-# GraphQL
-gh api graphql -f query='{ viewer { login } }'
-gh api graphql -f query='
-  query($owner: String!, $repo: String!) {
-    repository(owner: $owner, name: $repo) {
-      issues(first: 10) {
-        nodes { title number }
-      }
-    }
-  }
-' -f owner='{owner}' -f repo='{repo}'
-
-# Pagination
-gh api repos/{owner}/{repo}/issues --paginate
-
-# Output formatting
-gh api repos/{owner}/{repo} --jq '.stargazers_count'
-gh api repos/{owner}/{repo} --template '{{.full_name}}'
-```
-
-## Extensions
-
-```bash
-gh extension list
-gh extension install owner/gh-extension
-gh extension upgrade --all
-gh extension remove extension-name
-gh extension search keyword
-```
-
-## Configuration
-
-```bash
-gh config set editor vim
-gh config set git_protocol ssh
-gh config set prompt disabled
-gh config get git_protocol
-gh config list
-```
-
-## Secrets
-
-```bash
-gh secret list
-gh secret set SECRET_NAME
-gh secret set SECRET_NAME < secret.txt
-gh secret set SECRET_NAME --env production
-gh secret delete SECRET_NAME
-```
-
-## Common Patterns
-
-```bash
-# Get PR number from current branch
-gh pr view --json number -q .number
-
-# List open PRs as JSON
-gh pr list --json number,title,author
-
-# Wait for checks to pass
-gh pr checks 123 --watch
-
-# Create issue from template
-gh issue create --template bug_report.md
-
-# Bulk close stale issues
-gh issue list --label stale --json number -q '.[].number' | xargs -I{} gh issue close {}
-```
+See [gh-cli-advanced.md](gh-cli-advanced.md) for API, secrets, extensions, and config.

@@ -86,29 +86,7 @@ options:
 
 ## From File
 
-Extract replacements to a file for reuse across kustomizations:
-
-```yaml
-# kustomization.yaml
-replacements:
-  - path: replacements.yaml
-```
-
-```yaml
-# replacements.yaml
-- source:
-    kind: ConfigMap
-    name: cluster-config
-    fieldPath: data.BASE_DOMAIN
-  targets:
-    - select:
-        kind: IngressRoute
-      fieldPaths:
-        - spec.routes.0.match
-      options:
-        delimiter: "`"
-        index: 1
-```
+Extract replacements to a separate file for reuse: add `- path: replacements.yaml` under `replacements:` in kustomization.yaml. The file contains the same list structure as inline replacements (without the `replacements:` key).
 
 ## Common Patterns
 

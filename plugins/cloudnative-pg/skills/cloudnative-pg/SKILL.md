@@ -1,6 +1,6 @@
 ---
 name: cloudnative-pg
-description: CloudNativePG (CNPG) Kubernetes operator for PostgreSQL. Use when deploying PostgreSQL clusters on Kubernetes, creating Cluster CRDs, configuring PgBouncer connection pooling (Pooler), setting up S3/MinIO backups with Barman Cloud Plugin, WAL archiving, scheduled backups, point-in-time recovery (PITR), declarative role management, Prometheus monitoring, failover/switchover, hibernating clusters, or troubleshooting CNPG issues. Covers single-instance homelab and HA multi-replica patterns with Rook Ceph storage.
+description: CloudNativePG (CNPG) operator for PostgreSQL on Kubernetes. Use when deploying clusters, PgBouncer, S3/MinIO backups, WAL archiving, PITR, Prometheus monitoring, failover, or troubleshooting CNPG.
 ---
 
 # CloudNativePG (CNPG)

@@ -107,32 +107,22 @@ class MyActor extends Actor {
     system.resources.health.value = Math.clamped(
       system.resources.health.value, 0, system.resources.health.max
     );
-
-    // Derive level from experience
-    system.level = Math.floor(system.experience / 1000) + 1;
   }
 }
 ```
 
 ## Data Migration
 
-Handle schema changes across versions:
-
 ```javascript
 class HeroDataModel extends foundry.abstract.TypeDataModel {
   static defineSchema() { /* ... */ }
 
   static migrateData(source) {
-    // Rename old field to new field
     if ("hp" in source) {
       source.resources ??= {};
       source.resources.health = { value: source.hp, max: source.hpMax };
       delete source.hp;
       delete source.hpMax;
-    }
-    // Convert numeric level to progress
-    if (Number.isNumeric(source.level)) {
-      source.experience = source.level * 1000;
     }
     return super.migrateData(source);
   }
@@ -141,61 +131,17 @@ class HeroDataModel extends foundry.abstract.TypeDataModel {
 
 ## Token Resource Bars
 
-Configure trackable attributes for token bars:
-
 ```javascript
 Hooks.once("init", () => {
   CONFIG.Actor.trackableAttributes = {
     hero: {
-      bar: ["resources.health", "resources.mana"],  // bar attributes (value/max)
-      value: ["level"]                                // value-only attributes
-    },
-    npc: {
-      bar: ["resources.health"],
-      value: []
+      bar: ["resources.health", "resources.mana"],
+      value: ["level"]
     }
   };
 });
 ```
 
-## Game Settings API
+## Game Settings & Module Sub-Types
 
-```javascript
-// Register (in init hook)
-game.settings.register("my-module", "difficulty", {
-  name: "MYMOD.DifficultyName",
-  hint: "MYMOD.DifficultyHint",
-  scope: "world",        // GM-only setting
-  config: true,          // Show in module settings
-  type: String,
-  choices: { easy: "Easy", normal: "Normal", hard: "Hard" },
-  default: "normal",
-  requiresReload: true   // Prompt reload on change
-});
-
-// Register client setting (per-user)
-game.settings.register("my-module", "theme", {
-  scope: "client",
-  config: true,
-  type: String,
-  default: "dark"
-});
-
-// Read/Write (in ready hook or later)
-const val = game.settings.get("my-module", "difficulty");
-await game.settings.set("my-module", "difficulty", "hard");
-```
-
-## Module-Defined Sub-Types (v11+)
-
-Modules can extend Actor/Item types without being a system:
-
-```json
-{
-  "id": "my-module",
-  "documentTypes": {
-    "Actor": { "companion": {} },
-    "JournalEntryPage": { "encounter": {} }
-  }
-}
-```
+See `references/modules/data-models-settings.md` for Game Settings API and module-defined document sub-types.

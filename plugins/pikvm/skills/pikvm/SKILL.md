@@ -53,6 +53,8 @@ See [ansible-collection-setup.md](references/ansible-collection-setup.md) for:
 See [ansible-module-best-practices.md](references/ansible-module-best-practices.md) for:
 - DOCUMENTATION, EXAMPLES, RETURN string format and fields
 - `argument_spec` keys and `AnsibleModule` constructor params
+
+See [ansible-module-implementation.md](references/ansible-module-implementation.md) for:
 - Check mode and diff mode implementation
 - Doc fragments for shared auth options (`extends_documentation_fragment`)
 - Module utils: `open_url` from `ansible.module_utils.urls` (NOT httpx/requests)
