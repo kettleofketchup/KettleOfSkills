@@ -152,6 +152,11 @@
       "source": "./plugins/helm"
     },
     {
+      "name": "humanizer",
+      "description": "Remove signs of AI-generated writing from text. Use when editing or reviewing text to make it sound more natural and ...",
+      "source": "./plugins/humanizer"
+    },
+    {
       "name": "hyprland",
       "description": "Hyprland Wayland compositor on NixOS. This skill should be used when configuring programs.hyprland, GPU rendering (In...",
       "source": "./plugins/hyprland"
