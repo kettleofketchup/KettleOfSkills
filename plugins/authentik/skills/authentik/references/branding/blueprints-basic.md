@@ -40,7 +40,9 @@ entries:
       branding_title: "My Org"
       branding_logo: "/static/dist/custom-assets/logo.svg"
       branding_favicon: "/static/dist/custom-assets/favicon.png"
-      branding_default_flow_background: "background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4c1d95 100%)"
+      # URL only — a CSS value here is wrapped in url("…") and silently ignored.
+      # Use branding_custom_css for a gradient background.
+      branding_default_flow_background: "/static/dist/custom-assets/flow-bg.jpg"
       branding_custom_css: |
         :root {
           --pf-global--primary-color--100: #6366f1;
