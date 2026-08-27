@@ -81,6 +81,11 @@ Additional airgapped considerations:
 - **Container images**: Mirror `ghcr.io/goauthentik/server` and outpost images to internal registry
 - **Helm chart**: Mirror `https://charts.goauthentik.io` to internal chart repo
 - **Outpost image base**: Set `AUTHENTIK_OUTPOSTS__CONTAINER_IMAGE_BASE` to internal registry
+- **Event map tiles** (2026.8+): the events map ships with a bundled hexworld
+  basemap and makes no outbound requests when the brand's `branding_map_tiles`
+  is empty. Leave it unset, or point it at an internal XYZ/`pmtiles://` source.
+- **Base URL** (2026.8+): set `AUTHENTIK_WEB__BASE_URL` — required from 2026.11
+  and there is no outbound lookup to fall back on
 
 ## Advanced
 

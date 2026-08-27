@@ -7,6 +7,23 @@ description: Authentik self-hosted IdP on Kubernetes. This skill should be used 
 
 Self-hosted identity provider supporting SAML, OAuth2/OIDC, LDAP, and proxy authentication. Designed for Kubernetes deployment via Helm with declarative configuration through blueprints.
 
+## Version
+
+Documented against **2026.8** (current line; releases every three months since
+2026.2). **Read [releases-2026.md](references/releases-2026.md) before writing
+blueprints or config against an older memory of authentik** — the 2026.x line
+changed several things this skill previously documented differently:
+
+| Change | Version | Impact |
+|---|---|---|
+| `meta_hide: true` replaces the `blank://blank` launch-URL hack | 2026.5 | Existing apps auto-migrate, but blueprints keep overwriting — update them |
+| `user.ak_groups` → `user.groups` | 2026.2 | Property mappings and policy expressions |
+| Unified SAML endpoint `/application/saml/<slug>/` | 2026.x | Binding-specific paths still work |
+| `AUTHENTIK_WEB__BASE_URL` | 2026.8 | Optional now, **required from 2026.11** |
+| `AUTHENTIK_POSTGRESQL__DIRECT__*` for transaction-mode poolers | 2026.8 | Proper PgBouncer support |
+| Listen default `0.0.0.0` → `[::]` | 2026.5 | IPv4-only clusters must set it back |
+| Proxy outpost rewritten Go → Rust | 2026.8 | 1-to-1 functional match; endpoints and headers unchanged |
+
 ## Quick Start
 
 ### Helm Deployment
@@ -27,7 +44,8 @@ For Helm values reference and ArgoCD app-of-apps integration, see [deployment.md
 Configure SAML providers for SSO with applications (ArgoCD, Grafana, etc.).
 - Provider settings, NameID policies, signing certificates
 - Metadata URL: `/application/saml/<slug>/metadata/`
-- ACS URL: `/application/saml/<slug>/sso/binding/post/`
+- SSO URL (2026.x unified, handles SSO + SLO on both bindings): `/application/saml/<slug>/`
+- Legacy binding-specific SSO URL (still supported): `/application/saml/<slug>/sso/binding/post/`
 - See [saml.md](references/saml.md)
 
 ### Blueprints (Declarative Config)
@@ -58,8 +76,9 @@ Protect apps behind Traefik using Authentik proxy provider outpost.
   group-revocation lag) plus a second middleware on `/auth/nginx` (401, no redirect)
   selected by `Sec-Fetch-Mode`.
 
-### Hiding Applications from the User Library
-Use `meta_launch_url: "blank://blank"` to hide a proxy-provider Application's tile from My Applications without changing its policies. The literal is `blank://blank` — `blank://` alone fails Authentik's URL validator with `Enter a valid URL`. Hide forward-auth proxies that **duplicate** an existing OIDC/SAML user-facing app; keep visible (with a real launch URL) for proxies that ARE the only user-facing entry.
+### Hiding Applications from the Application Dashboard
+Set `meta_hide: true` to hide a proxy-provider Application's tile without changing its policies (UI label: **Hide from Application Dashboard**; "My Applications" was renamed the Application Dashboard in 2026.5). Hide forward-auth proxies that **duplicate** an existing OIDC/SAML user-facing app; keep visible (with a real launch URL) for proxies that ARE the only user-facing entry.
+- **2026.5 replaced the old `meta_launch_url: "blank://blank"` sentinel.** Existing apps auto-migrate on upgrade, but a blueprint still writing `blank://blank` overwrites the migration every reconcile — update the blueprint. On pre-2026.5 the literal must be `blank://blank`; `blank://` alone fails the URL validator with `Enter a valid URL`.
 - See [hide-from-library.md](references/hide-from-library.md)
 
 ### Google Workspace SAML Login
@@ -73,15 +92,15 @@ SAML/OIDC setup for common self-hosted apps.
 - ArgoCD OIDC via Dex (recommended, supports CLI) → [integrations/argocd-oidc.md](references/integrations/argocd-oidc.md)
 - ArgoCD SAML via Dex → [integrations/argocd-saml.md](references/integrations/argocd-saml.md)
 - Grafana, Gitea, MinIO, generic SAML → [integrations.md](references/integrations.md)
-- **Critical**: SAML SSO URLs must use `/sso/binding/post/` not `/sso/binding/redirect/` (CSRF)
+- **Critical (pre-2026 / legacy paths)**: SAML SSO URLs must use `/sso/binding/post/` not `/sso/binding/redirect/` (CSRF). On 2026.x the unified `/application/saml/<slug>/` endpoint handles both bindings and sidesteps the choice.
 
 ### Configuration & Environment Variables
 All settings via `AUTHENTIK_*` env vars. Double underscore (`__`) separates nested keys.
-- Core: `SECRET_KEY`, `LOG_LEVEL`, `COOKIE_DOMAIN`
-- PostgreSQL: connection, SSL/TLS, PgBouncer (`DISABLE_SERVER_SIDE_CURSORS`), read replicas
+- Core: `SECRET_KEY`, `LOG_LEVEL`, `COOKIE_DOMAIN`, `WEB__BASE_URL` (2026.8+, required from 2026.11)
+- PostgreSQL: connection, SSL/TLS, read replicas, and `POSTGRESQL__DIRECT__*` for transaction-mode poolers (2026.8+; supersedes the `DISABLE_SERVER_SIDE_CURSORS` PgBouncer workaround). `CONN_OPTIONS` deprecated in 2026.5
 - Storage: file or S3 backend, per-category overrides (media, reports)
 - Web/Worker tuning: Gunicorn workers/threads, Dramatiq task settings
-- Listen addresses, cache timeouts, email/SMTP, outpost image base
+- Listen addresses (default `[::]` since 2026.5), cache timeouts, email/SMTP, outpost image base
 - Values support `env://` and `file://` URI syntax for indirection
 - See [configuration-core.md](references/configuration-core.md) for core, PostgreSQL, cache, email, listeners, web/worker
 - See [configuration-storage.md](references/configuration-storage.md) for storage, outposts, security, airgapped settings
@@ -92,6 +111,7 @@ Disable all outbound connections for air-gapped environments:
 - `AUTHENTIK_DISABLE_STARTUP_ANALYTICS=true` — disable startup analytics
 - `AUTHENTIK_ERROR_REPORTING__ENABLED=false` — disable Sentry
 - Avatars: set to `initials` in System > Settings (default uses Gravatar)
+- Event map: leave the brand's `branding_map_tiles` empty to use the bundled offline basemap (2026.8+)
 - GeoIP: auto-skipped if DB files missing at `/geoip/`
 - Mirror container images and Helm chart to internal registries
 - Set `AUTHENTIK_OUTPOSTS__CONTAINER_IMAGE_BASE` to internal registry
@@ -99,7 +119,8 @@ Disable all outbound connections for air-gapped environments:
 
 ### Branding & Theming
 Custom logos, colors, CSS, and per-domain visual identity via the `authentik_brands.brand` model.
-- Brand fields: title, logo, favicon, custom CSS, default flow background
+- Brand fields: title, logo, favicon, custom CSS, default flow background, `branding_map_tiles` (2026.8+)
+- Brand flow slots: authentication, invalidation, recovery, unenrollment, user settings, device code, plus `flow_user_switch` / `flow_request` (2026.8+) and `flow_lockdown` (2026.5+)
 - Logo theme variants with `%(theme)s` placeholder (light/dark)
 - Patternfly CSS variables (`--pf-global--primary-color--*`) for color schemes
 - Flow-level overrides: per-flow backgrounds and layout (stacked, content_left/right, sidebar)
@@ -113,8 +134,9 @@ Custom logos, colors, CSS, and per-domain visual identity via the `authentik_bra
 
 ### Property Mappings & Policies
 Custom attribute statements and access control.
-- SAML mappings: Python expressions with `request`, `user`, `provider` variables
+- SAML mappings: Python expressions with `request`, `user`, `provider` variables (Python 3.14 since 2026.2)
 - 7 default SAML mappings (Email, Groups, Name, UPN, User ID, Username, WindowsAccountName)
+- **`user.ak_groups` deprecated in 2026.2 — use `user.groups`** (legacy use logs a config warning)
 - Expression policies for conditional access
 - See [saml.md](references/saml.md)
 
@@ -125,10 +147,18 @@ Custom attribute statements and access control.
 | Admin UI | `/if/admin/` |
 | User UI | `/if/user/` |
 | SAML Metadata | `/application/saml/<slug>/metadata/` |
-| SAML SSO (POST) | `/application/saml/<slug>/sso/binding/post/` |
-| SAML SSO (Redirect) | `/application/saml/<slug>/sso/binding/redirect/` |
-| SAML SLO | `/application/saml/<slug>/slo/binding/[post\|redirect]/` |
-| IdP-initiated SSO | `/application/saml/<slug>/sso/binding/init/` |
+| SAML unified SSO+SLO (2026.x) | `/application/saml/<slug>/` |
+| IdP-initiated SSO (2026.x) | `/application/saml/<slug>/init/` |
+| SAML SSO (POST, legacy) | `/application/saml/<slug>/sso/binding/post/` |
+| SAML SSO (Redirect, legacy) | `/application/saml/<slug>/sso/binding/redirect/` |
+| SAML SLO (legacy) | `/application/saml/<slug>/slo/binding/[post\|redirect]/` |
+| IdP-initiated SSO (legacy) | `/application/saml/<slug>/sso/binding/init/` |
 | OAuth2 Authorize | `/application/o/authorize/` |
 | OIDC Discovery | `/application/o/<slug>/.well-known/openid-configuration` |
+| OAuth2 DCR (2026.8+) | `/application/o/register/` (see provider's `dcr_registration`) |
+| Forward auth (Traefik) | `/outpost.goauthentik.io/auth/traefik` |
+| Forward auth (nginx/XHR) | `/outpost.goauthentik.io/auth/nginx` |
 | Outpost health | `outpost:9300/metrics` |
+
+## Release Notes
+2026.x changes that affect this skill's guidance — breaking changes, new env vars, new brand/provider fields, and the OAuth2/PAM/agent-account feature surface: [releases-2026.md](references/releases-2026.md)

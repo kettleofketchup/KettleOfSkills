@@ -15,7 +15,7 @@ entries:
       name: "Welcome"
       title: "Sign in to My Org"
       designation: authentication
-      background: "/static/custom-assets/login-bg.jpg"
+      background: "/static/dist/custom-assets/login-bg.jpg"
       layout: content_left   # stacked | content_left | content_right | sidebar_left | sidebar_right
 
   - model: authentik_stages_identification.identificationstage

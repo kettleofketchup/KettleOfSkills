@@ -95,6 +95,7 @@ entries:
       signature_algorithm: http://www.w3.org/2001/04/xmldsig-more#rsa-sha256
       name_id_policy: urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress
       allow_idp_initiated: true
+      # force_authn: true   # 2026.x+: re-authenticate at Google even if a session exists
       authentication_flow: !Find [authentik_flows.flow, [slug, default-authentication-flow]]
       enrollment_flow: !Find [authentik_flows.flow, [slug, default-source-enrollment]]
 

@@ -17,8 +17,8 @@ entries:
       default: true
     attrs:
       branding_title: "My Organization"
-      branding_logo: "/static/custom-assets/logo.svg"
-      branding_favicon: "/static/custom-assets/favicon.png"
+      branding_logo: "/static/dist/custom-assets/logo.svg"
+      branding_favicon: "/static/dist/custom-assets/favicon.png"
       flow_authentication: !Find [authentik_flows.flow, [slug, default-authentication-flow]]
       flow_invalidation: !Find [authentik_flows.flow, [slug, default-invalidation-flow]]
       flow_recovery: !Find [authentik_flows.flow, [slug, default-recovery-flow]]
@@ -38,8 +38,8 @@ entries:
       default: true
     attrs:
       branding_title: "My Org"
-      branding_logo: "/static/custom-assets/logo.svg"
-      branding_favicon: "/static/custom-assets/favicon.png"
+      branding_logo: "/static/dist/custom-assets/logo.svg"
+      branding_favicon: "/static/dist/custom-assets/favicon.png"
       branding_default_flow_background: "background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4c1d95 100%)"
       branding_custom_css: |
         :root {
@@ -75,8 +75,8 @@ entries:
       default: true
     attrs:
       # %(theme)s resolves to "light" or "dark"
-      branding_logo: "/static/custom-assets/logo_%(theme)s.svg"
-      branding_favicon: "/static/custom-assets/favicon.png"
+      branding_logo: "/static/dist/custom-assets/logo_%(theme)s.svg"
+      branding_favicon: "/static/dist/custom-assets/favicon.png"
       branding_title: "My Org"
       flow_authentication: !Find [authentik_flows.flow, [slug, default-authentication-flow]]
       flow_invalidation: !Find [authentik_flows.flow, [slug, default-invalidation-flow]]
@@ -99,8 +99,8 @@ entries:
       default: true
     attrs:
       branding_title: "Staff Portal"
-      branding_logo: "/static/custom-assets/internal-logo.svg"
-      branding_favicon: "/static/custom-assets/internal-favicon.png"
+      branding_logo: "/static/dist/custom-assets/internal-logo.svg"
+      branding_favicon: "/static/dist/custom-assets/internal-favicon.png"
       branding_custom_css: |
         :root { --pf-global--primary-color--100: #2563eb; }
       flow_authentication: !Find [authentik_flows.flow, [slug, default-authentication-flow]]
@@ -113,9 +113,9 @@ entries:
       domain: "login.product.com"
     attrs:
       branding_title: "Product Login"
-      branding_logo: "/static/custom-assets/product-logo.svg"
-      branding_favicon: "/static/custom-assets/product-favicon.png"
-      branding_default_flow_background: "/static/custom-assets/product-bg.jpg"
+      branding_logo: "/static/dist/custom-assets/product-logo.svg"
+      branding_favicon: "/static/dist/custom-assets/product-favicon.png"
+      branding_default_flow_background: "/static/dist/custom-assets/product-bg.jpg"
       branding_custom_css: |
         :root { --pf-global--primary-color--100: #059669; }
         .pf-c-login__footer-band { display: none; }

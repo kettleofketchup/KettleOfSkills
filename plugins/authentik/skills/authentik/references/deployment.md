@@ -2,17 +2,17 @@
 
 ## Helm Chart
 
-```
-Repo: https://charts.goauthentik.io
-Chart: authentik/authentik
-ArtifactHub: https://artifacthub.io/packages/helm/goauthentik/authentik
-```
+- Repo: `https://charts.goauthentik.io`
+- Chart: `authentik/authentik`
+- [ArtifactHub](https://artifacthub.io/packages/helm/goauthentik/authentik)
 
 ## Minimal Values
 
 ```yaml
 authentik:
   secret_key: "<generate-with-openssl-rand-base64-32>"
+  web:
+    base_url: "https://auth.example.com"   # AUTHENTIK_WEB__BASE_URL
   postgresql:
     password: "<secure-password>"
 
@@ -31,14 +31,13 @@ redis:
 
 **Generate secret key:** `openssl rand -base64 32`
 
+`web.base_url` is optional in 2026.8 and **required from 2026.11** — set it now.
+
 ## Production Values (Traefik + ArgoCD)
 
-```yaml
-authentik:
-  secret_key: "<secret>"
-  postgresql:
-    password: "<password>"
+Deltas from the minimal values above:
 
+```yaml
 server:
   replicas: 1
   metrics:
@@ -48,16 +47,12 @@ worker:
   replicas: 1
 
 postgresql:
-  enabled: true
-  auth:
-    password: "<password>"
   primary:
     persistence:
       enabled: true
       size: 8Gi
 
 redis:
-  enabled: true
   master:
     persistence:
       enabled: true
@@ -85,7 +80,7 @@ spec:
   sources:
     - repoURL: https://charts.goauthentik.io
       chart: authentik
-      targetRevision: "2025.*"
+      targetRevision: "2026.*"
       helm:
         valueFiles:
           - $values/apps/authentik/values.yaml
@@ -123,6 +118,22 @@ spec:
           port: 80
 ```
 
+## Upgrading
+
+```bash
+helm repo update
+helm upgrade authentik authentik/authentik -f values.yaml --version ^2026.8
+```
+
+- **Outpost versions must match the server version.** Upgrade standalone
+  outposts at the same time; embedded outposts follow the server automatically.
+- **Do not skip release lines** — 2026.8 lifecycle tooling blocks unsupported
+  skips. Step through `2026.2 → 2026.5 → 2026.8`. Cadence is three months.
+
+For the 2026.x breaking changes affecting blueprints and config (`meta_hide`,
+`user.groups`, listen defaults, `CONN_OPTIONS`, `hash_password`), see
+[releases-2026.md](releases-2026.md).
+
 ## Post-Install
 
 1. Navigate to `https://auth.example.com/if/flow/initial-setup/`
@@ -131,4 +142,7 @@ spec:
 
 ## Environment Variables
 
-For the complete environment variable reference (PostgreSQL, Redis, email, storage, web/worker tuning, cache, listen addresses, airgapped settings), see [configuration.md](configuration.md).
+Full environment variable reference:
+[configuration-core.md](configuration-core.md) (core, PostgreSQL, cache, email,
+listen, web/worker) and [configuration-storage.md](configuration-storage.md)
+(storage, outposts, security, airgapped).

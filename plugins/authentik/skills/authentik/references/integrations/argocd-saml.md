@@ -7,6 +7,9 @@ For the recommended OIDC approach, see [argocd-oidc.md](argocd-oidc.md).
 
 Authentik's redirect binding (`/sso/binding/redirect/`) is NOT `@csrf_exempt`.
 The POST binding (`/sso/binding/post/`) IS. **Always use POST binding**:
+
+(On 2026.x the unified endpoint `/application/saml/argocd/` also works and
+accepts either binding. The POST path below remains supported.)
 ```
 ssoURL: https://auth.example.com/application/saml/argocd/sso/binding/post/
 ```

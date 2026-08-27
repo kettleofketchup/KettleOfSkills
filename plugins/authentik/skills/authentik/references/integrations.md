@@ -4,7 +4,8 @@ Per-app integration guides in `references/integrations/`:
 
 | App | Auth Type | File |
 |-----|-----------|------|
-| ArgoCD | SAML via Dex | [integrations/argocd.md](integrations/argocd.md) |
+| ArgoCD | OIDC via Dex (recommended) | [integrations/argocd-oidc.md](integrations/argocd-oidc.md) |
+| ArgoCD | SAML via Dex | [integrations/argocd-saml.md](integrations/argocd-saml.md) |
 | Grafana | OAuth2/OIDC | Below |
 | Gitea | OAuth2/OIDC | Below |
 | MinIO | OpenID Connect | Below |
@@ -94,6 +95,11 @@ MINIO_IDENTITY_OPENID_CLAIM_NAME=policy
 - IdP Entity ID: `https://auth.example.com`
 
 **Always use `/sso/binding/post/`** — the redirect binding is NOT csrf_exempt.
+
+On 2026.x you can instead point the SP at the unified endpoint
+`https://auth.example.com/application/saml/<slug>/`, which accepts both bindings
+and is csrf_exempt. The binding-specific paths above remain supported, so
+existing SP configs need no change.
 
 ### Blueprint Pattern
 ```yaml

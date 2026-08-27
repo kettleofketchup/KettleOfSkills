@@ -13,6 +13,8 @@ Docs: https://docs.goauthentik.io/install-config/configuration
 | `AUTHENTIK_LOG_LEVEL` | `info` | `debug`, `info`, `warning`, `error`, `trace`. Trace includes sensitive data |
 | `AUTHENTIK_COOKIE_DOMAIN` | auto | Session cookie domain |
 | `AUTHENTIK_SKIP_MIGRATIONS` | `false` | Skip DB migrations on startup (not recommended) |
+| `AUTHENTIK_WEB__BASE_URL` | - | External scheme+host, e.g. `https://authentik.company`. **New in 2026.8, required from 2026.11.** Also settable as `base_url` in **System > Settings** or via the API |
+| `AUTHENTIK_BOOTSTRAP_PASSWORD_HASH` | - | Seed `akadmin` with a pre-hashed Django password (2026.5+). Use instead of `AUTHENTIK_BOOTSTRAP_PASSWORD` to keep plaintext out of the environment |
 
 ## PostgreSQL
 
@@ -31,11 +33,39 @@ Docs: https://docs.goauthentik.io/install-config/configuration
 | `AUTHENTIK_POSTGRESQL__CONN_HEALTH_CHECKS` | `false` | Enable persistent connection health checks |
 | `AUTHENTIK_POSTGRESQL__DISABLE_SERVER_SIDE_CURSORS` | `false` | **Set `true` for PgBouncer transaction mode** |
 | `AUTHENTIK_POSTGRESQL__DEFAULT_SCHEMA` | `public` | DB schema (cannot change after init) |
+| `AUTHENTIK_POSTGRESQL__CONN_OPTIONS` | - | **Deprecated in 2026.5**, slated for removal |
+
+### Transaction-Mode Pooler + Direct Connection (2026.8+)
+
+Before 2026.8, PgBouncer in transaction mode needed
+`DISABLE_SERVER_SIDE_CURSORS=true` and still broke on LISTEN/NOTIFY and advisory
+locks. 2026.8 splits the two needs: the primary `AUTHENTIK_POSTGRESQL__*`
+settings carry normal traffic and may point at a transaction-mode pooler, while
+`AUTHENTIK_POSTGRESQL__DIRECT__*` points at a direct or session-pooled endpoint
+used for operations that require a stable session.
+
+| Variable | Description |
+|----------|-------------|
+| `AUTHENTIK_POSTGRESQL__DIRECT__HOST` | Direct/session-pooled hostname |
+| `AUTHENTIK_POSTGRESQL__DIRECT__PORT` | Direct port |
+| `AUTHENTIK_POSTGRESQL__DIRECT__NAME` | Database name |
+| `AUTHENTIK_POSTGRESQL__DIRECT__USER` | DB user |
+| `AUTHENTIK_POSTGRESQL__DIRECT__PASSWORD` | DB password |
+| `AUTHENTIK_POSTGRESQL__DIRECT__SSLMODE` | SSL mode |
+| `AUTHENTIK_POSTGRESQL__DIRECT__SSLROOTCERT` | CA certificate path |
+| `AUTHENTIK_POSTGRESQL__DIRECT__SSLCERT` | Client SSL certificate |
+| `AUTHENTIK_POSTGRESQL__DIRECT__SSLKEY` | Client certificate key |
+
+Unset `DIRECT` settings fall back to the primary connection, so deployments
+without a pooler need no change.
 
 ### Read Replicas
 
 Indexed via `AUTHENTIK_POSTGRESQL__READ_REPLICAS__<index>__<setting>`.
-Each replica accepts: `HOST`, `PORT`, `NAME`, `USER`, `PASSWORD`, `SSLMODE`, `SSLROOTCERT`, `SSLCERT`, `SSLKEY`, `CONN_MAX_AGE`, `CONN_HEALTH_CHECKS`, `DISABLE_SERVER_SIDE_CURSORS`, `CONN_OPTIONS`.
+Each replica accepts: `HOST`, `PORT`, `NAME`, `USER`, `PASSWORD`, `SSLMODE`, `SSLROOTCERT`, `SSLCERT`, `SSLKEY`, `CONN_MAX_AGE`, `CONN_HEALTH_CHECKS`, `DISABLE_SERVER_SIDE_CURSORS`.
+
+`AUTHENTIK_POSTGRESQL__REPLICA_CONN_OPTIONS` and the per-replica `CONN_OPTIONS`
+are **deprecated as of 2026.5**.
 
 ## Cache
 
@@ -62,14 +92,18 @@ Each replica accepts: `HOST`, `PORT`, `NAME`, `USER`, `PASSWORD`, `SSLMODE`, `SS
 
 | Variable | Default | Applies to |
 |----------|---------|------------|
-| `AUTHENTIK_LISTEN__HTTP` | `0.0.0.0:9000` | Server, Worker, Proxy outposts |
-| `AUTHENTIK_LISTEN__HTTPS` | `0.0.0.0:9443` | Server, Proxy outposts |
-| `AUTHENTIK_LISTEN__LDAP` | `0.0.0.0:3389` | LDAP outposts |
-| `AUTHENTIK_LISTEN__LDAPS` | `0.0.0.0:6636` | LDAP outposts |
-| `AUTHENTIK_LISTEN__METRICS` | `0.0.0.0:9300` | Prometheus metrics |
-| `AUTHENTIK_LISTEN__DEBUG` | `0.0.0.0:9900` | Go debug |
-| `AUTHENTIK_LISTEN__DEBUG_PY` | `0.0.0.0:9901` | Python debug |
+| `AUTHENTIK_LISTEN__HTTP` | `[::]:9000` | Server, Worker, Proxy outposts |
+| `AUTHENTIK_LISTEN__HTTPS` | `[::]:9443` | Server, Proxy outposts |
+| `AUTHENTIK_LISTEN__LDAP` | `[::]:3389` | LDAP outposts |
+| `AUTHENTIK_LISTEN__LDAPS` | `[::]:6636` | LDAP outposts |
+| `AUTHENTIK_LISTEN__METRICS` | `[::]:9300` | Prometheus metrics |
+| `AUTHENTIK_LISTEN__DEBUG` | `[::]:9900` | Server/outpost debug (Go pre-2026.8, Rust after) |
+| `AUTHENTIK_LISTEN__DEBUG_PY` | `[::]:9901` | Python debug |
 | `AUTHENTIK_LISTEN__TRUSTED_PROXY_CIDRS` | RFC1918+loopback | Comma-separated CIDRs for proxy headers |
+
+**Breaking change in 2026.5:** the listen default moved from `0.0.0.0` to `[::]`
+(dual-stack). IPv4-only environments that can't bind IPv6 must set the values
+back explicitly, e.g. `AUTHENTIK_LISTEN__HTTP=0.0.0.0:9000`.
 
 ## Web Server (Gunicorn)
 

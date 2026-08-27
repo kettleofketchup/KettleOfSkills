@@ -1,6 +1,6 @@
 # Brand Model Reference
 
-Brands control per-domain visual identity and flow routing. Model: `authentik_brands.brand` (renamed from `authentik_tenants.tenant` in 2024.2+).
+Per-domain visual identity and flow routing. Model: `authentik_brands.brand` (renamed from `authentik_tenants.tenant` in 2024.2+).
 
 ## Brand Fields
 
@@ -13,7 +13,11 @@ Brands control per-domain visual identity and flow routing. Model: `authentik_br
 | `branding_favicon` | file/URL | Browser tab icon |
 | `branding_custom_css` | text | Custom CSS injected into all pages (including ShadowDOM since 2025.4) |
 | `branding_default_flow_background` | file/URL | Default background image for flow executor |
+| `branding_map_tiles` | text | Events-map vector tiles (2026.8+): XYZ template with `{z}`/`{x}`/`{y}`, or `pmtiles://` URL. Empty = bundled offline basemap. **Served to unauthenticated clients — no API keys** |
 | `flow_authentication` | FK→flow | Authentication flow for this brand |
+| `flow_user_switch` | FK→flow | Flow for switching between signed-in accounts (2026.8+) |
+| `flow_request` | FK→flow | Flow for access requests / PAM (2026.8+) |
+| `flow_lockdown` | FK→flow | Flow used by account lockdown (2026.5+) |
 | `flow_invalidation` | FK→flow | Logout/session invalidation flow |
 | `flow_recovery` | FK→flow | Password recovery flow |
 | `flow_unenrollment` | FK→flow | Account removal flow |
@@ -34,7 +38,7 @@ attributes:
     locale: en           # Language code
     default_user_display: username  # username | name | email
     layout:
-      type: row          # row | 2-column | 3-column (My Applications page)
+      type: row          # row | 2-column | 3-column (Application Dashboard)
     search: true         # Show search bar
     sidebar:
       api_drawer: true   # API Drawer toggle
@@ -48,16 +52,17 @@ attributes:
 - **Format**: SVG preferred (scalable, supports theme variants)
 - **Logo aspect ratio**: ~7:1 for wordmarks, 1:1 for icon-only
 - **Favicon**: Square, 32x32 or 48x48 recommended
-- Remove fixed `width`/`height` from SVGs; use `viewBox` for responsive scaling
-- Trim excess whitespace from SVG `viewBox`
-- **Theme variants**: Use `%(theme)s` in path — resolves to `light` or `dark`
-  - Example: `/static/dist/assets/icons/icon_%(theme)s.svg`
-  - Provide both `icon_light.svg` and `icon_dark.svg`
+- Remove fixed `width`/`height` from SVGs and trim excess `viewBox` whitespace
+- **Theme variants**: `%(theme)s` in the path resolves to `light`/`dark` — e.g.
+  `/static/dist/assets/icons/icon_%(theme)s.svg`; provide both files
 
 ## Serving Custom Assets
 
 ### Via Media Storage
-Upload through Admin UI (System > Brands > edit). Files stored in media directory.
+Upload through Admin UI (System > Brands > edit). On the default `file` backend the media
+dir is per-pod and ephemeral, so a multi-replica deploy needs an RWX volume or the S3
+backend first — otherwise the upload hits one pod and is lost on restart. Imperative
+state, too: no blueprint can reproduce it.
 
 ### Via Static Files (Kubernetes)
 Mount custom assets into the server pod:
@@ -74,28 +79,28 @@ server:
       readOnly: true
 ```
 
-Reference in brand: `/static/custom-assets/logo.svg`
+Reference in brand: `/static/dist/custom-assets/logo.svg`
+
+**The `dist` segment is required** — `/static/custom-assets/...` 404s (verified 2026.5.5),
+failing silently as a broken image. `/static/dist/` maps to `/web/dist/` and is a plain
+directory server, not a staticfiles manifest, so any file under the mount is served with no
+collectstatic step. Mount a NEW subdir: a ConfigMap volume replaces the directory it lands
+on, so `/web/dist/assets/images` would hide authentik's own stock images.
 
 ### Via External URL
-Point `branding_logo` and `branding_favicon` to external URLs (CDN, S3, etc.).
+Point `branding_logo`/`branding_favicon` at a CDN or S3 URL. Weigh this carefully: it makes
+the login page depend on an external host at render time.
 
 ## Flow Background Customization
 
 Background set at brand level; per-flow overrides possible via `authentik_flows.flow` `background` field.
 
-### Background as CSS value
-The background field accepts CSS values directly:
+### Background as CSS value or image URL
+The field takes either a CSS value or a path:
 ```yaml
-# Solid color
 branding_default_flow_background: "background-color: #1a1a2e"
-
-# Gradient
 branding_default_flow_background: "background: linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
-```
-
-### Background as image URL
-```yaml
-branding_default_flow_background: "/static/custom-assets/bg.jpg"
+branding_default_flow_background: "/static/dist/custom-assets/bg.jpg"
 ```
 
 ### Per-Flow Override
@@ -104,7 +109,7 @@ branding_default_flow_background: "/static/custom-assets/bg.jpg"
   identifiers:
     slug: my-login-flow
   attrs:
-    background: "/static/custom-assets/login-bg.jpg"
+    background: "/static/dist/custom-assets/login-bg.jpg"
 ```
 
 ## Flow Layout Options

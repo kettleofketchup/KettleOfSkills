@@ -104,7 +104,7 @@ Exported blueprints use hardcoded PKs, no tags. Clean up by replacing PKs with `
 
 ## Examples
 
-See [blueprints-examples.md](blueprints-examples.md) for complete working examples:
+See [blueprints-examples-auth.md](blueprints-examples-auth.md) and [blueprints-examples-proxy.md](blueprints-examples-proxy.md) for complete working examples:
 - Authentication flow with stage bindings
 - SAML provider + application + group policy
 - OAuth2/OIDC provider (ArgoCD)
