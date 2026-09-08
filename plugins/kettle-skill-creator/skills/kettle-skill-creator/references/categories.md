@@ -19,6 +19,7 @@ Every skill is automatically added to `all` -- never list `all` in config.yaml.
 | `shell` | Shell tooling | zinit-zsh, zsh-completions |
 | `discord` | Discord bot development | discord |
 | `linux` | Linux desktop (Wayland compositors, NixOS desktop) | hyprland, sway |
+| `machining` | Manufacturing and CAD data management (PDM/PLM) | autodesk-vault-api |
 
 ## config.yaml Format
 

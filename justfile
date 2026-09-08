@@ -26,6 +26,7 @@ sync-groups:
         [shell]="Shell tooling — zinit-zsh, zsh-completions"
         [discord]="Discord bot development"
         [linux]="Linux desktop — hyprland, sway"
+        [machining]="Manufacturing and CAD data management — Autodesk Vault, PDM/PLM APIs"
     )
 
     valid_groups=("${!group_descriptions[@]}")
@@ -126,9 +127,10 @@ sync-marketplace:
         [shell]="Shell tooling — zinit-zsh, zsh-completions"
         [discord]="Discord bot development"
         [linux]="Linux desktop — hyprland, sway"
+        [machining]="Manufacturing and CAD data management — Autodesk Vault, PDM/PLM APIs"
     )
 
-    GROUPS_CSV="all,k8s-core,k8s-storage,k8s-apps,homelab,devops,frontend,golang,cli,tui,docs,claude-tooling,shell,discord,linux"
+    GROUPS_CSV="all,k8s-core,k8s-storage,k8s-apps,homelab,devops,frontend,golang,cli,tui,docs,claude-tooling,shell,discord,linux,machining"
 
     entries_file="$(mktemp)"
     trap 'rm -f "$entries_file"' EXIT

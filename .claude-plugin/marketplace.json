@@ -22,6 +22,11 @@
       "source": "./plugins/authentik"
     },
     {
+      "name": "autodesk-vault-api",
+      "description": "Autodesk Vault APIs. Use for the Vault .NET SDK (WebServiceManager, VDF), Vault Data API REST endpoints, Gateway and ...",
+      "source": "./plugins/autodesk-vault-api"
+    },
+    {
       "name": "calico",
       "description": "Calico CNI via Tigera Operator for Kubernetes. Use for IPPools, NetworkPolicy/GlobalNetworkPolicy, BGP peering, Felix...",
       "source": "./plugins/calico"
@@ -405,6 +410,11 @@
       "name": "linux",
       "description": "Linux desktop — hyprland, sway",
       "source": "./plugins/linux"
+    },
+    {
+      "name": "machining",
+      "description": "Manufacturing and CAD data management — Autodesk Vault, PDM/PLM APIs",
+      "source": "./plugins/machining"
     },
     {
       "name": "shell",
