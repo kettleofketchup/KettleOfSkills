@@ -212,6 +212,11 @@
       "source": "./plugins/mermaidjs-v11"
     },
     {
+      "name": "mise",
+      "description": "Set up mise.toml in project directories with dev tool versions, env vars, tasks, and hooks for reproducible dev envir...",
+      "source": "./plugins/mise"
+    },
+    {
       "name": "mkdocs-documentation",
       "description": "MkDocs Material documentation. Use when writing or validating docs/ content: admonitions, Mermaid, code annotations, ...",
       "source": "./plugins/mkdocs-documentation"
