@@ -87,13 +87,38 @@ def group_endpoints(paths: list[str]) -> dict[str, list[str]]:
     return {k: sorted(v) for k, v in sorted(groups.items())}
 
 
+# `server-info` reports an internal build version (e.g. "30.4.28.0"), not the
+# marketing year. The major tracks the release year with a fixed offset:
+# 28 -> 2023, 29 -> 2024, 30 -> 2025, 31 -> 2026.
+_BUILD_MAJOR_TO_YEAR_OFFSET = 1995
+_BUILD_MAJOR_RANGE = range(26, 46)
+
+
+def parse_version(version: str | None) -> float | None:
+    """Normalise a reported version to a marketing year like 2025.2.
+
+    Accepts either form: a marketing year ("2025.2") or the internal build version
+    that `server-info` actually returns ("30.4.28.0" -> 2025.4).
+    """
+    if not version:
+        return None
+
+    year = re.search(r"\b(20\d{2})(?:\.(\d+))?", version)
+    if year:
+        return float(f"{year.group(1)}.{year.group(2) or 0}")
+
+    build = re.match(r"\s*(\d{2})\.(\d+)", version)
+    if build and int(build.group(1)) in _BUILD_MAJOR_RANGE:
+        return float(
+            f"{int(build.group(1)) + _BUILD_MAJOR_TO_YEAR_OFFSET}.{build.group(2)}"
+        )
+
+    return None
+
+
 def version_capabilities(version: str | None) -> list[tuple[str, bool | None]]:
     """Map a reported server version onto the known capability gates."""
-    numeric = None
-    if version:
-        m = re.search(r"(\d{4})(?:\.(\d+))?", version)
-        if m:
-            numeric = float(f"{m.group(1)}.{m.group(2) or 0}")
+    numeric = parse_version(version)
     return [(label, None if numeric is None else numeric >= gate) for gate, label in VERSION_GATES]
 
 
@@ -124,9 +149,10 @@ def probe(server: str) -> dict:
 
     info = report.get("server_info") or {}
     version = next(
-        (str(info[k]) for k in ("version", "productVersion", "Version") if k in info), None
+        (str(info[k]) for k in ("productVersion", "version", "Version") if k in info), None
     )
     report["version"] = version
+    report["release"] = parse_version(version)
     report["capabilities"] = [
         {"capability": label, "available": ok} for label, ok in version_capabilities(version)
     ]
@@ -154,6 +180,8 @@ def render(report: dict) -> str:
             f"{report.get('server_info_error', '')[:120]}"
         )
     out.append("")
+    if report.get("release"):
+        out.append(f"Release:        {report['release']}  (from build {report.get('version')})")
     out.append("Capabilities (by reported version):")
     for c in report["capabilities"]:
         mark = {True: "yes", False: "no", None: "unknown"}[c["available"]]

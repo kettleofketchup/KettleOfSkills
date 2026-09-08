@@ -104,6 +104,33 @@ class TestGroupEndpoints:
         assert "vaults" in vp.group_endpoints(["/vaults"])
 
 
+class TestParseVersion:
+    """server-info returns an internal build version, not a marketing year."""
+
+    @pytest.mark.parametrize(
+        ("reported", "expected"),
+        [
+            ("30.4.28.0", 2025.4),  # observed on a live Vault Professional server
+            ("30.2.0.0", 2025.2),
+            ("29.0.1.0", 2024.0),
+            ("28.3.0.0", 2023.3),
+            ("31.0.0.0", 2026.0),
+            ("2025.2", 2025.2),  # marketing form still works
+            ("Autodesk Vault Professional 2026.1", 2026.1),
+        ],
+    )
+    def test_normalises_to_a_release_year(self, reported, expected):
+        assert vp.parse_version(reported) == pytest.approx(expected)
+
+    @pytest.mark.parametrize("reported", [None, "", "Vault Professional Server", "abc"])
+    def test_unparseable_is_none(self, reported):
+        assert vp.parse_version(reported) is None
+
+    def test_implausible_major_is_not_treated_as_a_build(self):
+        # A two-digit number outside the known range is not a Vault build major.
+        assert vp.parse_version("99.1.0.0") is None
+
+
 class TestVersionCapabilities:
     def test_2025_2_has_read_api_only(self):
         caps = dict(vp.version_capabilities("2025.2"))
@@ -120,6 +147,13 @@ class TestVersionCapabilities:
 
     def test_unparseable_version_is_unknown(self):
         assert all(v is None for _, v in vp.version_capabilities("Vault Professional"))
+
+    def test_live_build_version_resolves_capabilities(self):
+        # Regression: "30.4.28.0" previously reported every capability as unknown,
+        # which is the one question the probe exists to answer.
+        caps = dict(vp.version_capabilities("30.4.28.0"))
+        assert caps["Vault Data API (read: files, folders, items, BOM, search, users)"] is True
+        assert caps["Lifecycle definition/state read and update over REST"] is False
 
     def test_missing_version_is_unknown(self):
         assert all(v is None for _, v in vp.version_capabilities(None))

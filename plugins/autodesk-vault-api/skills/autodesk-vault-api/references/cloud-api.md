@@ -27,18 +27,23 @@ Two token types, with different reach:
 | Vault token | `Authorization: Bearer V:{uuid}` | Direct server only |
 | APS 3-legged (Autodesk ID) | `Authorization: Bearer {jwt}` | Direct server **and** gateway |
 
-Vault tokens come from a session:
+Vault tokens come from a session. **The credentials must be wrapped in an `input`
+object** — a flat body is rejected, and the resulting error names the credentials rather
+than the schema, which sends people chasing the wrong problem:
 
 ```bash
-# POST a session, then reuse the returned accessToken
 curl -X POST "http://{server}/AutodeskDM/Services/api/vault/v2/sessions" \
   -H "Content-Type: application/json" -H "Accept: application/json" \
-  -d '{"vault":"Vault","userName":"Administrator","password":""}'
+  -d '{"input":{"vault":"Vault","userName":"Administrator","password":"","appCode":"my-app"}}'
 ```
 
-The session response carries `id`, `accessToken` (`V:{uuid}`), create date, vault info, user
-info, and a self URL at `/sessions/{session-id}`. Feed `accessToken` straight into
-`Authorization` on later calls.
+`appCode` is optional and tags the caller in Vault's server-side audit log — worth setting
+so service traffic is distinguishable from a person using the client.
+
+The response carries `accessToken` (`V:{...}`), `vaultInformation`, and `userInformation`.
+Only `accessToken` is required by the schema: **`id` is optional and often absent**, so use
+`@current` to address the session for `GET`/`DELETE /sessions/{id}`. Sign out on shutdown —
+a leaked session holds a licence seat exactly as a leaked SDK login does.
 
 For APS tokens: register an app at `https://aps.autodesk.com/myapps/`, choose the
 **Desktop, Mobile, Single-Page App** type, copy the Client ID, then run OAuth 2.0
@@ -68,7 +73,9 @@ server address.
 ## Endpoint families
 
 `server-info` is the only unauthenticated endpoint — use it to confirm reachability and read
-the product version before anything else.
+the product version before anything else. It reports the **internal build version, not the
+marketing year**: the major tracks the release with a fixed offset (28 = 2023, 29 = 2024,
+30 = 2025, 31 = 2026), so `30.4.28.0` means 2025.4. `vault_probe.py` does this conversion.
 
 | Purpose | Path (after the `.../vault/v2/` base) |
 |---------|----------------------------------------|
@@ -123,14 +130,10 @@ version, fall back to the .NET SDK or its SOAP endpoints — see `dotnet-api.md`
 ## CORS for browser callers
 
 Browser clients hitting the API cross-origin need IIS configured on the Vault server. Edit
-`web.config`, find `<server>` under `<connectivity.web>`, and add:
+`web.config`, find `<server>` under `<connectivity.web>`, and add a `<restapi>` child:
 
 ```xml
-<server ...>
-  <restapi>
-    <cors enabled="true" origins="http://servera,https://serverb" />
-  </restapi>
-</server>
+<restapi><cors enabled="true" origins="http://servera,https://serverb" /></restapi>
 ```
 
 `origins` takes a comma-separated allowlist. Without this, preflight fails and the browser
