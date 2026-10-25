@@ -17,7 +17,7 @@ spec:
     - websecure
   routes:
     # Machine access: CF Service Token validated by Cloudflare
-    - match: Host(`grafana.home.kettle.sh`) && HeadersRegexp(`Cf-Access-Jwt-Assertion`, `.+`)
+    - match: Host(`grafana.home.example.com`) && HeadersRegexp(`Cf-Access-Jwt-Assertion`, `.+`)
       kind: Rule
       priority: 100
       services:
@@ -25,7 +25,7 @@ spec:
           port: 3000
 
     # Human access: Authentik forwardAuth
-    - match: Host(`grafana.home.kettle.sh`)
+    - match: Host(`grafana.home.example.com`)
       kind: Rule
       priority: 10
       middlewares:
@@ -132,7 +132,7 @@ For services that should never accept service tokens:
 
 ```yaml
 routes:
-  - match: Host(`foundry.home.kettle.sh`)
+  - match: Host(`foundry.home.example.com`)
     kind: Rule
     middlewares:
       - name: authentik-forwardauth

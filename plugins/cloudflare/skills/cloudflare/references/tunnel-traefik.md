@@ -6,7 +6,7 @@ TLS is terminated at the Cloudflare edge. Route all traffic to Traefik and let T
 
 ```yaml
 ingress:
-  - hostname: "*.home.kettle.sh"
+  - hostname: "*.home.example.com"
     service: http://traefik.traefik.svc.cluster.local:80
   - service: http_status:404
 ```

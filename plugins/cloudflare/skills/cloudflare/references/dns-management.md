@@ -8,9 +8,9 @@ For Cloudflare Tunnel, hostnames need CNAME records pointing to the tunnel:
 
 ```bash
 # Via cloudflared CLI
-cloudflared tunnel route dns <tunnel-name> app.home.kettle.sh
+cloudflared tunnel route dns <tunnel-name> app.home.example.com
 
-# Creates: app.home.kettle.sh CNAME <tunnel-uuid>.cfargotunnel.com (proxied)
+# Creates: app.home.example.com CNAME <tunnel-uuid>.cfargotunnel.com (proxied)
 ```
 
 ## API-Based DNS Management
@@ -30,7 +30,7 @@ curl -X POST "https://api.cloudflare.com/client/v4/zones/{zone_id}/dns_records" 
   -H "Content-Type: application/json" \
   -d '{
     "type": "CNAME",
-    "name": "app.home.kettle.sh",
+    "name": "app.home.example.com",
     "content": "<tunnel-uuid>.cfargotunnel.com",
     "proxied": true
   }'
@@ -49,9 +49,9 @@ Only services with DNS records pointing to the tunnel are internet-accessible:
 
 | Service | DNS Record | Exposed? |
 |---------|-----------|----------|
-| foundry.home.kettle.sh | CNAME → tunnel | Yes |
-| grafana.home.kettle.sh | CNAME → tunnel | Yes |
-| argocd.home.kettle.sh | No record | No (LAN only) |
+| foundry.home.example.com | CNAME → tunnel | Yes |
+| grafana.home.example.com | CNAME → tunnel | Yes |
+| argocd.home.example.com | No record | No (LAN only) |
 
 **To expose a new service:**
 1. Create CNAME record pointing to tunnel
@@ -68,7 +68,7 @@ When a hostname has a Cloudflare proxied CNAME:
 - **LAN**: Also resolves to Cloudflare IP unless local DNS overrides it
 
 For split-horizon DNS (LAN goes direct to Traefik):
-- Configure local DNS server (Pi-hole, router) with `*.home.kettle.sh → 192.168.5.200`
+- Configure local DNS server (Pi-hole, router) with `*.home.example.com → 192.168.1.200`
 - External requests go through Cloudflare, local requests go direct
 
 **IMPORTANT:** DNS-only (grey cloud) mode with a tunnel CNAME still resolves to Cloudflare IPs. To keep a hostname purely local, don't create any Cloudflare DNS record for it.

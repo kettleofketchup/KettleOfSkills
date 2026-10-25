@@ -55,7 +55,7 @@ nextcloud:
         'trusted_proxies' => array(
           0 => '127.0.0.1',
           1 => '10.244.0.0/16',
-          2 => '192.168.5.0/24',
+          2 => '192.168.1.0/24',
         ),
         'forwarded_for_headers' => array('HTTP_X_FORWARDED_FOR'),
       );

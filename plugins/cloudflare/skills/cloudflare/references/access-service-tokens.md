@@ -31,7 +31,7 @@ curl -X POST "https://api.cloudflare.com/client/v4/accounts/{account_id}/access/
   -H "Content-Type: application/json" \
   -d '{
     "name": "Grafana",
-    "domain": "grafana.home.kettle.sh",
+    "domain": "grafana.home.example.com",
     "type": "self_hosted",
     "session_duration": "24h"
   }'
@@ -87,7 +87,7 @@ DELETE /accounts/{id}/access/service_tokens/{token_id}
 curl -v \
   -H "CF-Access-Client-Id: $CLIENT_ID" \
   -H "CF-Access-Client-Secret: $CLIENT_SECRET" \
-  https://grafana.home.kettle.sh/api/health
+  https://grafana.home.example.com/api/health
 ```
 
 | Response | Meaning |

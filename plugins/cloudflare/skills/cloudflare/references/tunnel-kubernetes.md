@@ -83,7 +83,7 @@ metrics: 0.0.0.0:2000
 
 # Route ALL traffic to Traefik (let Traefik do host-based routing)
 ingress:
-  - hostname: "*.home.kettle.sh"
+  - hostname: "*.home.example.com"
     service: http://traefik.traefik.svc.cluster.local:80
   - service: http_status:404
 ```

@@ -76,9 +76,9 @@ kind: ConfigMap
 metadata:
   name: cluster-config
 data:
-  BASE_DOMAIN: home.kettle.sh
-  argocd_host: argocd.home.kettle.sh
-  auth_host: auth.home.kettle.sh
+  BASE_DOMAIN: home.example.com
+  argocd_host: argocd.home.example.com
+  auth_host: auth.home.example.com
 ```
 
 ### Consuming with replacements
